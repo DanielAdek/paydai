@@ -17,7 +17,7 @@ FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 
 # Copy the JAR file from the build stage to the current directory
-COPY --from=build /app/target/api-1.0-SNAPSHOT.jar paydai-api.jar
+COPY --from=build /app/target/api-0.0-1-SNAPSHOT.jar paydai-api.jar
 
 # Expose the port that your application will run on
 EXPOSE 8080
