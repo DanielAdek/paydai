@@ -19,4 +19,4 @@ spring:
         format-sql: true
 application:
   server:
-    url: ${BASE_URL?:http://localhost:${server.port}}
+    url: ${BASE_URL}
