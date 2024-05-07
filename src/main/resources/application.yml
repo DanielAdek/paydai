@@ -1,0 +1,22 @@
+server:
+  port: ${APP_PORT?:8000}
+  servlet:
+    context-path: /
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST?:localhost}:${DB_PORT?:5432}/${DB_NAME?:db_paydai}
+    username: ${DB_USER?:postgres}
+    password: ${DB_PASSWORD?:PostgreSQL@5443}
+    driverClassName: org.postgresql.Driver
+  application:
+    name: PaydaiServerApplication
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format-sql: true
+application:
+  server:
+    url: ${BASE_URL?:http://localhost:${server.port}}
