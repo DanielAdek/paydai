@@ -10,4 +10,7 @@ public class AppConfig {
   // SECTION FOR OPEN API DOC
   @Value("${application.server.url}")
   private String apiBaseUrl;
+
+  @Value("${application.stripe.secret_key}")
+  private String stripeKey;
 }

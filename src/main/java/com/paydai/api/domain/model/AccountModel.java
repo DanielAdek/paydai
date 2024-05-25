@@ -12,10 +12,10 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "_auth")
-public class AuthModel {
+@Table(name = "tbl_account")
+public class AccountModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "auth_id")
-  public UUID authId;
+  @Column(name = "account_id")
+  public UUID accountId;
 }
