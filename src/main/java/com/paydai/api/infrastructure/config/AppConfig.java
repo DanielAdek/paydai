@@ -13,4 +13,7 @@ public class AppConfig {
 
   @Value("${application.stripe.secret_key}")
   private String stripeKey;
+
+  @Value("${application.paydai.client_callback}")
+  private String paydaiClientBaseUrl;
 }

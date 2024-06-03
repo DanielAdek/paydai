@@ -1,12 +1,13 @@
 package com.paydai.api.domain.service;
 
-import com.paydai.api.presentation.dto.StripeAccountDto;
+import com.paydai.api.presentation.request.AccountLinkRequest;
+import com.paydai.api.presentation.request.AccountRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 
 public interface AccountService {
-  JapiResponse createAccount();
+  JapiResponse createAccount(AccountRequest payload);
 
-  JapiResponse createAccountLink(StripeAccountDto stripeAccountDto);
+  JapiResponse createAccountLink(AccountLinkRequest payload);
 
   String serveIndex();
 }

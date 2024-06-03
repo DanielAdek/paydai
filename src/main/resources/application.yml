@@ -30,3 +30,5 @@ application:
     url: ${BASE_URL}
   stripe:
     secret_key: ${STRIPE_SECRET_KEY}
+  paydai:
+    client_callback: ${PAYDAI_RETURN_CALLBACK_URL}

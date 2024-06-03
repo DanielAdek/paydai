@@ -3,7 +3,8 @@ package com.paydai.api.presentation.controller.Impl;
 import com.paydai.api.domain.service.AccountService;
 import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.controller.AccountController;
-import com.paydai.api.presentation.dto.StripeAccountDto;
+import com.paydai.api.presentation.request.AccountLinkRequest;
+import com.paydai.api.presentation.request.AccountRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.Stripe;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,14 +40,14 @@ public class AccountControllerImpl implements AccountController {
   })
   @Override
   @PostMapping(path = "/account")
-  public ResponseEntity<JapiResponse> createAccount() {
-    JapiResponse response = service.createAccount();
+  public ResponseEntity<JapiResponse> createAccount(@RequestBody() AccountRequest payload) {
+    JapiResponse response = service.createAccount(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
   @Override
   @PostMapping(path = "/account_link")
-  public ResponseEntity<JapiResponse> createAccountLink(@RequestBody StripeAccountDto payload) {
+  public ResponseEntity<JapiResponse> createAccountLink(@RequestBody AccountLinkRequest payload) {
     JapiResponse response = service.createAccountLink(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
