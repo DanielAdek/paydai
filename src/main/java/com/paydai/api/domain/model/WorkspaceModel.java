@@ -29,8 +29,8 @@ public class WorkspaceModel {
   @OneToMany(mappedBy = "workspace")
   private List<UserWorkspaceModel> userWorkspaces;
 
-  @OneToMany(mappedBy = "password")
-  private List<PasswordModel> passwords;
+  @OneToOne(mappedBy = "workspace")
+  private PasswordModel password;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

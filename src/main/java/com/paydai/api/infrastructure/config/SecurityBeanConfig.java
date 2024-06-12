@@ -1,9 +1,8 @@
 package com.paydai.api.infrastructure.config;
 
-import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,13 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.UUID;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityBeanConfig {
   private final UserRepository repository;
-
-  @Autowired
-  public SecurityBeanConfig(UserRepository repository) {
-    this.repository = repository;
-  }
 
   @Bean
   public UserDetailsService userDetailsService() throws UsernameNotFoundException {

@@ -29,7 +29,7 @@ public class UserWorkspaceModel {
 
   @ManyToOne
   @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspaceId;
+  private WorkspaceModel workspace;
 
   @OneToOne
   @JoinColumn(name = "role_id")

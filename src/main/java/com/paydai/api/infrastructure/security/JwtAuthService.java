@@ -24,6 +24,7 @@ import java.util.function.Function;
 public class JwtAuthService {
   private final AppConfig appConfig;
 
+  //******************* GENERATE TOKEN BY SETTING CLAIMS***************//
   @NotNull
   private Key getSignKey() {
     byte[] keyBytes = Decoders.BASE64.decode(appConfig.getSecretKey());
@@ -46,6 +47,7 @@ public class JwtAuthService {
     return generateToken(new HashMap<>(), userDetails);
   }
 
+  //******************* EXTRACT THE CLAIM *******************************//
   private Claims extractAllClaims(String token) {
     return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
   }
@@ -64,6 +66,7 @@ public class JwtAuthService {
     return UUID.fromString(userId);
   }
 
+  //******************* CHECK TOKEN VALIDITY ****************************//
   private boolean isTokenExpired(String token) {
     return extractExpiration(token).before(new Date());
   }
