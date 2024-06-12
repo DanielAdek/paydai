@@ -29,6 +29,10 @@ public class RoleModel {
   @Column(name = "user_id", nullable = false)
   private UUID creator;
 
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
+
   @ManyToMany
   @JoinTable(
     name = "role_permission_tbl",

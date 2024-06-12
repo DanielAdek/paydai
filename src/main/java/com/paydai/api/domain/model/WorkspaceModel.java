@@ -26,11 +26,18 @@ public class WorkspaceModel {
   @Column
   private String name;
 
+  @OneToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private UserModel owner;
+
   @OneToMany(mappedBy = "workspace")
   private List<UserWorkspaceModel> userWorkspaces;
 
   @OneToOne(mappedBy = "workspace")
   private EmailModel email;
+
+  @OneToMany(mappedBy = "workspace")
+  private List<RoleModel> roles;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

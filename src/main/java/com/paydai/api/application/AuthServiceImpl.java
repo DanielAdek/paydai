@@ -1,4 +1,4 @@
-package com.paydai.api.application.auth;
+package com.paydai.api.application;
 
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;

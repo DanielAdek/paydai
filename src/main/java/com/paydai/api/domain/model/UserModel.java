@@ -49,6 +49,9 @@ public class UserModel implements UserDetails {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<UserWorkspaceModel> userWorkspaces;
 
+  @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private WorkspaceModel workspace;
+
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return userWorkspaces.stream()

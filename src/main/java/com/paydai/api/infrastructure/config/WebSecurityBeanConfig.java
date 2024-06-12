@@ -32,7 +32,8 @@ public class WebSecurityBeanConfig {
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .authorizeHttpRequests(
         req -> req.requestMatchers(
-          "api/v1/**",
+          "api/v1/auth/**",
+            "api/v1/permission/**",
             "/swagger-ui/**",
             "/v3/api-docs/**"
           )

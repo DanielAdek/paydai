@@ -1,4 +1,4 @@
-package com.paydai.api.application.account;
+package com.paydai.api.application;
 
 import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.service.AccountService;

@@ -21,6 +21,7 @@ import java.util.UUID;
 public class PermissionModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "permission_id")
   private UUID permissionId;
 
   @Column
@@ -30,8 +31,10 @@ public class PermissionModel {
   private List<RoleModel> roles;
 
   @CreationTimestamp
+  @Column(name = "created_at")
   private LocalDateTime createdAt;
 
   @UpdateTimestamp
+  @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 }
