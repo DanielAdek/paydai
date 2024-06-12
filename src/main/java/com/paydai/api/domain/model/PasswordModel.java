@@ -30,10 +30,6 @@ public class PasswordModel {
   @JoinColumn(name = "email_id")
   private EmailModel email;
 
-  @OneToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
-
   @Column(nullable = false)
   private String passwordHash;
 

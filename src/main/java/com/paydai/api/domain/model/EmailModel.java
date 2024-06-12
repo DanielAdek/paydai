@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "auth_tbl")
+@Table(name = "email_tbl")
 public class EmailModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,6 +36,9 @@ public class EmailModel {
   @ManyToOne
   @JoinColumn(name = "user_id")
   private UserModel user;
+
+  @OneToOne(mappedBy = "email", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private PasswordModel password;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

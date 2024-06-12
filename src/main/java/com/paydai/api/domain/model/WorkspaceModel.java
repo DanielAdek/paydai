@@ -30,7 +30,7 @@ public class WorkspaceModel {
   private List<UserWorkspaceModel> userWorkspaces;
 
   @OneToOne(mappedBy = "workspace")
-  private PasswordModel password;
+  private EmailModel email;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

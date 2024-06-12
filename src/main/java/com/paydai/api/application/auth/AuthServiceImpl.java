@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
       EmailModel emailModel = emailRepository.save(buildEmail);
 
       // Build password
-      PasswordModel buildPass = PasswordModel.builder().email(emailModel).passwordHash(passwordEncoder.encode(payload.getPassword())).build();
+      PasswordModel buildPass = PasswordModel.builder().email(emailModel).user(userModel).passwordHash(passwordEncoder.encode(payload.getPassword())).build();
 
       // Save Password
       passwordRepository.save(buildPass);
@@ -90,10 +90,17 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public JapiResponse authenticate(AuthRequest authCred) {
     try {
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authCred.getEmail(), authCred.getPassword()));
+      EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
 
+      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getUserId(), authCred.getPassword()));
 
-      return JapiResponse.builder().status(true).statusCode(HttpStatus.OK).message("Success!").data(null).build();
+      String jwt = jwtService.generateToken(emailModel.getUser());
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt);
+
+      AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
+
+      return JapiResponse.builder().status(true).statusCode(HttpStatus.OK).message("Success!").data(auth).build();
     } catch (BadCredentialsException e) {
       throw new ApiRequestException(e.getMessage(), e);
     } catch (Exception e) {

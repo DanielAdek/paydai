@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface EmailRepository {
   Optional<EmailModel> findByEmail(String email);
   EmailModel findEmailQuery(String email);
-
+  EmailModel findEmailAndPassword(String email);
   EmailModel save(EmailModel buildEmail);
+
 }

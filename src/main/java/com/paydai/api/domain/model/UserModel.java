@@ -43,13 +43,10 @@ public class UserModel implements UserDetails {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<EmailModel> emails;
 
-  @OneToMany(mappedBy = "user")
-  private List<PasswordModel> passwords;
-
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<UserWorkspaceModel> userWorkspaces;
 
   @Override
@@ -66,7 +63,12 @@ public class UserModel implements UserDetails {
 
   @Override
   public String getPassword() {
-    return passwords.isEmpty() ? null : passwords.get(0).getPasswordHash();
+    // Return password from one of the associated emails
+    return emails.stream()
+      .filter(email -> email.getPassword() != null)
+      .findFirst()
+      .map(email -> email.getPassword().getPasswordHash())
+      .orElse(null);
   }
 
   @Override
