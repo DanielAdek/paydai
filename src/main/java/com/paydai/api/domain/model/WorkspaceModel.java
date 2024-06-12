@@ -9,23 +9,32 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stripe_account_tbl")
-public class AccountModel {
+@Entity
+@Table(name = "workspace_tbl")
+public class WorkspaceModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID workspaceId;
+
+  @Column
+  private String name;
+
+  @OneToMany(mappedBy = "workspace")
+  private List<UserWorkspaceModel> userWorkspaces;
+
+  @OneToMany(mappedBy = "password")
+  private List<PasswordModel> passwords;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.paydai.api.domain.model;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,20 +13,31 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stripe_account_tbl")
-public class AccountModel {
+@Entity
+@Table(name = "user_workspace_bridge_tbl")
+public class UserWorkspaceModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID userWorkspaceId;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private UserModel user;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspaceId;
+
+  @OneToOne
+  @JoinColumn(name = "role_id")
+  private RoleModel role;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

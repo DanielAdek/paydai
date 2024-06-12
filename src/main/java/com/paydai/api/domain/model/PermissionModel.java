@@ -9,23 +9,29 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stripe_account_tbl")
-public class AccountModel {
+@Entity
+@Table(name = "permission_tbl")
+public class PermissionModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID permissionId;
+
+  @Column
+  private String permission;
+
+  @ManyToMany(mappedBy = "permissions")
+  private List<RoleModel> roles;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

@@ -26,6 +26,9 @@ spring:
         format-sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 application:
+  security:
+    jwt_secret:
+      key: ${JWT_SECRET}
   server:
     url: ${BASE_URL}
   stripe:

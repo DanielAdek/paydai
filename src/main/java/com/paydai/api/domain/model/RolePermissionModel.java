@@ -12,20 +12,27 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stripe_account_tbl")
-public class AccountModel {
+@Entity
+@Table(name = "role_permission_bridge_tbl")
+public class RolePermissionModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID rolePermissionId;
+
+  @ManyToOne
+  @JoinColumn(name = "role_id")
+  private RoleModel role;
+
+  @ManyToOne
+  @JoinColumn(name = "permission_id")
+  private PermissionModel permission;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

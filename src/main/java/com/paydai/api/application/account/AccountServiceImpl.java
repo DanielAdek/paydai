@@ -40,6 +40,8 @@ public class AccountServiceImpl implements AccountService {
 
       Account account = Account.create(accountCreateParams);
 
+      // Todo persist account id and customer details
+
       return JapiResponse.success(account.getId());
     } catch (Exception e) {
       logger.error("Stripe::Error:: " + e.getMessage());

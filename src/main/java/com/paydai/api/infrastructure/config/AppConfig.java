@@ -16,4 +16,7 @@ public class AppConfig {
 
   @Value("${application.paydai.client_callback}")
   private String paydaiClientBaseUrl;
+
+  @Value("${application.security.jwt_secret.key}")
+  private String secretKey;
 }

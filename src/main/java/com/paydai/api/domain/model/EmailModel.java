@@ -12,20 +12,34 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stripe_account_tbl")
-public class AccountModel {
+@Entity
+@Table(name = "auth_tbl")
+public class EmailModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID emailId;
+
+  @Column
+  private String email;
+
+  @Column
+  @Enumerated(EnumType.STRING)
+  private EmailType emailType;
+
+  @OneToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private UserModel user;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }
