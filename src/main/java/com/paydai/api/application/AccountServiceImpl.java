@@ -1,8 +1,18 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.exception.ApiRequestException;
+import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
+import com.paydai.api.domain.model.EmailModel;
+import com.paydai.api.domain.model.StripeAccountModel;
+import com.paydai.api.domain.model.UserModel;
+import com.paydai.api.domain.model.UserType;
+import com.paydai.api.domain.repository.EmailRepository;
+import com.paydai.api.domain.repository.StripeAccountRepository;
 import com.paydai.api.domain.service.AccountService;
 import com.paydai.api.infrastructure.config.AppConfig;
+import com.paydai.api.presentation.dto.account.StripeAccountDtoMapper;
+import com.paydai.api.presentation.dto.account.StripeAccountRecord;
 import com.paydai.api.presentation.enums.AccountType;
 import com.paydai.api.presentation.request.AccountLinkRequest;
 import com.paydai.api.presentation.request.AccountRequest;
@@ -14,6 +24,8 @@ import com.stripe.param.AccountLinkCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -24,7 +36,10 @@ import java.nio.file.Paths;
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
- private final AppConfig config;
+  private final StripeAccountRepository repository;
+  private final EmailRepository emailRepository;
+  private final StripeAccountDtoMapper stripeAccountDtoMapper;
+  private final AppConfig config;
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   /**
@@ -33,17 +48,35 @@ public class AccountServiceImpl implements AccountService {
    */
   public JapiResponse createAccount(AccountRequest payload) {
     try {
-      AccountCreateParams.Type accountType = payload.getAccountType().equals(AccountType.BUSINESS) ? AccountCreateParams.Type.STANDARD :
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      StripeAccountModel stripeAccountExist = repository.findByUser(userModel.getUserId());
+
+      if (stripeAccountExist != null) throw new ConflictException("Stripe account already exit!");
+
+      AccountCreateParams.Type accountType = payload.getAccountType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
         AccountCreateParams.Type.EXPRESS;
 
       AccountCreateParams accountCreateParams = AccountCreateParams.builder().setEmail(payload.getEmail()).setType(accountType).build();
 
       Account account = Account.create(accountCreateParams);
 
-      // Todo persist account id and customer details
+      if (account == null) throw new ApiRequestException("Account did not create");
 
-      return JapiResponse.success(account.getId());
-    } catch (Exception e) {
+      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId());
+
+      StripeAccountModel buildStripeAccount = StripeAccountModel.builder().stripeId(account.getId()).userId(userModel.getUserId()).personalEmail(emailModel.getEmail()).build();
+
+      StripeAccountModel stripeAccountModel = repository.save(buildStripeAccount);
+
+      stripeAccountModel.setStripeId(account.getId());
+
+      StripeAccountRecord stripeAccountRecord = stripeAccountDtoMapper.apply(stripeAccountModel);
+
+      return JapiResponse.success(stripeAccountRecord);
+    } catch (ConflictException e) {throw e; } catch (Exception e) {
       logger.error("Stripe::Error:: " + e.getMessage());
       throw new InternalServerException(e.getMessage());
     }

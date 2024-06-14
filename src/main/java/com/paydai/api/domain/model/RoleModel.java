@@ -26,9 +26,6 @@ public class RoleModel {
   @Column
   private String role;
 
-  @Column(name = "user_id", nullable = false)
-  private UUID creator;
-
   @ManyToOne
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;

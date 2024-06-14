@@ -1,10 +1,7 @@
 package com.paydai.api.domain.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,7 +14,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,11 +27,15 @@ public class UserModel implements UserDetails {
   @Column(name = "user_id")
   private UUID userId;
 
-  @Column(name = "full_name")
-  private String fullName;
+  @Column(name = "first_name")
+  private String firstName;
+
+  @Column(name = "last_name")
+  private String lastName;
 
   @Column(name = "user_type")
-  private String userType;
+  @Enumerated(EnumType.STRING)
+  private UserType userType;
 
   @CreationTimestamp
   @Column(name = "created_at")
@@ -52,14 +54,19 @@ public class UserModel implements UserDetails {
   @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private WorkspaceModel workspace;
 
-  @Override
-  public Collection<? extends GrantedAuthority> getAuthorities() {
-    return userWorkspaces.stream()
-      .map(UserWorkspaceModel::getRole)
-      .flatMap(role -> role.getPermissions().stream())
-      .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
-      .collect(Collectors.toSet());
-  }
+//  @Override
+//  public Collection<? extends GrantedAuthority> getAuthorities() {
+//    return userWorkspaces.stream()
+//      .map(UserWorkspaceModel::getRole)
+//      .flatMap(role -> role.getPermissions().stream())
+//      .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
+//      .collect(Collectors.toSet());
+//  }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+      String authority = (userType != null) ? userType.name() : UserType.SALES_REP.name();
+      return List.of(new SimpleGrantedAuthority(authority));
+    }
 
   @Override
   public String getUsername() { return String.valueOf(userId); }
@@ -93,4 +100,7 @@ public class UserModel implements UserDetails {
   public boolean isEnabled() {
     return true;
   }
+
+  @Override
+  public String toString() { return super.toString(); }
 }

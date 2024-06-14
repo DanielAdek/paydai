@@ -1,6 +1,6 @@
 package com.paydai.api.presentation.enums;
 
 public enum AccountType {
-  BUSINESS,
+  MERCHANT,
   SALES_REP
 }

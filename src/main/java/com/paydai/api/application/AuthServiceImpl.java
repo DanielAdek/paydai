@@ -3,12 +3,10 @@ package com.paydai.api.application;
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
-import com.paydai.api.domain.model.EmailModel;
-import com.paydai.api.domain.model.EmailType;
-import com.paydai.api.domain.model.PasswordModel;
-import com.paydai.api.domain.model.UserModel;
+import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.PasswordRepository;
+import com.paydai.api.domain.repository.StripeAccountRepository;
 import com.paydai.api.domain.repository.UserRepository;
 import com.paydai.api.domain.service.AuthService;
 import com.paydai.api.infrastructure.security.JwtAuthService;
@@ -35,6 +33,8 @@ public class AuthServiceImpl implements AuthService {
 
   private final PasswordRepository passwordRepository;
 
+  private final StripeAccountRepository stripeAccountRepository;
+
   private final EmailRepository emailRepository;
 
   private final JwtAuthService jwtService;
@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
       if (email != null) throw new ConflictException("Email in use!");
 
       // Build user data to save
-      UserModel buildUser = UserModel.builder().fullName(payload.getFullName()).userType(payload.getAccountType()).build();
+      UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
 
       // Save user
       UserModel userModel = userRepository.save(buildUser);
@@ -76,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
       String token = jwtService.generateToken(userModel);
 
       // Build data response to send to client
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token);
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
@@ -96,7 +96,12 @@ public class AuthServiceImpl implements AuthService {
 
       String jwt = jwtService.generateToken(emailModel.getUser());
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt);
+      // Find stripe account;
+      StripeAccountModel stripeAccountModel = stripeAccountRepository.findByUser(emailModel.getUser().getUserId());
+
+      String stripeId = stripeAccountModel != null ? stripeAccountModel.getStripeId() : null;
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, stripeId);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

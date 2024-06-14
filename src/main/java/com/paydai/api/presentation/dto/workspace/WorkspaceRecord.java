@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record WorkspaceRecord(
-  UUID permissionId,
-  String permission,
+  UUID workspaceId,
+  String name,
   LocalDateTime createdAt,
   LocalDateTime updatedAt
 ) {

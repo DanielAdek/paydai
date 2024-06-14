@@ -17,15 +17,24 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "stripe_account_tbl")
-public class AccountModel {
+public class StripeAccountModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "stripe_account_id")
-  public UUID stripeAccountId;
+  private UUID stripeAccountId;
+
+  @Column(name = "personal_email")
+  private String personalEmail;
+
+  @Column(name = "user_id")
+  private UUID userId;
+
+  @Column(name = "stripe_id")
+  private String stripeId;
 
   @CreationTimestamp
-  public LocalDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @UpdateTimestamp
-  public LocalDateTime updatedAt;
+  private LocalDateTime updatedAt;
 }

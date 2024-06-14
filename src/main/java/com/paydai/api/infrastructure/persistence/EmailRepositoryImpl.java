@@ -21,4 +21,8 @@ public interface EmailRepositoryImpl extends EmailRepository, JpaRepository<Emai
   @Override
   @Query(nativeQuery = true, value = "SELECT e.email, p.password_hash FROM email_tbl e inner join passwords_tbl p on e.email_id=p.email_id WHERE email = ?1")
   EmailModel findEmailAndPassword(String email);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM email_tbl WHERE user_id=?1")
+  EmailModel findPersonalEmailByUser(UUID userId);
 }

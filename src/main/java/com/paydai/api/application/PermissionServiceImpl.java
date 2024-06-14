@@ -3,8 +3,8 @@ package com.paydai.api.application;
 import com.paydai.api.domain.model.PermissionModel;
 import com.paydai.api.domain.repository.PermissionRepository;
 import com.paydai.api.domain.service.PermissionService;
-import com.paydai.api.presentation.dto.permission.WorkspaceDtoMapper;
-import com.paydai.api.presentation.dto.permission.WorkspaceRecord;
+import com.paydai.api.presentation.dto.permission.PermissionDtoMapper;
+import com.paydai.api.presentation.dto.permission.PermissionRecord;
 import com.paydai.api.presentation.request.PermissionRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.List;
 public class PermissionServiceImpl implements PermissionService {
   private final PermissionRepository repository;
 
-  private final WorkspaceDtoMapper permissionDtoMapper;
+  private final PermissionDtoMapper permissionDtoMapper;
 
   @Override
   public JapiResponse getPermissions() {
@@ -34,7 +34,7 @@ public class PermissionServiceImpl implements PermissionService {
 
       PermissionModel permissionModel = repository.save(buildPermission);
 
-      WorkspaceRecord permissionDto = permissionDtoMapper.apply(permissionModel);
+      PermissionRecord permissionDto = permissionDtoMapper.apply(permissionModel);
 
       return JapiResponse.success(permissionDto);
     } catch (Exception e) { throw e; }

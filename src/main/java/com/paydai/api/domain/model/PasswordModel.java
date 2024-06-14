@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "passwords_tbl")
+@Table(name = "password_tbl")
 public class PasswordModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

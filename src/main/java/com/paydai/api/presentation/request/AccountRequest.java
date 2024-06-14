@@ -1,6 +1,6 @@
 package com.paydai.api.presentation.request;
 
-import com.paydai.api.presentation.enums.AccountType;
+import com.paydai.api.domain.model.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AccountRequest {
   String email;
-  AccountType accountType;
+  UserType accountType;
 }
