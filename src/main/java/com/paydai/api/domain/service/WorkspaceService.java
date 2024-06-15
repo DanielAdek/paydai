@@ -5,8 +5,10 @@ import com.paydai.api.presentation.request.PermissionRequest;
 import com.paydai.api.presentation.request.WorkspaceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 
+import java.util.UUID;
+
 public interface WorkspaceService {
-  JapiResponse inviteToWorkspace(InviteRequest payload);
+  JapiResponse getWorkspace(UUID workspaceId);
 
   JapiResponse createWorkspace(WorkspaceRequest payload);
 }

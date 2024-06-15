@@ -16,14 +16,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "/api/v1/workspace")
 @RequiredArgsConstructor
-@Tag(name = "Workspace", description = "APIs for workspaces")
+@Tag(name = "Workspaces", description = "APIs for workspaces")
 public class WorkspaceControllerImpl implements WorkspaceController {
   private final WorkspaceService service;
 
@@ -39,9 +39,10 @@ public class WorkspaceControllerImpl implements WorkspaceController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
+  @GetMapping
   @Override
-  public ResponseEntity<JapiResponse> inviteToWorkspace(@RequestBody InviteRequest payload) {
-    JapiResponse response = service.inviteToWorkspace(payload);
+  public ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getWorkspace(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
@@ -57,6 +58,7 @@ public class WorkspaceControllerImpl implements WorkspaceController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
+  @PostMapping(path = "/create")
   @Override
   public ResponseEntity<JapiResponse> create(@RequestBody WorkspaceRequest payload) {
     JapiResponse response = service.createWorkspace(payload);

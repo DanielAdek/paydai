@@ -1,12 +1,15 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.exception.ConflictException;
+import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.EmailModel;
 import com.paydai.api.domain.model.UserModel;
 import com.paydai.api.domain.model.WorkspaceModel;
 import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.WorkspaceRepository;
 import com.paydai.api.domain.service.WorkspaceService;
+import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.request.WorkspaceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
@@ -15,20 +18,23 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class WorkspaceServiceImpl implements WorkspaceService {
   private final WorkspaceRepository repository;
-  private final EmailRepository emailRepository;
+  private final WorkspaceDtoMapper workspaceDtoMapper;
 
   @Override
-  public JapiResponse inviteToWorkspace(InviteRequest payload) {
+  public JapiResponse getWorkspace(UUID workspaceId) {
     try {
-      EmailModel emailModel = emailRepository.findEmailQuery(payload.getEmail());
+      WorkspaceModel workspaceModel = repository.findByWorkspaceId(workspaceId);
+      if (workspaceModel == null) throw new NotFoundException("Workspace not exiting");
 
-      if (emailModel != null) throw new ConflictException("Already invited");
+      WorkspaceRecord workspaceRecord = workspaceDtoMapper.apply(workspaceModel);
 
-      return JapiResponse.success(null);
+      return JapiResponse.success(workspaceRecord);
     } catch (Exception e) { throw e; }
   }
 

@@ -1,5 +1,6 @@
 package com.paydai.api.presentation.request;
 
+import com.paydai.api.domain.model.AggregateType;
 import com.paydai.api.domain.model.EmailModel;
 import com.paydai.api.domain.model.RoleModel;
 import jakarta.persistence.Column;
@@ -21,7 +22,7 @@ import java.util.UUID;
 public class InviteRequest {
   private String email;
   private UUID workspaceId;
-  private String aggregate;
+  private AggregateType aggregate;
   private int interval;
   private String duration;
   private UUID roleId;

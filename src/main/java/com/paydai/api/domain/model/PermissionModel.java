@@ -27,7 +27,7 @@ public class PermissionModel {
   @Column
   private String permission;
 
-  @ManyToMany(mappedBy = "permissions")
+  @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
   private List<RoleModel> roles;
 
   @CreationTimestamp

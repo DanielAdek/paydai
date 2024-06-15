@@ -27,7 +27,7 @@ public class CommissionSettingModel {
   private Double commission;
 
   @Column
-  private String aggregate;
+  private AggregateType aggregate;
 
   @Column(name = "next_paydai")
   private LocalDateTime nextPaydai;
