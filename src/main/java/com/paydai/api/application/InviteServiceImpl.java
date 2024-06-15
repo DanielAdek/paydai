@@ -6,6 +6,10 @@ import com.paydai.api.domain.model.WorkspaceModel;
 import com.paydai.api.domain.repository.InviteRepository;
 import com.paydai.api.domain.repository.WorkspaceRepository;
 import com.paydai.api.domain.service.InviteService;
+import com.paydai.api.infrastructure.config.AppConfig;
+import com.paydai.api.presentation.dto.invite.InviteDto;
+import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
+import com.paydai.api.presentation.dto.invite.InviteRecord;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +22,8 @@ import java.security.SecureRandom;
 public class InviteServiceImpl implements InviteService {
   private final InviteRepository repository;
   private final WorkspaceRepository workspaceRepository;
+  private final InviteDtoMapper inviteDtoMapper;
+  private final AppConfig appConfig;
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   private static final int CODE_LENGTH = 8;
   private static final SecureRandom random = new SecureRandom();
@@ -33,12 +39,12 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse createInvite(InviteRequest payload) {
     try {
-      WorkspaceModel workspace = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
+//      WorkspaceModel workspace = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
 
       InviteModel buildInvite = InviteModel.builder()
         .inviteCode(this.generateInviteCode())
         .email(payload.getEmail())
-        .workspace(workspace)
+        .workspace(WorkspaceModel.builder().workspaceId(payload.getWorkspaceId()).build())
         .aggregate(payload.getAggregate())
         .commission(payload.getCommission())
         .interval(payload.getInterval())
@@ -48,8 +54,13 @@ public class InviteServiceImpl implements InviteService {
 
       InviteModel inviteModel = repository.save(buildInvite);
 
-      // Send email
-      return JapiResponse.success(inviteModel);
+      String link = appConfig.getPaydaiClientBaseUrl() + "/invite/" + buildInvite.getInviteCode();
+
+      InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
+
+      InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
+
+      return JapiResponse.success(inviteRecord);
     } catch (Exception e) { throw e; }
   }
 }

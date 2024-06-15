@@ -33,7 +33,7 @@ public class InviteModel {
   private Double commission;
 
   @Column
-  private String aggregate;
+  private AggregateType aggregate;
 
   @Column
   private int interval;
