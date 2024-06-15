@@ -13,32 +13,41 @@ import java.util.UUID;
 
 @Data
 @Builder
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "email_tbl")
-public class EmailModel {
+@Table(name = "invite_tbl")
+public class InviteModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID emailId;
+  @Column(name = "invite_id")
+  private UUID inviteId;
 
   @Column
   private String email;
 
+  @Column(name = "invite_code")
+  private String inviteCode;
+
   @Column
-  @Enumerated(EnumType.STRING)
-  private EmailType emailType;
+  private Double commission;
+
+  @Column
+  private String aggregate;
+
+  @Column
+  private int interval;
+
+  @Column
+  private String duration;
+
+  @OneToOne
+  @JoinColumn(name = "role_id")
+  private RoleModel role;
 
   @OneToOne
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
-
-  @ManyToOne
-  @JoinColumn(name = "user_id")
-  private UserModel user;
-
-  @OneToOne(mappedBy = "email", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private PasswordModel password;
 
   @CreationTimestamp
   @Column(name = "created_at")

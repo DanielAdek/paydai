@@ -1,9 +1,17 @@
 package com.paydai.api.presentation.request;
 
+import com.paydai.api.domain.model.EmailModel;
+import com.paydai.api.domain.model.RoleModel;
+import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Data
@@ -12,4 +20,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InviteRequest {
   private String email;
+  private UUID workspaceId;
+  private String aggregate;
+  private int interval;
+  private String duration;
+  private UUID roleId;
+  private Double commission;
 }

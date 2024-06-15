@@ -13,32 +13,41 @@ import java.util.UUID;
 
 @Data
 @Builder
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "email_tbl")
-public class EmailModel {
+@Table(name = "commission_setting_tbl")
+public class CommissionSettingModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID emailId;
+  @Column(name = "commission_id")
+  private UUID comSettingId;
 
   @Column
-  private String email;
+  private Double commission;
 
   @Column
-  @Enumerated(EnumType.STRING)
-  private EmailType emailType;
+  private String aggregate;
+
+  @Column(name = "next_paydai")
+  private LocalDateTime nextPaydai;
+
+  @Column
+  private int interval;
+
+  @Column
+  private String duration;
 
   @OneToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
+  @JoinColumn(name = "role_id")
+  private RoleModel role;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id")
-  private UserModel user;
+  @OneToOne
+  @JoinColumn(name = "email_id")
+  private EmailModel emailId;
 
-  @OneToOne(mappedBy = "email", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private PasswordModel password;
+  @Column(name = "workspace_id")
+  private UUID workspaceId;
 
   @CreationTimestamp
   @Column(name = "created_at")

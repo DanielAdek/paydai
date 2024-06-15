@@ -60,6 +60,8 @@ public class AuthServiceImpl implements AuthService {
       // Save user
       UserModel userModel = userRepository.save(buildUser);
 
+      // confirm invite
+
       // Build email
       EmailModel buildEmail = EmailModel.builder().email(payload.getEmail()).user(userModel).emailType(EmailType.PERSONAL).build();
 
@@ -100,6 +102,8 @@ public class AuthServiceImpl implements AuthService {
       StripeAccountModel stripeAccountModel = stripeAccountRepository.findByUser(emailModel.getUser().getUserId());
 
       String stripeId = stripeAccountModel != null ? stripeAccountModel.getStripeId() : null;
+
+      // role and permission to user
 
       AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, stripeId);
 

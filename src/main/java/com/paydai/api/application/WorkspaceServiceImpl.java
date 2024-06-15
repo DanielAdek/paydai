@@ -28,7 +28,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
       if (emailModel != null) throw new ConflictException("Already invited");
 
-
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }
   }
@@ -36,7 +35,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   @Override
   public JapiResponse createWorkspace(WorkspaceRequest payload) {
     try {
-      // Get the authenticated user creating worksapace;
+      // Get the authenticated user creating workspace;
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
       UserModel user = (UserModel) authentication.getPrincipal();
