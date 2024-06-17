@@ -25,8 +25,8 @@ public class EmailModel {
   @Column
   private String email;
 
-  @Column
   @Enumerated(EnumType.STRING)
+  @Column(name = "email_type")
   private EmailType emailType;
 
   @OneToOne

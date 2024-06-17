@@ -3,10 +3,7 @@ package com.paydai.api.application;
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
-import com.paydai.api.domain.model.EmailModel;
-import com.paydai.api.domain.model.StripeAccountModel;
-import com.paydai.api.domain.model.UserModel;
-import com.paydai.api.domain.model.UserType;
+import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.StripeAccountRepository;
 import com.paydai.api.domain.service.AccountService;
@@ -56,16 +53,16 @@ public class AccountServiceImpl implements AccountService {
 
       if (stripeAccountExist != null) throw new ConflictException("Stripe account already exit!");
 
-      AccountCreateParams.Type accountType = payload.getAccountType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
+      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId(), EmailType.PERSONAL);
+
+      AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
         AccountCreateParams.Type.EXPRESS;
 
-      AccountCreateParams accountCreateParams = AccountCreateParams.builder().setEmail(payload.getEmail()).setType(accountType).build();
+      AccountCreateParams accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
 
       Account account = Account.create(accountCreateParams);
 
       if (account == null) throw new ApiRequestException("Account did not create");
-
-      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId());
 
       StripeAccountModel buildStripeAccount = StripeAccountModel.builder().stripeId(account.getId()).userId(userModel.getUserId()).personalEmail(emailModel.getEmail()).build();
 

@@ -60,8 +60,6 @@ public class AuthServiceImpl implements AuthService {
       // Save user
       UserModel userModel = userRepository.save(buildUser);
 
-      // confirm invite
-
       // Build email
       EmailModel buildEmail = EmailModel.builder().email(payload.getEmail()).user(userModel).emailType(EmailType.PERSONAL).build();
 

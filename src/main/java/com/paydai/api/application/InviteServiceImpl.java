@@ -1,8 +1,8 @@
 package com.paydai.api.application;
 
-import com.paydai.api.domain.model.InviteModel;
-import com.paydai.api.domain.model.RoleModel;
-import com.paydai.api.domain.model.WorkspaceModel;
+import com.paydai.api.domain.exception.NotFoundException;
+import com.paydai.api.domain.model.*;
+import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.InviteRepository;
 import com.paydai.api.domain.repository.WorkspaceRepository;
 import com.paydai.api.domain.service.InviteService;
@@ -11,6 +11,7 @@ import com.paydai.api.presentation.dto.invite.InviteDto;
 import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
 import com.paydai.api.presentation.request.InviteRequest;
+import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.security.SecureRandom;
 public class InviteServiceImpl implements InviteService {
   private final InviteRepository repository;
   private final WorkspaceRepository workspaceRepository;
+  private final EmailRepository emailRepository;
   private final InviteDtoMapper inviteDtoMapper;
   private final AppConfig appConfig;
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,7 +62,37 @@ public class InviteServiceImpl implements InviteService {
 
       InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
 
+      // TODO SEND EMAIL NOTIFICATION
+
       return JapiResponse.success(inviteRecord);
     } catch (Exception e) { throw e; }
   }
+
+  @Override
+  public JapiResponse acceptInvite(RegisterRequest request, String inviteCode) {
+    try {
+      InviteModel inviteModel = repository.findByInvite(inviteCode);
+
+      if (inviteModel != null) throw new NotFoundException("Invite Code is invalid");
+
+      WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(inviteModel.getWorkspace().getWorkspaceId());
+
+      UserModel userModel = UserModel.builder()
+        .userType(UserType.SALES_REP)
+        .firstName(request.getFirstName())
+        .workspace(workspaceModel)
+        .lastName(request.getLastName())
+        .build();
+
+      EmailModel emailModel = EmailModel.builder()
+        .email(inviteModel.getEmail())
+        .emailType(EmailType.COMPANY)
+        .user(userModel)
+        .build();
+
+      return JapiResponse.success(null);
+    } catch (Exception e) { throw e; }
+  }
+
+
 }
