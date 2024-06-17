@@ -53,7 +53,7 @@ public class AccountServiceImpl implements AccountService {
 
       if (stripeAccountExist != null) throw new ConflictException("Stripe account already exit!");
 
-      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId(), EmailType.PERSONAL);
+      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId());
 
       AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
         AccountCreateParams.Type.EXPRESS;

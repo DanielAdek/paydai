@@ -10,5 +10,5 @@ public interface EmailRepository {
   Optional<EmailModel> findByEmail(String email);
   EmailModel findEmailQuery(String email);
   EmailModel save(EmailModel buildEmail);
-  EmailModel findPersonalEmailByUser(UUID userId, EmailType emailType);
+  EmailModel findPersonalEmailByUser(UUID userId);
 }
