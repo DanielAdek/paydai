@@ -10,4 +10,6 @@ public interface WorkspaceRepository {
   WorkspaceModel findByName(String name);
 
   WorkspaceModel findByWorkspaceId(UUID workspaceId);
+
+  WorkspaceModel findByUserId(UUID userId);
 }

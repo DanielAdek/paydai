@@ -4,10 +4,7 @@ import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.model.*;
-import com.paydai.api.domain.repository.EmailRepository;
-import com.paydai.api.domain.repository.PasswordRepository;
-import com.paydai.api.domain.repository.StripeAccountRepository;
-import com.paydai.api.domain.repository.UserRepository;
+import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.AuthService;
 import com.paydai.api.infrastructure.security.JwtAuthService;
 import com.paydai.api.presentation.dto.auth.AuthDtoMapper;
@@ -38,6 +35,8 @@ public class AuthServiceImpl implements AuthService {
   private final EmailRepository emailRepository;
 
   private final JwtAuthService jwtService;
+
+  private final WorkspaceRepository workspaceRepository;
 
   private final PasswordEncoder passwordEncoder;
 
@@ -71,6 +70,8 @@ public class AuthServiceImpl implements AuthService {
 
       // Save Password
       passwordRepository.save(buildPass);
+
+      if (payload.getUserType().equals(UserType.MERCHANT)) workspaceRepository.save(WorkspaceModel.builder().name(payload.getBusiness()).owner(userModel).build());
 
       // Generate token
       String token = jwtService.generateToken(userModel);

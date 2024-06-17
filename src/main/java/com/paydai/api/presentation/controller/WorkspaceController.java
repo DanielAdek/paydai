@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.UUID;
 
 public interface WorkspaceController {
-  ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID workspaceId);
-  ResponseEntity<JapiResponse> create(@RequestBody WorkspaceRequest payload);
+  ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID userId);
+
+//  ResponseEntity<JapiResponse> create(@RequestBody WorkspaceRequest payload);
 }

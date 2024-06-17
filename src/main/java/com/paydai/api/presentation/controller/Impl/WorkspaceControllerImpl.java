@@ -41,27 +41,27 @@ public class WorkspaceControllerImpl implements WorkspaceController {
   })
   @GetMapping
   @Override
-  public ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID workspaceId) {
-    JapiResponse response = service.getWorkspace(workspaceId);
+  public ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID userId) {
+    JapiResponse response = service.getWorkspace(userId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
-  @Operation(
-    summary = "Paydai workspace API endpoint",
-    description = "POST response to show DTO"
-  )
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
-    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
-    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
-  })
-  @SecurityRequirements({
-    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
-  })
-  @PostMapping(path = "/create")
-  @Override
-  public ResponseEntity<JapiResponse> create(@RequestBody WorkspaceRequest payload) {
-    JapiResponse response = service.createWorkspace(payload);
-    return new ResponseEntity<>(response, response.getStatusCode());
-  }
+//  @Operation(
+//    summary = "Paydai workspace API endpoint",
+//    description = "POST response to show DTO"
+//  )
+//  @ApiResponses({
+//    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+//    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+//    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+//  })
+//  @SecurityRequirements({
+//    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+//  })
+//  @PostMapping(path = "/create")
+//  @Override
+//  public ResponseEntity<JapiResponse> create(@RequestBody WorkspaceRequest payload) {
+//    JapiResponse response = service.createWorkspace(payload);
+//    return new ResponseEntity<>(response, response.getStatusCode());
+//  }
 }

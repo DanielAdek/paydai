@@ -27,9 +27,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private final WorkspaceDtoMapper workspaceDtoMapper;
 
   @Override
-  public JapiResponse getWorkspace(UUID workspaceId) {
+  public JapiResponse getWorkspace(UUID userId) {
     try {
-      WorkspaceModel workspaceModel = repository.findByWorkspaceId(workspaceId);
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      WorkspaceModel workspaceModel = repository.findByUserId(userModel.getUserId());
+
       if (workspaceModel == null) throw new NotFoundException("Workspace not exiting");
 
       WorkspaceRecord workspaceRecord = workspaceDtoMapper.apply(workspaceModel);

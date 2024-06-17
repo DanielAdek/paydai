@@ -71,6 +71,19 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse acceptInvite(RegisterRequest request, String inviteCode) {
     try {
+      // user with already existing personal email could be invite
+      // check if the company email already exit
+      // check if the personal email already exit
+      // pick the code and collect invite info
+          // role attached
+      // delete invite from invite
+      // save commission setting
+      // save company and personal email if not exit any
+      // save password for both
+      // generate token
+      // send welcome to paydai to email company
+      // send stripe confirm account created if not created before
+      // respond to client
       InviteModel inviteModel = repository.findByInvite(inviteCode);
 
       if (inviteModel != null) throw new NotFoundException("Invite Code is invalid");

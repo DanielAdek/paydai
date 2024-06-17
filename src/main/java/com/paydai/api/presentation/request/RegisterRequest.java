@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 public class RegisterRequest {
   private String email;
 
+  private String business;
+
   private String firstName;
 
   private String lastName;
@@ -21,10 +23,10 @@ public class RegisterRequest {
 
   private UserType userType;
 
-  public static RegisterRequest getRegisterPayload(
-    String email, String password, String lastName,
-    UserType userType, String firstName
-  ) {
-    return new RegisterRequest(email, password, firstName, lastName, userType);
-  }
+//  public static RegisterRequest getRegisterPayload(
+//    String email, String business, String password, String lastName,
+//    UserType userType, String firstName
+//  ) {
+//    return new RegisterRequest(email, business, password, firstName, lastName, userType);
+//  }
 }

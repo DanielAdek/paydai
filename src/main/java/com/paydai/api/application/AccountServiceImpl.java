@@ -58,7 +58,33 @@ public class AccountServiceImpl implements AccountService {
       AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
         AccountCreateParams.Type.EXPRESS;
 
-      AccountCreateParams accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
+      AccountCreateParams accountCreateParams;
+
+      if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
+        accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
+      } else {
+        accountCreateParams = AccountCreateParams.builder()
+          .setEmail(emailModel.getEmail())
+          .setController(
+            AccountCreateParams.Controller.builder()
+              .setFees(
+                AccountCreateParams.Controller.Fees.builder()
+                  .setPayer(AccountCreateParams.Controller.Fees.Payer.APPLICATION)
+                  .build()
+              )
+              .setLosses(
+                AccountCreateParams.Controller.Losses.builder()
+                  .setPayments(AccountCreateParams.Controller.Losses.Payments.APPLICATION)
+                  .build()
+              )
+              .setStripeDashboard(
+                AccountCreateParams.Controller.StripeDashboard.builder()
+                  .setType(AccountCreateParams.Controller.StripeDashboard.Type.EXPRESS)
+                  .build()
+              ).build()
+          )
+          .build();
+      }
 
       Account account = Account.create(accountCreateParams);
 
