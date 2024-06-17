@@ -8,7 +8,7 @@ import com.paydai.api.presentation.response.JapiResponse;
 import java.util.UUID;
 
 public interface WorkspaceService {
-  JapiResponse getWorkspace(UUID workspaceId);
+  JapiResponse getWorkspace();
 
   JapiResponse createWorkspace(WorkspaceRequest payload);
 }

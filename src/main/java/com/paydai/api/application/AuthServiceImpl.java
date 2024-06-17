@@ -3,6 +3,7 @@ package com.paydai.api.application;
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
+import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.AuthService;
@@ -71,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
       // Save Password
       passwordRepository.save(buildPass);
 
-      if (payload.getUserType().equals(UserType.MERCHANT)) workspaceRepository.save(WorkspaceModel.builder().name(payload.getBusiness()).owner(userModel).build());
+      if (payload.getUserType().equals(UserType.MERCHANT)) workspaceRepository.save(WorkspaceModel.builder().name(payload.getBusiness().trim().toLowerCase()).owner(userModel).build());
 
       // Generate token
       String token = jwtService.generateToken(userModel);
@@ -92,6 +93,8 @@ public class AuthServiceImpl implements AuthService {
   public JapiResponse authenticate(AuthRequest authCred) {
     try {
       EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
+
+      if (emailModel == null) throw new NotFoundException("Email not found");
 
       authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getUserId(), authCred.getPassword()));
 

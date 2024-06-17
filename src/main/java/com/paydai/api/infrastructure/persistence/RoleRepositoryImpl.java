@@ -10,10 +10,10 @@ import java.util.UUID;
 
 public interface RoleRepositoryImpl extends RoleRepository, JpaRepository<RoleModel, UUID> {
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM role_tbl WHERE workspace_id=?1")
-  List<RoleModel> findRolesByWorkspace(UUID workspaceId);
+  @Query(nativeQuery = true, value = "SELECT * FROM role_tbl")
+  List<RoleModel> findRoles();
 
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM role_tbl WHERE role=?1 AND workspace_id=?2")
-  RoleModel findRoleByWorkspace(String role, UUID workspaceId);
+  @Query(nativeQuery = true, value = "SELECT * FROM role_tbl WHERE role=?1")
+  RoleModel findRole(String role);
 }

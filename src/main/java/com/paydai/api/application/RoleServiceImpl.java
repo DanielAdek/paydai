@@ -29,13 +29,13 @@ public class RoleServiceImpl implements RoleService {
   @Override
   public JapiResponse createRole(RoleRequest payload) {
     try {
-      RoleModel roleModel = repository.findRoleByWorkspace(payload.getRole().trim().toLowerCase(), payload.getWorkspaceId());
+      RoleModel roleModel = repository.findRole(payload.getRole().trim().toLowerCase());
 
       if (roleModel != null) throw new ConflictException("Role in use");
 
-      WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
+//      WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
 
-      RoleModel buildRole = RoleModel.builder().role(payload.getRole().trim().toLowerCase()).workspace(workspaceModel).build();
+      RoleModel buildRole = RoleModel.builder().role(payload.getRole().trim().toLowerCase()).build();
 
       RoleModel role = repository.save(buildRole);
 
@@ -48,9 +48,9 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
-  public JapiResponse getRolesByWorkspace(UUID workspaceId) {
+  public JapiResponse getRoles() {
     try {
-      List<RoleModel> roleModels = repository.findRolesByWorkspace(workspaceId);
+      List<RoleModel> roleModels = repository.findRoles();
       return JapiResponse.success(roleModels);
     } catch (Exception e) {
       throw e;

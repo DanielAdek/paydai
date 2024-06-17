@@ -41,8 +41,8 @@ public class WorkspaceControllerImpl implements WorkspaceController {
   })
   @GetMapping
   @Override
-  public ResponseEntity<JapiResponse> getWorkspace(@RequestParam UUID userId) {
-    JapiResponse response = service.getWorkspace(userId);
+  public ResponseEntity<JapiResponse> getWorkspace() {
+    JapiResponse response = service.getWorkspace();
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 

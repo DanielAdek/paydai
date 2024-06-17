@@ -8,5 +8,5 @@ import java.util.UUID;
 public interface RoleService {
   JapiResponse createRole(RoleRequest payload);
 
-  JapiResponse getRolesByWorkspace(UUID workspaceId);
+  JapiResponse getRoles();
 }

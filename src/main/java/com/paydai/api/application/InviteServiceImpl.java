@@ -41,22 +41,23 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse createInvite(InviteRequest payload) {
     try {
-//      WorkspaceModel workspace = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
 
       InviteModel buildInvite = InviteModel.builder()
         .inviteCode(this.generateInviteCode())
-        .email(payload.getEmail())
+        .email(payload.getCompanyEmail())
         .workspace(WorkspaceModel.builder().workspaceId(payload.getWorkspaceId()).build())
-        .aggregate(payload.getAggregate())
         .commission(payload.getCommission())
         .interval(payload.getInterval())
         .duration(payload.getDuration())
         .role(RoleModel.builder().roleId(payload.getRoleId()).build())
         .build();
 
+      if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
+
+      // Check if invite already exiting if so then update instead of save;
       InviteModel inviteModel = repository.save(buildInvite);
 
-      String link = appConfig.getPaydaiClientBaseUrl() + "/invite/" + buildInvite.getInviteCode();
+      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + buildInvite.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
 
       InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
 

@@ -20,7 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InviteRequest {
-  private String email;
+  private String companyEmail;
   private UUID workspaceId;
   private AggregateType aggregate;
   private int interval;

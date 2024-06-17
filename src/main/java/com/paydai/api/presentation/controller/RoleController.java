@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.UUID;
 
 public interface RoleController {
-  ResponseEntity<JapiResponse> getWorkspaceRoles(@RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> getAllRoles();
   ResponseEntity<JapiResponse> create(@RequestBody RoleRequest payload);
 }

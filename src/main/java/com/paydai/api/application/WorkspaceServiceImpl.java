@@ -27,7 +27,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private final WorkspaceDtoMapper workspaceDtoMapper;
 
   @Override
-  public JapiResponse getWorkspace(UUID userId) {
+  public JapiResponse getWorkspace() {
     try {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

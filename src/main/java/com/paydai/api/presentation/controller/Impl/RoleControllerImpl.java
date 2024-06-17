@@ -39,8 +39,8 @@ public class RoleControllerImpl implements RoleController {
   })
   @GetMapping
   @Override
-  public ResponseEntity<JapiResponse> getWorkspaceRoles(@RequestParam UUID workspaceId) {
-    JapiResponse response = service.getRolesByWorkspace(workspaceId);
+  public ResponseEntity<JapiResponse> getAllRoles() {
+    JapiResponse response = service.getRoles();
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
