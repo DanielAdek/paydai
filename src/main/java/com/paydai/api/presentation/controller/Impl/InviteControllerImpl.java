@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +42,7 @@ public class InviteControllerImpl implements InviteController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @PostMapping(path = "/send")
-  public ResponseEntity<JapiResponse> sendInvite(@RequestBody InviteRequest request) {
+  public ResponseEntity<JapiResponse> sendInvite(@RequestBody InviteRequest request) throws MessagingException {
     JapiResponse response = service.createInvite(request);
     return new ResponseEntity<>(response, response.getStatusCode());
   }

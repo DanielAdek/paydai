@@ -14,9 +14,15 @@ public class AppConfig {
   @Value("${application.stripe.secret_key}")
   private String stripeKey;
 
+  @Value("${application.stripe.oauth_endpoint}")
+  private String stripeEndpoint;
+
   @Value("${application.paydai.client_callback}")
   private String paydaiClientBaseUrl;
 
   @Value("${application.security.jwt_secret.key}")
   private String secretKey;
+
+  @Value("${spring.mail.username}")
+  private String from;
 }

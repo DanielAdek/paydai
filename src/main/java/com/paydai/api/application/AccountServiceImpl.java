@@ -8,19 +8,22 @@ import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.StripeAccountRepository;
 import com.paydai.api.domain.service.AccountService;
 import com.paydai.api.infrastructure.config.AppConfig;
+import com.paydai.api.infrastructure.external.RestApiCall;
 import com.paydai.api.presentation.dto.account.StripeAccountDtoMapper;
 import com.paydai.api.presentation.dto.account.StripeAccountRecord;
-import com.paydai.api.presentation.enums.AccountType;
 import com.paydai.api.presentation.request.AccountLinkRequest;
 import com.paydai.api.presentation.request.AccountRequest;
+import com.paydai.api.presentation.request.OauthRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.model.Account;
 import com.stripe.model.AccountLink;
+import com.stripe.model.oauth.TokenResponse;
 import com.stripe.param.AccountCreateParams;
 import com.stripe.param.AccountLinkCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.stripe.net.OAuth;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +44,8 @@ public class AccountServiceImpl implements AccountService {
   private final EmailRepository emailRepository;
   private final StripeAccountDtoMapper stripeAccountDtoMapper;
   private final AppConfig config;
+  private final RestApiCall restApiCall;
+
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   /**
@@ -128,6 +137,42 @@ public class AccountServiceImpl implements AccountService {
       throw new InternalServerException(e.getMessage());
     }
   }
+
+  /**
+   * @desc This method authenticate merchants
+   * @param payload the oauth payload
+   * @return it returns a json response containing account Url
+   */
+  @Override
+  public JapiResponse authenticate(OauthRequest payload) {
+    try {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      Map<String, Object> hashMap = new HashMap<>();
+
+      hashMap.put("grant_type", "authorization_code");
+
+      hashMap.put("code", payload.getCode());
+
+      TokenResponse response = OAuth.token(hashMap, null);
+
+      hashMap.put("stripeId", response.getStripeUserId());
+
+      StripeAccountModel stripeUser = repository.findByUser(userModel.getUserId());
+
+      if (stripeUser == null) {
+        repository.save(StripeAccountModel.builder().userId(userModel.getUserId()).stripeId(response.getStripeUserId()).build());
+      }
+
+      return JapiResponse.success(hashMap);
+    } catch (Exception ex) {
+      logger.info("An error occurred: {} ", ex.getMessage());
+      throw new InternalServerException(ex.getMessage(), ex);
+    }
+  }
+
 
   /**
    * @return

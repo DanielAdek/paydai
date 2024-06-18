@@ -82,6 +82,7 @@ public class AuthServiceImpl implements AuthService {
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
+
       return JapiResponse.builder().status(true).message("Success!").statusCode(HttpStatus.CREATED).data(auth).build();
     } catch (ConflictException e) { throw e; } catch (Exception ex) {
       logger.info("An error occurred: {} ", ex.getMessage());

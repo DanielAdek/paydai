@@ -10,9 +10,11 @@ import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.dto.invite.InviteDto;
 import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
+import com.paydai.api.presentation.request.EmailRequest;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ public class InviteServiceImpl implements InviteService {
   private final WorkspaceRepository workspaceRepository;
   private final EmailRepository emailRepository;
   private final InviteDtoMapper inviteDtoMapper;
+  private final EmailSenderService emailSenderService;
   private final AppConfig appConfig;
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   private static final int CODE_LENGTH = 8;
@@ -39,7 +42,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public JapiResponse createInvite(InviteRequest payload) {
+  public JapiResponse createInvite(InviteRequest payload) throws MessagingException {
     try {
 
       InviteModel buildInvite = InviteModel.builder()
@@ -63,7 +66,15 @@ public class InviteServiceImpl implements InviteService {
 
       InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
 
-      // TODO SEND EMAIL NOTIFICATION
+      // SEND EMAIL NOTIFICATION
+      EmailRequest buildEmail = EmailRequest.builder()
+        .toEmail(payload.getCompanyEmail())
+        .subject("You have been invited to join a workspace")
+        .isHTML(true)
+        .message(link)
+        .build();
+
+      emailSenderService.sendMail(buildEmail);
 
       return JapiResponse.success(inviteRecord);
     } catch (Exception e) { throw e; }
@@ -105,8 +116,7 @@ public class InviteServiceImpl implements InviteService {
         .build();
 
       return JapiResponse.success(null);
-    } catch (Exception e) { throw e; }
+    }  catch (Exception e) { throw e; }
   }
-
 
 }

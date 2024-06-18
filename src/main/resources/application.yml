@@ -3,13 +3,20 @@ server:
   servlet:
     context-path: /
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jws-algorithms: RS256
-          audiences: https://api-paydai
-          issuer-uri: https://dev-jb52jse3wmo5txth.us.auth0.com
+  mail:
+    host: ${MAIL_HOST}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    port: ${MAIL_PORT}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        mime:
+          charset: UTF
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USER}
@@ -33,5 +40,6 @@ application:
     url: ${BASE_URL}
   stripe:
     secret_key: ${STRIPE_SECRET_KEY}
+    oauth_endpoint: ${STRIPE_OAUTH_ENDPOINT}
   paydai:
     client_callback: ${PAYDAI_RETURN_CALLBACK_URL}

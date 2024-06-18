@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Workspace Invitation</title>
+  <style>
+      /* Add your CSS styling here */
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+      }
+      .container {
+          width: 100%;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+          background-color: #C5AFDD;
+          color: #ffffff;
+          padding: 10px;
+          text-align: center;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+      }
+      a {
+          text-decoration: none;
+      }
+      .content {
+          padding: 20px;
+          text-align: center;
+      }
+      .content h1 {
+          font-size: 24px;
+          margin-bottom: 20px;
+      }
+      .content p {
+          font-size: 16px;
+          margin-bottom: 20px;
+      }
+      .button {
+          display: inline-block;
+          padding: 10px 20px;
+          background-color: #C5AFDD;
+          color: #ffffff;
+          text-decoration: none;
+          border-radius: 5px;
+          font-size: 16px;
+      }
+      .footer {
+          margin-top: 20px;
+          padding: 10px;
+          background-color: #C5AFDD;
+          text-align: center;
+          border-bottom-left-radius: 10px;
+          border-bottom-right-radius: 10px;
+      }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAcpSURBVHgB7VtZU9tWFP7kRbZs4w1jFoclKSSEQKdDOu20k/apP7rtSx/ah3bI0jRpGghJ2GKwjW28r7J6zhUkARuMhAyahG9GY4OuzP18zj3Ldy+SRsBnBAc+M1wT/tThgkVQ2x2UD+qAJvUdKzk0uGQXPIoTDqcDktT/GatgGeFGrY3nv+8aeEKPlUpAhi8sY3jMh6GYAq/ixiBhGeHjYItph6+98OFerdwSV3anAjZ0dNyHsVtBhEZ8NMJ6yw+EsKw4kLgdwmmEpQ7QpiXAXlHON1AtNaHR7zhBZpNVZHcrGB734+ZSDB6ftRYfCGG37MDErTBwTgu1myrymQqSawWKA00RB7LJGgr7O5hZjGB0OnTuz+qHAbm0MbhkJ0YSQXEV0hVsvsyjlK3TFyFh/XGWXL6NmYWYJZxtl5ZCcT8WHyTIslEytB7Y3pHl3z7L0sq/eFFoyMKq2sFBuvbRbz5MoEnr8QjtlkbrsIxeJnE4HJC9TviC8qnpyOGQkJiL0BgPVlfSUFsdJF/n4XBpmGZLXwCSkVq6WWth5ectWAGnW0KI0lAsEUCEIrPL5ewxSqM13cDzP3YFaZ7o0oNxEcHN4spcWhVeUMXawzSe/raD9HaxxygJgbAXd78ZBZNnf1h/kkGz0YJZmA5asRsBDE/4YRTsUDVKQ8Vsg646pSMNdQpKrx5lKEU1MXMvKqqvjxGK+8jFQ3j3qoh6pY1tWtNfLJlzbdOEA2GPcMeLgJfI1moO6c2yyMO7rwtQKUXNLo9Q+Xmc9I35KHKUqmqVFtJvi5i4OURVmgdGcaVRWqYycvarOO5+Nw63V59KeruM7dWDrrG8xqfuRcR7VdWQXC/ADGyQliREyGWXfkxQPtans7OWJ3evdo2MjgdEhOe1zNWYGe3CMsL8x9vNDqUklQKSChjMmYpfxp2v4+I5du+N5zmc5MPpKj6tL6NWvSOKE6OwjDA3ACu/buLhL1t48dcezCA86icr6oGwlGvQVesaEx3jlKSJq9jjfj9Y6tIdypWcLznwmMWNO7RODwuSg3S3WwciCuVwnraEcqEJo7BdaekPyUIYYORTbMHjfs3VmTegJ5cSdVpGYTvCvE6VoN4SNquqUFJOQlFk8dqictZo3LKlpqX4dcKtVpuCYDdhh1ufNhctWsfY8rEhYUkQEThNNNGOjzcCW1q4UdU7L7fHCbe7u6loNXSrcjFysgztB9sR7pB1KyU9+ipDck9C1ZIerJSg8crYdoS5oeBgxQhE5K77XNg0a/p9r1+GUdiKMCsae2/yhz9JPbuxYq7+vqSMjCkwClsRzpFKwuIdIxBxYyji7RqT3ijhSAbudb8fbEOYLff6yb54z4XW7WVu+o9H4Ga9hfxh9RUgsmZc2gaqpYaDVBWrj9JoN/ScO7UQeV98fIwdahs7bb2OHqN+2AyulHClWMfumyL2yE0PBUqMTAZw4zb3vdKJsQ2kNkvivZfE+eGEjQhzm8jqRS+onY6IskXqhiok0HERIbFeRX7MjcPUfDdZLi/XHqbQUTUxNnEnTDnY3GocCOEGEXrzT/bc433kvje/HBEqJk5KtxSRt0mYrxZ04S4UVzA2E4JZXJlLy4oL4REPIqMBEgQ5/fQuETf+y5F4p0s+rHbM3Y/jIrCMsNfvwuIPY90WOgHuhjxEVvaevUnWbqvYeJpDakuXb13UMCx8P973uX6wjDDvKIRixmXbXijna1h7nEGtqLsxk529HxO98kVhi820I9TKTVIs80K55B1E9hWPz4X5b+MkCxuvqnrBQsJnbYD3Rpv63VZdQ26vjIO9Cgokzmva4adQnhqe8GGGBHcrTwVYd+SBWrqXJN5p5yFNrDjV8KYbNwMnBU6O2pOUnmImc+1ZsIwwpVd9M9skJEqrvOs/MjlETYEfgzrnYhlhnqAy5D63HC05JSHlBCIeagI84tXZcwfRWliYltxY/mny3OM14fxsxss7ssSwOEqff/LSJRM9wvXRw4tDg6F9pWPC8uAP9lpOuFpsYu1RirZB6nj7TG/oU5sFscP/4s8kNv/dx6vHKbQOt2NeruxRs9GiTqiD9b8zGDQsJ5zeLFJn06Ry0ClE9NTGATI7FcRoq1OltnH63jCGogr2kxX6cuooUSrb3ykJtbJZbWPQsJQwi2tF6nGnFqLIbJfE8QU+njA5H4bDpW+AMTzU9bRJW+bGf245Jk4GXdY5dUsJ51Nl0Q1lklUS5CokpLtErvUH9aMJvO/LMix3QMGojEq+Tq5eEZ1R2cTGmBlYmpbcXhdml+Oi9i1la1Q+qpiYC5GYrt8fmw2iVm0JCcdDX8T0YgzBYUWs52q5IQ6VDhqmz2kNJ/wIxz+cl+LSMDYRoGrJ3pnOtIWz7yriOgIfuomM+mxP2NDsznaFq6mcjMKQS3co6lRPOWbApaI/bPzc1GVDuv6/pU8c14Q/dfwP+s/q69zhWUYAAAAASUVORK5CYII=" alt="Paydai" />
+    <h2>Hurray!! You're Invited!</h2>
+  </div>
+  <div class="content">
+    <h1>Join Our Workspace</h1>
+    <p>We are super excited to inform you that you have been invited to join a workspace within the Paydai platform. Kindly click the button below to get started.</p>
+    <a th:href="${link}" class="button">Join Now</a>
+  </div>
+  <div class="footer">
+    <p>If you have any questions, feel free to contact us at support@itspaydai.com</p>
+  </div>
+</div>
+</body>
+</html>
