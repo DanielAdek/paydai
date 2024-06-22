@@ -40,6 +40,6 @@ application:
     url: ${BASE_URL}
   stripe:
     secret_key: ${STRIPE_SECRET_KEY}
-    oauth_endpoint: ${STRIPE_OAUTH_ENDPOINT}
+    base_url: ${STRIPE_BASE_API}
   paydai:
     client_callback: ${PAYDAI_RETURN_CALLBACK_URL}

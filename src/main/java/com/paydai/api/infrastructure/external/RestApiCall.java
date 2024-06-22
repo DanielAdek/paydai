@@ -16,24 +16,31 @@ public class RestApiCall {
   private final RestApiConfigBean apiCall;
   private final ObjectMapper objectMapper;
 
-  private HttpHeaders writeHeaders(String jwt) {
+  private HttpHeaders writeHeaders(String token, String key) {
     HttpHeaders headers = new HttpHeaders();
 
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     headers.set("Content-Encoding", "UTF-8");
 
-    if (jwt != null) {
-      headers.setBearerAuth(jwt);
+    if (key != null) {
+      headers.setBasicAuth(key);
     }
+
+    if (token != null) {
+      headers.setBearerAuth(token);
+    }
+
     return headers;
   }
 
-  public JapiResponse reachOut(HttpMethod method, Object payload, String endpoint) {
+  public JapiResponse reachOut(HttpMethod method, Object payload, String endpoint, String key) {
     try {
+      HttpHeaders headers = writeHeaders(null, key);
+
       String mapped = objectMapper.writeValueAsString(payload);
 
-      HttpEntity<String> entity = new HttpEntity<>(mapped);
+      HttpEntity<String> entity = new HttpEntity<>(mapped, headers);
 
       // Use the exchange method with the correct parameters
       ResponseEntity<JapiResponse> response = apiCall.restTemplate().exchange(endpoint, method, entity, JapiResponse.class);
@@ -47,7 +54,7 @@ public class RestApiCall {
 
   public JapiResponse reachOutToAuth(HttpMethod method, Object payload, String endpoint, String jwt) {
     try {
-     HttpHeaders headers = writeHeaders(jwt);
+     HttpHeaders headers = writeHeaders(jwt, null);
 
       String mapped = objectMapper.writeValueAsString(payload);
 

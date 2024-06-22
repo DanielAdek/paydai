@@ -14,8 +14,8 @@ public class AppConfig {
   @Value("${application.stripe.secret_key}")
   private String stripeKey;
 
-  @Value("${application.stripe.oauth_endpoint}")
-  private String stripeEndpoint;
+  @Value("${application.stripe.base_url}")
+  private String stripeBaseApi;
 
   @Value("${application.paydai.client_callback}")
   private String paydaiClientBaseUrl;

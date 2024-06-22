@@ -12,5 +12,7 @@ public interface AccountService {
 
   JapiResponse authenticate(OauthRequest payload);
 
+  JapiResponse getStripeAccount(String accountId);
+
   String serveIndex();
 }

@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -173,6 +174,38 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
+  /**
+   * @desc This method authenticate merchants
+   * @param accountId the account stripe id
+   * @return it returns a json response containing account Url
+   */
+  @Override
+  public JapiResponse getStripeAccount(String accountId) {
+    try {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      Account account = Account.retrieve(accountId);
+
+      Map<String, Object> hashMap = new HashMap<>();
+
+      if (account != null) {
+        hashMap.put("type", account.getType());
+        hashMap.put("email", account.getEmail());
+        hashMap.put("stripeId", account.getId());
+        hashMap.put("country", account.getCountry());
+        hashMap.put("detailsSubmitted", account.getDetailsSubmitted());
+        hashMap.put("defaultCurrency", account.getDefaultCurrency());
+      }
+
+
+      return JapiResponse.success(hashMap);
+    } catch (Exception ex) {
+      logger.info("An error occurred: {} ", ex.getMessage());
+      throw new InternalServerException(ex.getMessage(), ex);
+    }
+  }
 
   /**
    * @return

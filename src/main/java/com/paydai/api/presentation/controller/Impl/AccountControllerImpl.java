@@ -80,6 +80,25 @@ public class AccountControllerImpl implements AccountController {
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
+  @Operation(
+    summary = "Stripe account get API endpoint",
+    description = "GET response to show stripe account"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @Override
+  @GetMapping("/account")
+  public ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId) {
+    JapiResponse response = service.getStripeAccount(accountId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
   @Override
   @GetMapping(path = "/")
   public String serveIndex() {

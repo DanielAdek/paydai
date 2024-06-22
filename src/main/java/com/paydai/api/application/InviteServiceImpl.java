@@ -58,13 +58,13 @@ public class InviteServiceImpl implements InviteService {
       if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
 
       // Check if invite already exiting if so then update instead of save;
-      InviteModel inviteModel = repository.save(buildInvite);
+//      InviteModel inviteModel = repository.save(buildInvite);
 
       String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + buildInvite.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
 
-      InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
-
-      InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
+//      InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
+//
+//      InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
 
       // SEND EMAIL NOTIFICATION
       EmailRequest buildEmail = EmailRequest.builder()
@@ -76,29 +76,45 @@ public class InviteServiceImpl implements InviteService {
 
       emailSenderService.sendMail(buildEmail);
 
-      return JapiResponse.success(inviteRecord);
+      return JapiResponse.success(null);
     } catch (Exception e) { throw e; }
   }
 
   @Override
   public JapiResponse acceptInvite(RegisterRequest request, String inviteCode) {
     try {
-      // user with already existing personal email could be invite
-      // check if the company email already exit
-      // check if the personal email already exit
-      // pick the code and collect invite info
-          // role attached
-      // delete invite from invite
-      // save commission setting
-      // save company and personal email if not exit any
-      // save password for both
-      // generate token
-      // send welcome to paydai to email company
-      // send stripe confirm account created if not created before
-      // respond to client
+      // check if invite exit
       InviteModel inviteModel = repository.findByInvite(inviteCode);
 
-      if (inviteModel != null) throw new NotFoundException("Invite Code is invalid");
+      if (inviteModel == null) {
+        throw new NotFoundException("Invalid invite code");
+      }
+
+      // check if the company email already exit
+      EmailModel emailModel = emailRepository.findEmailQuery(request.getEmail());
+
+
+      // check if the personal email already exit
+
+
+      // pick the code and collect invite info
+          // role attached
+
+
+      // delete invite from invite
+      repository.removeInvite(inviteCode);
+
+      // save commission setting
+
+      // save company and personal email if not exit any
+
+      // save password for both
+
+      // generate token
+
+      // send welcome to paydai to email company
+
+      // send stripe confirm account created if not created before
 
       WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(inviteModel.getWorkspace().getWorkspaceId());
 
@@ -109,7 +125,7 @@ public class InviteServiceImpl implements InviteService {
         .lastName(request.getLastName())
         .build();
 
-      EmailModel emailModel = EmailModel.builder()
+      EmailModel _emailModel = EmailModel.builder()
         .email(inviteModel.getEmail())
         .emailType(EmailType.COMPANY)
         .user(userModel)

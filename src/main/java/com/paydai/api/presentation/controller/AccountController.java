@@ -15,6 +15,8 @@ public interface AccountController {
 
   ResponseEntity<JapiResponse> authenticate(@RequestBody OauthRequest payload);
 
+  ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId);
+
   String serveIndex();
 }
 
