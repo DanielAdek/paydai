@@ -75,24 +75,20 @@ public class AccountServiceImpl implements AccountService {
       } else {
         accountCreateParams = AccountCreateParams.builder()
           .setEmail(emailModel.getEmail())
-          .setController(
-            AccountCreateParams.Controller.builder()
-              .setFees(
-                AccountCreateParams.Controller.Fees.builder()
-                  .setPayer(AccountCreateParams.Controller.Fees.Payer.APPLICATION)
+          .setType(AccountCreateParams.Type.EXPRESS)
+          .setCapabilities(
+            AccountCreateParams.Capabilities.builder()
+              .setCardPayments(
+                AccountCreateParams.Capabilities.CardPayments.builder()
+                  .setRequested(true)
                   .build()
               )
-              .setLosses(
-                AccountCreateParams.Controller.Losses.builder()
-                  .setPayments(AccountCreateParams.Controller.Losses.Payments.APPLICATION)
-                  .build()
+              .setTransfers(
+                AccountCreateParams.Capabilities.Transfers.builder().setRequested(true).build()
               )
-              .setStripeDashboard(
-                AccountCreateParams.Controller.StripeDashboard.builder()
-                  .setType(AccountCreateParams.Controller.StripeDashboard.Type.EXPRESS)
-                  .build()
-              ).build()
+              .build()
           )
+          .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
           .build();
       }
 
