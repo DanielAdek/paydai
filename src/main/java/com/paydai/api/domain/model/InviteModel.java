@@ -24,7 +24,7 @@ public class InviteModel {
   private UUID inviteId;
 
   @Column
-  private String email;
+  private String companyEmail;
 
   @Column(name = "invite_code")
   private String inviteCode;

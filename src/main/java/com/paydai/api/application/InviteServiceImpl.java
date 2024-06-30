@@ -1,10 +1,15 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.InviteService;
 import com.paydai.api.infrastructure.config.AppConfig;
+import com.paydai.api.infrastructure.security.JwtAuthService;
+import com.paydai.api.presentation.dto.auth.AuthDtoMapper;
+import com.paydai.api.presentation.dto.auth.AuthModelDto;
+import com.paydai.api.presentation.dto.auth.AuthRecordDto;
 import com.paydai.api.presentation.dto.invite.InviteDto;
 import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
@@ -23,6 +28,7 @@ import java.security.SecureRandom;
 @RequiredArgsConstructor
 public class InviteServiceImpl implements InviteService {
   private final AppConfig appConfig;
+  private final JwtAuthService jwtService;
   private final InviteRepository repository;
   private final UserRepository userRepository;
   private final EmailRepository emailRepository;
@@ -30,8 +36,11 @@ public class InviteServiceImpl implements InviteService {
   private final InviteDtoMapper inviteDtoMapper;
   private final EmailSenderService emailSenderService;
   private final PasswordRepository passwordRepository;
-  private final WorkspaceRepository workspaceRepository;
+  private final AuthDtoMapper authenticationDTOMapper;
   private final CommSettingRepository commSettingRepository;
+  private final StripeAccountRepository stripeAccountRepository;
+  private final UserWorkspaceRepository userWorkspaceRepository;
+
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   private static final int CODE_LENGTH = 8;
   private static final SecureRandom random = new SecureRandom();
@@ -50,7 +59,7 @@ public class InviteServiceImpl implements InviteService {
 
       InviteModel buildInvite = InviteModel.builder()
         .inviteCode(this.generateInviteCode())
-        .email(payload.getCompanyEmail())
+        .companyEmail(payload.getCompanyEmail())
         .workspace(WorkspaceModel.builder().workspaceId(payload.getWorkspaceId()).build())
         .commission(payload.getCommission())
         .interval(payload.getInterval())
@@ -86,28 +95,54 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse acceptInvite(RegisterRequest request, String inviteCode) {
     try {
-      // check if invite exit
+      // Check if invite exit
       InviteModel inviteModel = repository.findByInvite(inviteCode);
 
-      if (inviteModel == null) {
-        throw new NotFoundException("Invalid invite code");
+      if (inviteModel == null) throw new NotFoundException("Invalid invite code");
+
+      // Check if the personal email already exit
+      EmailModel emailModel;
+
+      emailModel = emailRepository.findEmailQuery(request.getEmail());
+
+      if (emailModel == null) {
+        UserModel userModel = userRepository.save(
+          UserModel.builder()
+            .firstName(request.getFirstName())
+            .lastName(request.getLastName())
+            .userType(UserType.SALES_REP)
+            .build());
+
+        // Create email personal
+        emailModel = emailRepository.save(
+          EmailModel.builder()
+            .email(request.getEmail())
+            .emailType(EmailType.PERSONAL)
+            .user(userModel)
+            .build()
+        );
+
+        // Create password hash personal access
+        passwordRepository.save(
+          PasswordModel.builder()
+            .passwordHash(passwordEncoder.encode(request.getPassword()))
+            .user(emailModel.getUser())
+            .email(emailModel)
+            .build()
+        );
       }
 
-      // check if the company email already exit
-      EmailModel emailModel = emailRepository.findEmailQuery(request.getEmail());
+      // Create email account company
+      EmailModel emailAddedWorkspace = emailRepository.save(
+        EmailModel.builder()
+          .email(inviteModel.getCompanyEmail())
+          .emailType(EmailType.COMPANY)
+          .workspace(inviteModel.getWorkspace())
+          .user(emailModel.getUser())
+          .build()
+      );
 
-
-      // check if the personal email already exit
-
-
-      // pick the code and collect invite info
-          // role attached
-
-
-      // delete invite from invite
-      repository.removeInvite(inviteCode);
-
-      // save commission setting
+      // Create commission setting
       CommissionSettingModel buildCommSettings = CommissionSettingModel.builder()
         .commission(inviteModel.getCommission())
         .emailId(emailModel)
@@ -117,59 +152,46 @@ public class InviteServiceImpl implements InviteService {
         .workspaceId(inviteModel.getWorkspace().getWorkspaceId())
         .role(inviteModel.getRole())
         .build();
-
       commSettingRepository.save(buildCommSettings);
 
-      // Create user paydai account
-      UserModel userModel = UserModel.builder()
-//        .workspace()
-        .firstName(request.getFirstName())
-        .lastName(request.getLastName())
-        .userType(UserType.SALES_REP)
-//        .userWorkspaces()
-        .build();
 
-      // save company and personal email if not exit any
-      EmailModel emailToSave = EmailModel.builder()
-        .email(request.getEmail())
-        .emailType(EmailType.COMPANY)
-//        .workspace()
-        .user(userModel)
-//        .password()
-        .build();
-      EmailModel savedEmail = emailRepository.save(emailToSave);
+      // Create password hash workspace account
+      passwordRepository.save(
+        PasswordModel.builder()
+          .passwordHash(passwordEncoder.encode(request.getPassword()))
+          .user(emailModel.getUser())
+          .email(emailAddedWorkspace)
+          .build()
+      );
 
-      // Password hash
-      PasswordModel buildPassword = PasswordModel.builder()
-        .passwordHash(passwordEncoder.encode(request.getPassword()))
-        .user(userModel)
-        .email(savedEmail)
-        .build();
-      passwordRepository.save(buildPassword);
+      // Create workspace to user model
+      userWorkspaceRepository.save(
+        UserWorkspaceModel
+          .builder()
+          .user(emailModel.getUser())
+          .workspace(inviteModel.getWorkspace())
+          .role(inviteModel.getRole())
+          .build()
+      );
 
       // generate token
+      String jwt = jwtService.generateToken(emailModel.getUser());
+
+      // Find stripe account;
+      StripeAccountModel stripeAccountModel = stripeAccountRepository.findByUser(emailModel.getUser().getUserId());
+
+      String stripeId = stripeAccountModel != null ? stripeAccountModel.getStripeId() : null;
+
+      // delete invite from invite
+      repository.removeInvite(inviteCode);
 
       // send welcome to paydai to email company
 
-      // send stripe confirm account created if not created before
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, stripeId);
 
-      WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(inviteModel.getWorkspace().getWorkspaceId());
+      AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
-      UserModel _userModel = UserModel.builder()
-        .userType(UserType.SALES_REP)
-        .firstName(request.getFirstName())
-        .workspace(workspaceModel)
-        .lastName(request.getLastName())
-        .build();
-
-      EmailModel _emailModel = EmailModel.builder()
-        .email(inviteModel.getEmail())
-        .emailType(EmailType.COMPANY)
-        .user(userModel)
-        .build();
-
-      return JapiResponse.success(null);
+      return JapiResponse.success(auth);
     }  catch (Exception e) { throw e; }
   }
-
 }

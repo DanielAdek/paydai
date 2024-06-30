@@ -34,6 +34,7 @@ public class WebSecurityBeanConfig {
         req -> req.requestMatchers(
           "api/v1/auth/**",
             "api/v1/permission/**",
+            "api/v1/invite/accept",
             "/swagger-ui/**",
             "/v3/api-docs/**"
           )

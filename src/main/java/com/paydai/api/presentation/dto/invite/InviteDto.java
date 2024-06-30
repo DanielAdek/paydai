@@ -30,7 +30,7 @@ public class InviteDto {
   public static InviteDto getInviteDtoData(InviteModel inviteModel, String link) {
     return new InviteDto(
       inviteModel.getInviteId(),
-      inviteModel.getEmail(),
+      inviteModel.getCompanyEmail(),
       inviteModel.getInviteCode(),
       inviteModel.getCommission(),
       inviteModel.getAggregate(),
