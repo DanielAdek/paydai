@@ -1,40 +1,38 @@
 package com.paydai.api.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "workspace_tbl")
-public class WorkspaceModel {
+@Table(name = "customer_tbl")
+public class CustomerModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID workspaceId;
+  private UUID id;
 
   @Column
   private String name;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private UserModel owner;
+  @Column
+  private String email;
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "workspace", fetch = FetchType.LAZY)
-  private List<UserWorkspaceModel> userWorkspaces;
+  private String description;
 
-  @OneToOne(mappedBy = "workspace", fetch = FetchType.LAZY)
-  private EmailModel email;
+  @Column
+  @Enumerated(EnumType.STRING)
+  private CustomerType stage;
 
   @CreationTimestamp
   @Column(name = "created_at")

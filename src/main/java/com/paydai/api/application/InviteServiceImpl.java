@@ -85,7 +85,6 @@ public class InviteServiceImpl implements InviteService {
         .isHTML(true)
         .message(link)
         .build();
-
       emailSenderService.sendMail(buildEmail);
 
       return JapiResponse.success(inviteRecord);

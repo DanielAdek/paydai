@@ -7,6 +7,5 @@ import jakarta.mail.MessagingException;
 
 public interface InviteService {
   JapiResponse createInvite(InviteRequest payload) throws MessagingException;
-
   JapiResponse acceptInvite(RegisterRequest request, String inviteCode);
 }

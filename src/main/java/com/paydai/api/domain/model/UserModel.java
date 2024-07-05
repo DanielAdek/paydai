@@ -1,5 +1,6 @@
 package com.paydai.api.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,10 +13,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -45,9 +44,11 @@ public class UserModel implements UserDetails {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<EmailModel> emails;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<UserWorkspaceModel> userWorkspaces;
 
@@ -100,7 +101,4 @@ public class UserModel implements UserDetails {
   public boolean isEnabled() {
     return true;
   }
-
-  @Override
-  public String toString() { return super.toString(); }
 }

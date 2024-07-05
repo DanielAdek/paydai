@@ -4,8 +4,11 @@ import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.EmailModel;
 import com.paydai.api.domain.model.UserModel;
+import com.paydai.api.domain.model.UserWorkspaceModel;
 import com.paydai.api.domain.model.WorkspaceModel;
 import com.paydai.api.domain.repository.EmailRepository;
+import com.paydai.api.domain.repository.UserRepository;
+import com.paydai.api.domain.repository.UserWorkspaceRepository;
 import com.paydai.api.domain.repository.WorkspaceRepository;
 import com.paydai.api.domain.service.WorkspaceService;
 import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
@@ -18,13 +21,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class WorkspaceServiceImpl implements WorkspaceService {
   private final WorkspaceRepository repository;
   private final WorkspaceDtoMapper workspaceDtoMapper;
+  private final UserWorkspaceRepository userWorkspaceRepository;
 
   @Override
   public JapiResponse getWorkspace() {
@@ -64,6 +68,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       WorkspaceModel newWorkspace = repository.save(buildWorkspace);
 
       return JapiResponse.success(newWorkspace);
+    } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getSalesRepWorkspaces() {
+    try {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel user = (UserModel) authentication.getPrincipal();
+
+      // get list of workspaces of user by id
+      // map result to user and return
+
+      List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findByUserId(user.getUserId());
+      System.out.println(userWorkspaceModels);
+      return JapiResponse.success(userWorkspaceModels);
     } catch (Exception e) { throw e; }
   }
 }

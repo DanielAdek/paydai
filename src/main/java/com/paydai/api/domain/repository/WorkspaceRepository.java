@@ -6,10 +6,7 @@ import java.util.UUID;
 
 public interface WorkspaceRepository {
   WorkspaceModel save(WorkspaceModel workspace);
-
   WorkspaceModel findByName(String name);
-
   WorkspaceModel findByWorkspaceId(UUID workspaceId);
-
   WorkspaceModel findByUserId(UUID userId);
 }

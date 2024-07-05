@@ -1,10 +1,8 @@
 package com.paydai.api.presentation.controller.Impl;
 
-import com.paydai.api.domain.service.WorkspaceService;
-import com.paydai.api.presentation.controller.WorkspaceController;
-import com.paydai.api.presentation.request.InviteRequest;
-import com.paydai.api.presentation.request.PermissionRequest;
-import com.paydai.api.presentation.request.WorkspaceRequest;
+import com.paydai.api.domain.service.InvoiceService;
+import com.paydai.api.presentation.controller.InvoiceController;
+import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,47 +19,46 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(path = "/api/v1/workspace")
 @RequiredArgsConstructor
-@Tag(name = "Workspaces", description = "APIs for workspaces")
-public class WorkspaceControllerImpl implements WorkspaceController {
-  private final WorkspaceService service;
-
+@RequestMapping(path = "/api/v1/invoice")
+@Tag(name = "Invoice", description = "APIs for invoices")
+public class InvoiceControllerImpl implements InvoiceController {
+  private final InvoiceService service;
   @Operation(
-    summary = "Paydai workspace API endpoint",
-    description = "GET response to show DTO"
+    summary = "Invoice create API endpoint",
+    description = "POST response to show auth DTO, the invoice data"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
     @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
     @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
   })
+  @Override
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping
-  @Override
-  public ResponseEntity<JapiResponse> getWorkspace() {
-    JapiResponse response = service.getWorkspace();
+  @PostMapping(path = "/create")
+  public ResponseEntity<JapiResponse> create(@RequestBody() InvoiceRequest payload) {
+    JapiResponse response = service.create(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
   @Operation(
-    summary = "Paydai workspace API endpoint",
-    description = "GET response to show DTO"
+    summary = "Invoice list for customer API endpoint",
+    description = "POST response to show auth DTO, the invoice data"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
     @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
     @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
   })
+  @Override
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping("/sales-rep")
-  @Override
-  public ResponseEntity<JapiResponse> getSalesRepWorkspaces() {
-    JapiResponse response = service.getSalesRepWorkspaces();
+  @GetMapping
+  public ResponseEntity<JapiResponse> getInvoicesToCustomer(UUID customerId) {
+    JapiResponse response = service.getInvoiceToCustomer(customerId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

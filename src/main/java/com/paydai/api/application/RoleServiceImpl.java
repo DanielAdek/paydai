@@ -33,8 +33,6 @@ public class RoleServiceImpl implements RoleService {
 
       if (roleModel != null) throw new ConflictException("Role in use");
 
-//      WorkspaceModel workspaceModel = workspaceRepository.findByWorkspaceId(payload.getWorkspaceId());
-
       RoleModel buildRole = RoleModel.builder().role(payload.getRole().trim().toLowerCase()).build();
 
       RoleModel role = repository.save(buildRole);

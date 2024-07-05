@@ -1,6 +1,5 @@
 package com.paydai.api.domain.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,15 +22,15 @@ public class UserWorkspaceModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID userWorkspaceId;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private UserModel user;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
 
-  @OneToOne
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "role_id")
   private RoleModel role;
 

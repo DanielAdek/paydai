@@ -1,5 +1,6 @@
 package com.paydai.api.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +38,7 @@ public class EmailModel {
   @JoinColumn(name = "user_id")
   private UserModel user;
 
+  @JsonIgnore
   @OneToOne(mappedBy = "email", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private PasswordModel password;
 

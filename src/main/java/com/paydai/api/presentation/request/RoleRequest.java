@@ -14,5 +14,4 @@ import java.util.UUID;
 @NoArgsConstructor
 public class RoleRequest {
   private String role;
-  private UUID workspaceId;
 }

@@ -1,6 +1,5 @@
 package com.paydai.api.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -18,19 +16,23 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "permission_tbl")
-public class PermissionModel {
+@Table(name = "product_tbl")
+public class ProductModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "permission_id")
-  private UUID permissionId;
+  private UUID id;
 
   @Column
-  private String permission;
+  private String item;
 
-  @JsonIgnore
-  @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
-  private List<RoleModel> roles;
+  @Column
+  private Integer qty;
+
+  @Column
+  private Integer tax;
+
+  @Column(name = "stripe_product_id")
+  private String stripeProductId;
 
   @CreationTimestamp
   @Column(name = "created_at")

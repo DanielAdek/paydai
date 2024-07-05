@@ -26,10 +26,6 @@ public class RoleModel {
   @Column
   private String role;
 
-  @ManyToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
-
   @ManyToMany
   @JoinTable(
     name = "role_permission_tbl",

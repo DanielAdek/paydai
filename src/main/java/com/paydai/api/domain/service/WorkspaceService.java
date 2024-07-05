@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface WorkspaceService {
   JapiResponse getWorkspace();
-
   JapiResponse createWorkspace(WorkspaceRequest payload);
+  JapiResponse getSalesRepWorkspaces();
 }
