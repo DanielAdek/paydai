@@ -4,6 +4,7 @@ import com.paydai.api.domain.service.InvoiceService;
 import com.paydai.api.presentation.controller.InvoiceController;
 import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,7 +39,7 @@ public class InvoiceControllerImpl implements InvoiceController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @PostMapping(path = "/create")
-  public ResponseEntity<JapiResponse> create(@RequestBody() InvoiceRequest payload) {
+  public ResponseEntity<JapiResponse> create(@RequestBody() InvoiceRequest payload) throws StripeException {
     JapiResponse response = service.create(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
