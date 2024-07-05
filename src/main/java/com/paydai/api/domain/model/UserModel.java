@@ -1,6 +1,5 @@
 package com.paydai.api.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,11 +43,9 @@ public class UserModel implements UserDetails {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<EmailModel> emails;
 
-  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<UserWorkspaceModel> userWorkspaces;
 

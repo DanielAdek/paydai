@@ -1,5 +1,6 @@
 package com.paydai.api.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,7 @@ public class InvoiceModel {
   private String currency;
 
   @ManyToOne
+  @JsonIgnore
   @JoinColumn(name = "cutomer_id")
   private CustomerModel customer;
 

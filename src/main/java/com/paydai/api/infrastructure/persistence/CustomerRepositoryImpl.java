@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -13,4 +14,12 @@ public interface CustomerRepositoryImpl extends CustomerRepository, JpaRepositor
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl WHERE id=?1")
   CustomerModel findByCustomerId(UUID customerId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl WHERE email=?1")
+  CustomerModel findByCustomerEmail(String email);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl")
+  List<CustomerModel> findCustomers();
 }

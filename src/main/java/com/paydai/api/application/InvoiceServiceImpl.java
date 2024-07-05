@@ -49,7 +49,7 @@ public class InvoiceServiceImpl implements InvoiceService {
       InvoiceCreateParams invoiceCreateParams =
         InvoiceCreateParams.builder()
           .setCustomer(customer.getId())
-          .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
+//          .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
 //          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
           .build();
 

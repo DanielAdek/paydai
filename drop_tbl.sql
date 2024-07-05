@@ -1,0 +1,15 @@
+drop table commission_setting_tbl;
+drop table invoice_tbl;
+drop table customer_tbl;
+drop table invite_tbl;
+drop table user_workspace_bridge_tbl;
+drop table role_permission_bridge_tbl;
+drop table role_permission_tbl;
+drop table permission_tbl;
+drop table product_tbl;
+drop table password_tbl;
+drop table role_tbl;
+drop table stripe_account_tbl;
+drop table email_tbl;
+drop table workspace_tbl;
+drop table user_tbl;
