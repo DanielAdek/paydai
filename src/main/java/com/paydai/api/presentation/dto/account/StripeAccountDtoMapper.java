@@ -10,7 +10,7 @@ public class StripeAccountDtoMapper implements Function<UserModel, StripeAccount
   @Override
   public StripeAccountRecord apply(UserModel stripeAccModel) {
     return new StripeAccountRecord(
-      stripeAccModel.getUserId(),
+      stripeAccModel.getId(),
       stripeAccModel.getStripeId()
     );
   }

@@ -22,7 +22,7 @@ public class AuthDtoMapper implements Function<AuthModelDto, AuthRecordDto> {
   @Override
   public AuthRecordDto apply(AuthModelDto authModel) {
     return new AuthRecordDto(
-      authModel.getUserId(),
+      authModel.getId(),
       authModel.getUserType(),
       authModel.getEmail(),
       authModel.getEmailType(),

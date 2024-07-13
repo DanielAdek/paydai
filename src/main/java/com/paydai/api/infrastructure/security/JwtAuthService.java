@@ -32,7 +32,7 @@ public class JwtAuthService {
   }
 
   private String generateToken(Map<String, Object> extraClaims, @NotNull UserDetails userDetails) {
-    String userId = ((UserModel) userDetails).getUserId().toString();
+    String userId = ((UserModel) userDetails).getId().toString();
 
     return Jwts.builder()
       .setClaims(extraClaims)
@@ -74,7 +74,7 @@ public class JwtAuthService {
   public boolean isTokenValid(String token, UserDetails userDetails) {
     UserModel userModel = (UserModel) userDetails;
     UUID extractedUserId = extractUserId(token);
-    UUID userId = userModel.getUserId();
+    UUID userId = userModel.getId();
     return userId.equals(extractedUserId) && !isTokenExpired(token);
   }
 }

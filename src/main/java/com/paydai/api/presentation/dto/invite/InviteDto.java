@@ -29,13 +29,13 @@ public class InviteDto {
 
   public static InviteDto getInviteDtoData(InviteModel inviteModel, String link) {
     return new InviteDto(
-      inviteModel.getInviteId(),
+      inviteModel.getId(),
       inviteModel.getCompanyEmail(),
       inviteModel.getInviteCode(),
       inviteModel.getCommission(),
       inviteModel.getAggregate(),
       inviteModel.getInterval(),
-      inviteModel.getDuration(),
+      inviteModel.getIntervalUnit(),
       link,
       inviteModel.getCreatedAt(),
       inviteModel.getUpdatedAt()

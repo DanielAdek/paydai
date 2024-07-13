@@ -10,7 +10,7 @@ public class WorkspaceDtoMapper implements Function<WorkspaceModel, WorkspaceRec
   @Override
   public WorkspaceRecord apply(WorkspaceModel workspaceModel) {
     return new WorkspaceRecord(
-      workspaceModel.getWorkspaceId(),
+      workspaceModel.getId(),
       workspaceModel.getName(),
       workspaceModel.getCreatedAt(),
       workspaceModel.getUpdatedAt()
