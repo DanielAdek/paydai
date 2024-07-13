@@ -21,25 +21,21 @@ import java.util.UUID;
 public class EmailModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID emailId;
+  private UUID id;
 
   @Column
   private String email;
+
+  @Column
+  private String passwordHash;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "email_type")
   private EmailType emailType;
 
-  @OneToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
-
   @ManyToOne
   @JoinColumn(name = "user_id")
   private UserModel user;
-
-  @OneToOne(mappedBy = "email", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private PasswordModel password;
 
   @CreationTimestamp
   @Column(name = "created_at")

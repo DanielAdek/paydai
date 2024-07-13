@@ -20,8 +20,7 @@ import java.util.UUID;
 public class InviteModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "invite_id")
-  private UUID inviteId;
+  private UUID id;
 
   @Column
   private String companyEmail;
@@ -38,8 +37,8 @@ public class InviteModel {
   @Column
   private int interval;
 
-  @Column
-  private String duration;
+  @Column(name = "interval_unit")
+  private String intervalUnit;
 
   @OneToOne
   @JoinColumn(name = "role_id")

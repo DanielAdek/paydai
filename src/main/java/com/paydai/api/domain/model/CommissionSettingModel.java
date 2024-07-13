@@ -20,8 +20,7 @@ import java.util.UUID;
 public class CommissionSettingModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "commission_id")
-  private UUID comSettingId;
+  private UUID id;
 
   @Column
   private Double commission;
@@ -35,19 +34,12 @@ public class CommissionSettingModel {
   @Column
   private int interval;
 
-  @Column
-  private String duration;
+  @Column(name = "interval_unit")
+  private String intervalUnit;
 
   @OneToOne
-  @JoinColumn(name = "role_id")
-  private RoleModel role;
-
-  @OneToOne
-  @JoinColumn(name = "email_id")
-  private EmailModel emailId;
-
-  @Column(name = "workspace_id")
-  private UUID workspaceId;
+  @JoinColumn(name = "user_workspace_id")
+  private UserWorkspaceModel userWorkspace;
 
   @CreationTimestamp
   @Column(name = "created_at")

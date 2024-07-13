@@ -2,6 +2,7 @@ package com.paydai.api.presentation.dto.auth;
 
 import com.paydai.api.domain.model.EmailType;
 import com.paydai.api.domain.model.UserType;
+import com.paydai.api.presentation.dto.role.RoleRecord;
 
 import java.time.LocalDateTime;
 import java.util.List;

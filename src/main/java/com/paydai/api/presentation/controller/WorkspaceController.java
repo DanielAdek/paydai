@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface WorkspaceController {
   ResponseEntity<JapiResponse> getWorkspace();
   ResponseEntity<JapiResponse> getSalesRepWorkspaces();
+  ResponseEntity<JapiResponse> getWorkspaceSalesReps(@RequestParam UUID workspaceId, @RequestParam UUID roleId);
 }
