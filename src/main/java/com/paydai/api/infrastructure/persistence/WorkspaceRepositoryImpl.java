@@ -12,7 +12,7 @@ public interface WorkspaceRepositoryImpl extends WorkspaceRepository, JpaReposit
   @Query(nativeQuery = true, value = "SELECT * FROM workspace_tbl WHERE name =?1")
   WorkspaceModel findByName(String name);
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM workspace_tbl WHERE workspace_id=?1")
+  @Query(nativeQuery = true, value = "SELECT * FROM workspace_tbl WHERE id=?1")
   WorkspaceModel findByWorkspaceId(UUID workspaceId);
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM workspace_tbl WHERE user_id=?1")
