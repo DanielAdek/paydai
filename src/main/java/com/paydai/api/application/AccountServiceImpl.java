@@ -56,9 +56,7 @@ public class AccountServiceImpl implements AccountService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      String stripeAccountExist = repository.findUserStripeId(userModel.getId());
-
-      if (stripeAccountExist != null) throw new ConflictException("Stripe account already exit!");
+      if (userModel.getStripeId() != null) throw new ConflictException("Stripe account already exit!");
 
       EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getId());
 

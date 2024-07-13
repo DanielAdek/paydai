@@ -18,7 +18,7 @@ public interface UserRepositoryImpl extends UserRepository, JpaRepository<UserMo
   @Query(nativeQuery = true, value = "SELECT * FROM user_tbl WHERE id=?1")
   UserModel findUserById(UUID userId);
 
-  @Override
-  @Query(nativeQuery = true, value = "SELECT stripe_id FROM user_tbl WHERE id=?1")
-  String findUserStripeId(UUID userId);
+//  @Override
+//  @Query(nativeQuery = true, value = "SELECT stripe_id FROM user_tbl WHERE id=?1")
+//  UserModel findUserStripeId(UUID userId);
 }

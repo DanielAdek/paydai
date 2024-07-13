@@ -9,5 +9,5 @@ public interface UserRepository {
   Optional<UserModel> findByUserId(UUID userId);
   UserModel save(UserModel buildUser);
   UserModel findUserById(UUID userId);
-  String findUserStripeId(UUID userId);
+//  UserModel findUserStripeId(UUID userId);
 }
