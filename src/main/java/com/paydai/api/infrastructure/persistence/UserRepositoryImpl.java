@@ -12,7 +12,7 @@ import java.util.UUID;
 @Repository
 public interface UserRepositoryImpl extends UserRepository, JpaRepository<UserModel, UUID> {
   @Override
-  Optional<UserModel> findByUserId(UUID userId);
+  Optional<UserModel> findById(UUID userId);
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM user_tbl WHERE id=?1")
