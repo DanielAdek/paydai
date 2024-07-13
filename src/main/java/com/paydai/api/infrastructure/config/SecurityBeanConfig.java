@@ -23,7 +23,7 @@ public class SecurityBeanConfig {
 
   @Bean
   public UserDetailsService userDetailsService() throws UsernameNotFoundException {
-    return userId -> repository.findByUserId(UUID.fromString(userId)).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
+    return userId -> repository.findById(UUID.fromString(userId)).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
   }
 
   @Bean
