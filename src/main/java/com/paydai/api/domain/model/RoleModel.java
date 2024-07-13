@@ -26,14 +26,6 @@ public class RoleModel {
   @Column
   private String role;
 
-  @ManyToMany
-  @JoinTable(
-    name = "role_permission_tbl",
-    joinColumns = @JoinColumn(name = "role_id"),
-    inverseJoinColumns = @JoinColumn(name = "permission_id")
-  )
-  private List<PermissionModel> permissions;
-
   @CreationTimestamp
   private LocalDateTime createdAt;
 

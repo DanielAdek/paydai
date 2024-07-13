@@ -20,7 +20,7 @@ import java.util.UUID;
 public class RolePermissionModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID rolePermissionId;
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "role_id")

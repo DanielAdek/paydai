@@ -24,7 +24,7 @@ public class InviteRequest {
   private UUID workspaceId;
   private AggregateType aggregate;
   private int interval;
-  private String duration;
+  private String intervalUnit;
   private UUID roleId;
   private Double commission;
 }

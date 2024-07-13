@@ -20,7 +20,7 @@ import java.util.UUID;
 public class WorkspaceModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID workspaceId;
+  private UUID id;
 
   @Column
   private String name;
@@ -32,9 +32,6 @@ public class WorkspaceModel {
   @JsonIgnore
   @OneToMany(mappedBy = "workspace", fetch = FetchType.LAZY)
   private List<UserWorkspaceModel> userWorkspaces;
-
-  @OneToOne(mappedBy = "workspace", fetch = FetchType.LAZY)
-  private EmailModel email;
 
   @CreationTimestamp
   @Column(name = "created_at")

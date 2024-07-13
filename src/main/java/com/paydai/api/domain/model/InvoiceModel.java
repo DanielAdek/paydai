@@ -1,6 +1,5 @@
 package com.paydai.api.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,9 +34,33 @@ public class InvoiceModel {
   @Column
   private String currency;
 
+  @Column(name = "merchant_fee")
+  private Double merchantFee; // 1.5 this should take value at point of invoice create from user table
+
+  @Column(name = "sales_rep_fee")
+  private String saleRepFee; //
+
+  @OneToOne
+  @JoinColumn(name = "user_workspace_id")
+  private UserWorkspaceModel userWorkspace;
+
+  @Column(name = "stripe_invoice_id")
+  private String stripeInvoiceId;
+
+  @Column(name = "stripe_invoice_details")
+  private String stripeInvoiceDetails; // String(Object) raw data; upon created
+
+  @Column(name = "stripe_invoice_status")
+  private Boolean stripeInvoiceStatus;
+
+  @Column(name = "calculated_commission")
+  private Double calculatedComm; // json
+
+  @Column(name = "stripe_invoice_webhook")
+  private String stripeInvoiceWebhook; // raw upon stripe return
+
   @ManyToOne
-  @JsonIgnore
-  @JoinColumn(name = "cutomer_id")
+  @JoinColumn(name = "customer_id")
   private CustomerModel customer;
 
   @CreationTimestamp

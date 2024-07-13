@@ -13,6 +13,8 @@ import com.paydai.api.presentation.dto.auth.AuthRecordDto;
 import com.paydai.api.presentation.dto.invite.InviteDto;
 import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
+import com.paydai.api.presentation.dto.role.RoleDtoMapper;
+import com.paydai.api.presentation.dto.role.RoleRecord;
 import com.paydai.api.presentation.request.EmailRequest;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -30,15 +33,14 @@ public class InviteServiceImpl implements InviteService {
   private final AppConfig appConfig;
   private final JwtAuthService jwtService;
   private final InviteRepository repository;
+  private final RoleDtoMapper roleDtoMapper;
   private final UserRepository userRepository;
   private final EmailRepository emailRepository;
   private final PasswordEncoder passwordEncoder;
   private final InviteDtoMapper inviteDtoMapper;
   private final EmailSenderService emailSenderService;
-  private final PasswordRepository passwordRepository;
   private final AuthDtoMapper authenticationDTOMapper;
   private final CommSettingRepository commSettingRepository;
-  private final StripeAccountRepository stripeAccountRepository;
   private final UserWorkspaceRepository userWorkspaceRepository;
 
   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,10 +62,10 @@ public class InviteServiceImpl implements InviteService {
       InviteModel buildInvite = InviteModel.builder()
         .inviteCode(this.generateInviteCode())
         .companyEmail(payload.getCompanyEmail())
-        .workspace(WorkspaceModel.builder().workspaceId(payload.getWorkspaceId()).build())
+        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
         .commission(payload.getCommission())
         .interval(payload.getInterval())
-        .duration(payload.getDuration())
+        .intervalUnit(payload.getIntervalUnit())
         .role(RoleModel.builder().roleId(payload.getRoleId()).build())
         .build();
 
@@ -99,6 +101,8 @@ public class InviteServiceImpl implements InviteService {
 
       if (inviteModel == null) throw new NotFoundException("Invalid invite code");
 
+      String passwordHash = passwordEncoder.encode(request.getPassword());
+
       // Check if the personal email already exit
       EmailModel emailModel;
 
@@ -116,17 +120,9 @@ public class InviteServiceImpl implements InviteService {
         emailModel = emailRepository.save(
           EmailModel.builder()
             .email(request.getEmail())
+            .passwordHash(passwordHash)
             .emailType(EmailType.PERSONAL)
             .user(userModel)
-            .build()
-        );
-
-        // Create password hash personal access
-        passwordRepository.save(
-          PasswordModel.builder()
-            .passwordHash(passwordEncoder.encode(request.getPassword()))
-            .user(emailModel.getUser())
-            .email(emailModel)
             .build()
         );
       }
@@ -136,57 +132,40 @@ public class InviteServiceImpl implements InviteService {
         EmailModel.builder()
           .email(inviteModel.getCompanyEmail())
           .emailType(EmailType.COMPANY)
-          .workspace(inviteModel.getWorkspace())
-          .user(emailModel.getUser())
-          .build()
-      );
-
-      // Create commission setting
-      CommissionSettingModel buildCommSettings = CommissionSettingModel.builder()
-        .commission(inviteModel.getCommission())
-        .emailId(emailModel)
-        .interval(inviteModel.getInterval())
-        .aggregate(inviteModel.getAggregate())
-        .duration(inviteModel.getDuration())
-        .workspaceId(inviteModel.getWorkspace().getWorkspaceId())
-        .role(inviteModel.getRole())
-        .build();
-      commSettingRepository.save(buildCommSettings);
-
-
-      // Create password hash workspace account
-      passwordRepository.save(
-        PasswordModel.builder()
           .passwordHash(passwordEncoder.encode(request.getPassword()))
           .user(emailModel.getUser())
-          .email(emailAddedWorkspace)
           .build()
       );
 
+
       // Create workspace to user model
-      userWorkspaceRepository.save(
-        UserWorkspaceModel
-          .builder()
+      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.save(
+        UserWorkspaceModel.builder()
           .user(emailModel.getUser())
           .workspace(inviteModel.getWorkspace())
           .role(inviteModel.getRole())
           .build()
       );
 
+      // Create commission setting
+      CommissionSettingModel buildCommSettings = CommissionSettingModel.builder()
+          .commission(inviteModel.getCommission())
+          .interval(inviteModel.getInterval())
+          .aggregate(inviteModel.getAggregate())
+          .intervalUnit(inviteModel.getIntervalUnit())
+          .userWorkspace(userWorkspaceModel)
+          .build();
+      commSettingRepository.save(buildCommSettings);
+
       // generate token
       String jwt = jwtService.generateToken(emailModel.getUser());
-
-      // Find stripe account;
-      StripeAccountModel stripeAccountModel = stripeAccountRepository.findByUser(emailModel.getUser().getUserId());
-
-      String stripeId = stripeAccountModel != null ? stripeAccountModel.getStripeId() : null;
 
       // delete invite from invite
       repository.removeInvite(inviteCode);
 
       // send welcome to paydai to email company
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, stripeId);
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, roleDtoMapper.apply(userWorkspaceModel.getRole()));
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

@@ -11,6 +11,7 @@ import com.paydai.api.infrastructure.security.JwtAuthService;
 import com.paydai.api.presentation.dto.auth.AuthDtoMapper;
 import com.paydai.api.presentation.dto.auth.AuthModelDto;
 import com.paydai.api.presentation.dto.auth.AuthRecordDto;
+import com.paydai.api.presentation.dto.role.RoleDtoMapper;
 import com.paydai.api.presentation.request.AuthRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
@@ -27,23 +28,15 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-  private final UserRepository userRepository;
-
-  private final PasswordRepository passwordRepository;
-
-  private final StripeAccountRepository stripeAccountRepository;
-
-  private final EmailRepository emailRepository;
-
+  private final UserRepository repository;
   private final JwtAuthService jwtService;
-
-  private final WorkspaceRepository workspaceRepository;
-
+  private final RoleDtoMapper roleDtoMapper;
+  private final EmailRepository emailRepository;
   private final PasswordEncoder passwordEncoder;
-
   private final AuthDtoMapper authenticationDTOMapper;
-
+  private final WorkspaceRepository workspaceRepository;
   private final AuthenticationManager authenticationManager;
+  private final UserWorkspaceRepository userWorkspaceRepository;
   private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   @Override
@@ -57,20 +50,21 @@ public class AuthServiceImpl implements AuthService {
       // Build user data to save
       UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
 
+      if (payload.getUserType().equals(UserType.MERCHANT)) buildUser.setMerchantFee(1.5);
+
       // Save user
-      UserModel userModel = userRepository.save(buildUser);
+      UserModel userModel = repository.save(buildUser);
 
       // Build email
-      EmailModel buildEmail = EmailModel.builder().email(payload.getEmail()).user(userModel).emailType(EmailType.PERSONAL).build();
+      EmailModel buildEmail = EmailModel.builder()
+          .email(payload.getEmail())
+          .user(userModel)
+          .passwordHash(passwordEncoder.encode(payload.getPassword()))
+          .emailType(EmailType.PERSONAL)
+          .build();
 
       // Save email
       EmailModel emailModel = emailRepository.save(buildEmail);
-
-      // Build password
-      PasswordModel buildPass = PasswordModel.builder().email(emailModel).user(userModel).passwordHash(passwordEncoder.encode(payload.getPassword())).build();
-
-      // Save Password
-      passwordRepository.save(buildPass);
 
       if (payload.getUserType().equals(UserType.MERCHANT)) workspaceRepository.save(WorkspaceModel.builder().name(payload.getBusiness().trim().toLowerCase()).owner(userModel).build());
 
@@ -81,6 +75,8 @@ public class AuthServiceImpl implements AuthService {
       AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
+
+      //Todo: SEND WELCOME NOTIFICATION
 
       return JapiResponse.builder().status(true).message("Success!").statusCode(HttpStatus.CREATED).data(auth).build();
     } catch (ConflictException e) { throw e; } catch (Exception ex) {
@@ -96,18 +92,14 @@ public class AuthServiceImpl implements AuthService {
 
       if (emailModel == null) throw new NotFoundException("Email not found");
 
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getUserId(), authCred.getPassword()));
+      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getId(), authCred.getPassword()));
 
       String jwt = jwtService.generateToken(emailModel.getUser());
 
-      // Find stripe account;
-      StripeAccountModel stripeAccountModel = stripeAccountRepository.findByUser(emailModel.getUser().getUserId());
-
-      String stripeId = stripeAccountModel != null ? stripeAccountModel.getStripeId() : null;
-
       // add role and permission to user
+      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, stripeId);
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, roleDtoMapper.apply(userWorkspaceModel.getRole()));
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

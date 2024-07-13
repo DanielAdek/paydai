@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface UserWorkspaceRepository {
   UserWorkspaceModel save(UserWorkspaceModel buildUserWorkspace);
   List<UserWorkspaceModel> findByUserId(UUID userId);
+  List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId, UUID roleId);
+  UserWorkspaceModel findUserWorkspaceRole(UUID userId);
 }

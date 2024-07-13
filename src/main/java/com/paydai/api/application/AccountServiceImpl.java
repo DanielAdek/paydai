@@ -5,10 +5,9 @@ import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.EmailRepository;
-import com.paydai.api.domain.repository.StripeAccountRepository;
+import com.paydai.api.domain.repository.UserRepository;
 import com.paydai.api.domain.service.AccountService;
 import com.paydai.api.infrastructure.config.AppConfig;
-import com.paydai.api.infrastructure.external.RestApiCall;
 import com.paydai.api.presentation.dto.account.StripeAccountDtoMapper;
 import com.paydai.api.presentation.dto.account.StripeAccountRecord;
 import com.paydai.api.presentation.request.AccountLinkRequest;
@@ -23,7 +22,6 @@ import com.stripe.param.AccountLinkCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,20 +30,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.stripe.net.OAuth;
 
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
-  private final StripeAccountRepository repository;
+  private final UserRepository repository;
   private final EmailRepository emailRepository;
   private final StripeAccountDtoMapper stripeAccountDtoMapper;
   private final AppConfig config;
-  private final RestApiCall restApiCall;
 
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
@@ -59,11 +56,11 @@ public class AccountServiceImpl implements AccountService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      StripeAccountModel stripeAccountExist = repository.findByUser(userModel.getUserId());
+      String stripeAccountExist = repository.findUserStripeId(userModel.getId());
 
       if (stripeAccountExist != null) throw new ConflictException("Stripe account already exit!");
 
-      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getUserId());
+      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getId());
 
       AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
         AccountCreateParams.Type.EXPRESS;
@@ -94,15 +91,11 @@ public class AccountServiceImpl implements AccountService {
 
       Account account = Account.create(accountCreateParams);
 
-      if (account == null) throw new ApiRequestException("Account did not create");
+      if (account == null) throw new ApiRequestException("Account did not create. Try again");
 
-      StripeAccountModel buildStripeAccount = StripeAccountModel.builder().stripeId(account.getId()).userId(userModel.getUserId()).personalEmail(emailModel.getEmail()).build();
+      userModel.setStripeEmail(account.getId());
 
-      StripeAccountModel stripeAccountModel = repository.save(buildStripeAccount);
-
-      stripeAccountModel.setStripeId(account.getId());
-
-      StripeAccountRecord stripeAccountRecord = stripeAccountDtoMapper.apply(stripeAccountModel);
+      StripeAccountRecord stripeAccountRecord = stripeAccountDtoMapper.apply(userModel);
 
       return JapiResponse.success(stripeAccountRecord);
     } catch (ConflictException e) {throw e; } catch (Exception e) {
@@ -157,10 +150,10 @@ public class AccountServiceImpl implements AccountService {
 
       hashMap.put("stripeId", response.getStripeUserId());
 
-      StripeAccountModel stripeUser = repository.findByUser(userModel.getUserId());
+      UserModel stripeUser = repository.findUserById(userModel.getId());
 
       if (stripeUser == null) {
-        repository.save(StripeAccountModel.builder().userId(userModel.getUserId()).stripeId(response.getStripeUserId()).build());
+        stripeUser.setStripeId(Objects.requireNonNull(response.getStripeUserId()));
       }
 
       return JapiResponse.success(hashMap);
@@ -182,7 +175,7 @@ public class AccountServiceImpl implements AccountService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      Account account = Account.retrieve(accountId);
+      Account account = Account.retrieve(userModel.getStripeId());
 
       Map<String, Object> hashMap = new HashMap<>();
 
@@ -194,7 +187,6 @@ public class AccountServiceImpl implements AccountService {
         hashMap.put("detailsSubmitted", account.getDetailsSubmitted());
         hashMap.put("defaultCurrency", account.getDefaultCurrency());
       }
-
 
       return JapiResponse.success(hashMap);
     } catch (Exception ex) {

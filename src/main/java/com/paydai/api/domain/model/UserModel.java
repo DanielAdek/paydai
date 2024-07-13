@@ -22,8 +22,7 @@ import java.util.UUID;
 public class UserModel implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "user_id")
-  private UUID userId;
+  private UUID id;
 
   @Column(name = "first_name")
   private String firstName;
@@ -34,6 +33,18 @@ public class UserModel implements UserDetails {
   @Column(name = "user_type")
   @Enumerated(EnumType.STRING)
   private UserType userType;
+
+  @Column(name = "stripe_id")
+  private String stripeId;
+
+  @Column(name = "stripe_email")
+  private String stripeEmail;
+
+  @Column(name = "extra_field")
+  private String extraField;
+
+  @Column(name = "merchant_fee")
+  private Double merchantFee; // default debit 1.5
 
   @CreationTimestamp
   @Column(name = "created_at")
@@ -60,6 +71,7 @@ public class UserModel implements UserDetails {
 //      .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
 //      .collect(Collectors.toSet());
 //  }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
       String authority = (userType != null) ? userType.name() : UserType.SALES_REP.name();
@@ -67,15 +79,15 @@ public class UserModel implements UserDetails {
     }
 
   @Override
-  public String getUsername() { return String.valueOf(userId); }
+  public String getUsername() { return String.valueOf(id); }
 
   @Override
   public String getPassword() {
     // Return password from one of the associated emails
     return emails.stream()
-      .filter(email -> email.getPassword() != null)
+      .filter(email -> email.getPasswordHash() != null)
       .findFirst()
-      .map(email -> email.getPassword().getPasswordHash())
+      .map(email -> email.getPasswordHash())
       .orElse(null);
   }
 

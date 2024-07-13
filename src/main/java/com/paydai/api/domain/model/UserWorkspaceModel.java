@@ -20,7 +20,7 @@ import java.util.UUID;
 public class UserWorkspaceModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID userWorkspaceId;
+  private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -33,6 +33,10 @@ public class UserWorkspaceModel {
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "role_id")
   private RoleModel role;
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "email_id")
+  private EmailModel email;
 
   @CreationTimestamp
   private LocalDateTime createdAt;
