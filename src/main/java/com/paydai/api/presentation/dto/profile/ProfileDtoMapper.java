@@ -10,7 +10,7 @@ public class ProfileDtoMapper implements Function<UserModel, ProfileRecord> {
   @Override
   public ProfileRecord apply(UserModel userModel) {
     return new ProfileRecord(
-      userModel.getUserId(),
+      userModel.getId(),
       userModel.getFirstName(),
       userModel.getLastName()
     );

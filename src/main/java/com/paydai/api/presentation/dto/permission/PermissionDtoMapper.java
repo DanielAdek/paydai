@@ -10,7 +10,7 @@ public class PermissionDtoMapper implements Function<PermissionModel, Permission
   @Override
   public PermissionRecord apply(PermissionModel permissionModel) {
     return new PermissionRecord(
-      permissionModel.getPermissionId(),
+      permissionModel.getId(),
       permissionModel.getPermission(),
       permissionModel.getCreatedAt(),
       permissionModel.getUpdatedAt()
