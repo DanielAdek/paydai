@@ -99,7 +99,9 @@ public class AuthServiceImpl implements AuthService {
       // add role and permission to user
       UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, roleDtoMapper.apply(userWorkspaceModel.getRole()));
+      var role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

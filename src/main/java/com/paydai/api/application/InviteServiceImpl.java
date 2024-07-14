@@ -132,7 +132,7 @@ public class InviteServiceImpl implements InviteService {
         EmailModel.builder()
           .email(inviteModel.getCompanyEmail())
           .emailType(EmailType.COMPANY)
-          .passwordHash(passwordEncoder.encode(request.getPassword()))
+          .passwordHash(passwordHash)
           .user(emailModel.getUser())
           .build()
       );

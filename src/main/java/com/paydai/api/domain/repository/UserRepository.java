@@ -9,5 +9,6 @@ public interface UserRepository {
   Optional<UserModel> findById(UUID userId);
   UserModel save(UserModel buildUser);
   UserModel findUserById(UUID userId);
+  void updateUserStripe(UUID userId, String stripeId, String stripeEmail);
 //  UserModel findUserStripeId(UUID userId);
 }

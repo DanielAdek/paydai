@@ -39,10 +39,10 @@ import com.stripe.net.OAuth;
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
+  private final AppConfig config;
   private final UserRepository repository;
   private final EmailRepository emailRepository;
   private final StripeAccountDtoMapper stripeAccountDtoMapper;
-  private final AppConfig config;
 
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
@@ -91,11 +91,14 @@ public class AccountServiceImpl implements AccountService {
 
       if (account == null) throw new ApiRequestException("Account did not create. Try again");
 
-      userModel.setStripeEmail(account.getId());
+      // Update column stripe for user
+      repository.updateUserStripe(userModel.getId(), account.getId(), emailModel.getEmail());
 
-      StripeAccountRecord stripeAccountRecord = stripeAccountDtoMapper.apply(userModel);
+      Map<String, Object> response = new HashMap<>();
+      response.put("userId", userModel.getId());
+      response.put("stripeId", account.getId());
 
-      return JapiResponse.success(stripeAccountRecord);
+      return JapiResponse.success(response);
     } catch (ConflictException e) {throw e; } catch (Exception e) {
       logger.error("Stripe::Error:: " + e.getMessage());
       throw new InternalServerException(e.getMessage());
@@ -148,11 +151,8 @@ public class AccountServiceImpl implements AccountService {
 
       hashMap.put("stripeId", response.getStripeUserId());
 
-      UserModel stripeUser = repository.findUserById(userModel.getId());
-
-      if (stripeUser == null) {
-        stripeUser.setStripeId(Objects.requireNonNull(response.getStripeUserId()));
-      }
+      // Update column stripe for user
+      repository.updateUserStripe(userModel.getId(), response.getStripeUserId(), "");
 
       return JapiResponse.success(hashMap);
     } catch (Exception ex) {
