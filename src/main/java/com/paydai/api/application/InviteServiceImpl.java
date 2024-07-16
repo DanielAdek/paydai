@@ -15,6 +15,8 @@ import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
 import com.paydai.api.presentation.dto.role.RoleDtoMapper;
 import com.paydai.api.presentation.dto.role.RoleRecord;
+import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import com.paydai.api.presentation.request.EmailRequest;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
@@ -40,6 +42,7 @@ public class InviteServiceImpl implements InviteService {
   private final InviteDtoMapper inviteDtoMapper;
   private final EmailSenderService emailSenderService;
   private final AuthDtoMapper authenticationDTOMapper;
+  private final WorkspaceDtoMapper workspaceDtoMapper;
   private final CommSettingRepository commSettingRepository;
   private final UserWorkspaceRepository userWorkspaceRepository;
 
@@ -58,23 +61,27 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse createInvite(InviteRequest payload) throws MessagingException {
     try {
+      InviteModel inviteModel;
+      inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
 
-      InviteModel buildInvite = InviteModel.builder()
-        .inviteCode(this.generateInviteCode())
-        .companyEmail(payload.getCompanyEmail())
-        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-        .commission(payload.getCommission())
-        .interval(payload.getInterval())
-        .intervalUnit(payload.getIntervalUnit())
-        .role(RoleModel.builder().roleId(payload.getRoleId()).build())
-        .build();
+      if (inviteModel == null) {
+        InviteModel buildInvite = InviteModel.builder()
+          .inviteCode(this.generateInviteCode())
+          .companyEmail(payload.getCompanyEmail())
+          .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+          .commission(payload.getCommission())
+          .interval(payload.getInterval())
+          .intervalUnit(payload.getIntervalUnit())
+          .role(RoleModel.builder().id(payload.getRoleId()).build())
+          .build();
 
-      if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
+        if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
 
-      // Check if invite already exiting if so then update instead of save;
-      InviteModel inviteModel = repository.save(buildInvite);
+        // Check if invite already exiting if so then update instead of save;
+        inviteModel = repository.save(buildInvite);
+      }
 
-      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + buildInvite.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
+      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + inviteModel.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
 
       InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
 
@@ -165,7 +172,11 @@ public class InviteServiceImpl implements InviteService {
 
       // send welcome to paydai to email company
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, roleDtoMapper.apply(userWorkspaceModel.getRole()));
+      RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+
+      WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

@@ -40,11 +40,11 @@ public class InviteModel {
   @Column(name = "interval_unit")
   private String intervalUnit;
 
-  @OneToOne
+  @ManyToOne
   @JoinColumn(name = "role_id")
   private RoleModel role;
 
-  @OneToOne
+  @ManyToOne
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
 

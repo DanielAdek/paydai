@@ -7,8 +7,7 @@ import java.util.UUID;
 
 public interface RoleRepository {
   RoleModel save(RoleModel buildRole);
-
   RoleModel findRole(String role);
-
   List<RoleModel> findRoles();
+  RoleModel findByRoleId(UUID roleId);
 }

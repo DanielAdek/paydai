@@ -19,4 +19,8 @@ public interface InviteRepositoryImpl extends InviteRepository, JpaRepository<In
   @Transactional
   @Query(nativeQuery = true, value = "DELETE FROM invite_tbl WHERE invite_code=?1")
   void removeInvite(String code);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM invite_tbl WHERE id=?1 AND workspace_id=?2 And company_email=?3")
+  InviteModel findByInvited(UUID roleId, UUID workspaceId, String companyEmail);
 }

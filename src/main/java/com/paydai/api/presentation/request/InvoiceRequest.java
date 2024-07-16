@@ -20,6 +20,8 @@ public class InvoiceRequest {
 
   // product
   private String productName;
+  private int qty;
+  private Double unitPrice;
   private String productDescription;
 
   // price

@@ -26,7 +26,13 @@ public class ProductModel {
   private String item;
 
   @Column
+  private String description;
+
+  @Column
   private Integer qty;
+
+  @Column
+  private Double unitPrice;
 
   @Column
   private Integer tax;

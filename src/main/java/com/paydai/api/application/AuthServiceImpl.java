@@ -12,6 +12,9 @@ import com.paydai.api.presentation.dto.auth.AuthDtoMapper;
 import com.paydai.api.presentation.dto.auth.AuthModelDto;
 import com.paydai.api.presentation.dto.auth.AuthRecordDto;
 import com.paydai.api.presentation.dto.role.RoleDtoMapper;
+import com.paydai.api.presentation.dto.role.RoleRecord;
+import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import com.paydai.api.presentation.request.AuthRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
@@ -34,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
   private final EmailRepository emailRepository;
   private final PasswordEncoder passwordEncoder;
   private final AuthDtoMapper authenticationDTOMapper;
+  private final WorkspaceDtoMapper workspaceDtoMapper;
   private final WorkspaceRepository workspaceRepository;
   private final AuthenticationManager authenticationManager;
   private final UserWorkspaceRepository userWorkspaceRepository;
@@ -72,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
       String token = jwtService.generateToken(userModel);
 
       // Build data response to send to client
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null);
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null, null);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
@@ -99,9 +103,11 @@ public class AuthServiceImpl implements AuthService {
       // add role and permission to user
       UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
 
-      var role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+      RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role);
+      WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 

@@ -30,7 +30,7 @@ public class UserWorkspaceModel {
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "role_id")
   private RoleModel role;
 

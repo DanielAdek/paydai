@@ -9,27 +9,20 @@ import java.util.function.Function;
 
 @Service
 public class AuthDtoMapper implements Function<AuthModelDto, AuthRecordDto> {
-//  private static List<AuthAccess> getGrantedAuthorities(AuthModel authModel) {
-//    List<AuthAccess> authorities = new ArrayList<>();
-//
-//    for (GrantedAuthority grantedAuthority : authModel.getAuthorities()) {
-//      authorities.add(AuthAccess.valueOf(grantedAuthority.getAuthority()));
-//    }
-//
-//    return authorities;
-//  }
 
   @Override
-  public AuthRecordDto apply(AuthModelDto authModel) {
+  public AuthRecordDto apply(AuthModelDto authModelDto) {
     return new AuthRecordDto(
-      authModel.getId(),
-      authModel.getUserType(),
-      authModel.getEmail(),
-      authModel.getEmailType(),
-      authModel.getStripeId(),
-      authModel.getToken(),
-      authModel.getCreatedAt(),
-      authModel.getUpdatedAt()
+      authModelDto.getId(),
+      authModelDto.getUserType(),
+      authModelDto.getEmail(),
+      authModelDto.getEmailType(),
+      authModelDto.getStripeId(),
+      authModelDto.getToken(),
+      authModelDto.getCreatedAt(),
+      authModelDto.getUpdatedAt(),
+      authModelDto.getRole(),
+      authModelDto.getWorkspace()
     );
   }
 }

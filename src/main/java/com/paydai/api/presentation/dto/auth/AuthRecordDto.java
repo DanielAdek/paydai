@@ -3,6 +3,7 @@ package com.paydai.api.presentation.dto.auth;
 import com.paydai.api.domain.model.EmailType;
 import com.paydai.api.domain.model.UserType;
 import com.paydai.api.presentation.dto.role.RoleRecord;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,7 +17,9 @@ public record AuthRecordDto (
   String stripeId,
   String token,
   LocalDateTime createdAt,
-  LocalDateTime updatedAt
+  LocalDateTime updatedAt,
+  RoleRecord role,
+  WorkspaceRecord workspace
 ) {
 
 }
