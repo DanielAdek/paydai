@@ -20,8 +20,9 @@ public class InvoiceRequest {
 
   // product
   private String productName;
+  private int qty;
+  private Double unitPrice;
   private String productDescription;
 
-  // price
-  private Long unitAmount;
+  private UUID workspaceId;
 }

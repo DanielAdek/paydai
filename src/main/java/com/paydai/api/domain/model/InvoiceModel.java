@@ -32,6 +32,10 @@ public class InvoiceModel {
   private LocalDateTime dueDate;
 
   @Column
+  @Enumerated(EnumType.STRING)
+  private InvoiceStatus status;
+
+  @Column
   private String currency;
 
   @Column(name = "merchant_fee")
@@ -40,12 +44,37 @@ public class InvoiceModel {
   @Column(name = "sales_rep_fee")
   private String saleRepFee; //
 
-  @OneToOne
+  @Column(name = "snapshot_comm_percent")
+  private Double snapshotCommPercent;
+
+  @Column(name = "snapshot_comm_aggregate")
+  private AggregateType snapshotCommAggregate;
+
+  @Column(name = "snapshot_comm_interval")
+  private int snapshotCommInterval;
+
+  @Column(name = "snapshot_comm_interval_unit")
+  private String snapshotCommIntervalUnit;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
+
+  @ManyToOne
   @JoinColumn(name = "user_workspace_id")
   private UserWorkspaceModel userWorkspace;
 
   @Column(name = "stripe_invoice_id")
   private String stripeInvoiceId;
+
+  @Column(name = "stripe_invoice_item")
+  private String stripeInvoiceItem;
+
+  @Column(name = "stripe_invoice_pdf")
+  private String stripeInvoicePdf;
+
+  @Column(name = "stripe_invoice_hosted_url")
+  private String stripeInvoiceHostedUrl;
 
   @Column(name = "stripe_invoice_details")
   private String stripeInvoiceDetails; // String(Object) raw data; upon created
@@ -62,6 +91,10 @@ public class InvoiceModel {
   @ManyToOne
   @JoinColumn(name = "customer_id")
   private CustomerModel customer;
+
+  @ManyToOne
+  @JoinColumn(name = "product_id")
+  private ProductModel product;
 
   @CreationTimestamp
   @Column(name = "created_at")

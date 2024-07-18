@@ -16,4 +16,8 @@ public interface RoleRepositoryImpl extends RoleRepository, JpaRepository<RoleMo
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM role_tbl WHERE role=?1")
   RoleModel findRole(String role);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM role_tbl WHERE role_id=?1")
+  RoleModel findByRoleId(UUID roleId);
 }

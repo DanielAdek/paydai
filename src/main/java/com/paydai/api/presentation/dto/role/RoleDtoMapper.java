@@ -9,9 +9,10 @@ import java.util.function.Function;
 public class RoleDtoMapper implements Function<RoleModel, RoleRecord> {
   @Override
   public RoleRecord apply(RoleModel roleModel) {
+    String role = roleModel.getRole() != null ? roleModel.getRole().toUpperCase() : roleModel.getRole();
     return new RoleRecord(
-      roleModel.getRoleId(),
-      roleModel.getRole().toUpperCase(),
+      roleModel.getId(),
+      role,
       roleModel.getCreatedAt(),
       roleModel.getUpdatedAt()
     );

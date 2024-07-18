@@ -30,6 +30,20 @@ public class CustomerModel {
 
   private String description;
 
+  private String phone;
+
+  @ManyToOne
+  @JoinColumn(name = "closer_id")
+  private UserModel closer;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private UserModel creator;
+
+  @ManyToOne
+  @JoinColumn(name = "role_id")
+  private RoleModel creatorRole;
+
   @Column
   @Enumerated(EnumType.STRING)
   private CustomerType stage;

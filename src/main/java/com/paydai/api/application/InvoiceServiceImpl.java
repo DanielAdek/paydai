@@ -1,36 +1,53 @@
 package com.paydai.api.application;
 
-import com.paydai.api.domain.model.CustomerModel;
-import com.paydai.api.domain.model.ProductModel;
-import com.paydai.api.domain.repository.CustomerRepository;
-import com.paydai.api.domain.repository.InvoiceRepository;
+import com.paydai.api.domain.model.*;
+import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.InvoiceService;
+import com.paydai.api.presentation.dto.invoice.InvoiceDtoMapper;
+import com.paydai.api.presentation.dto.invoice.InvoiceRecord;
 import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.param.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
   private final InvoiceRepository repository;
+  private final InvoiceDtoMapper invoiceDtoMapper;
+  private final ProductRepository productRepository;
   private final CustomerRepository customerRepository;
+  private final UserWorkspaceRepository userWorkspaceRepository;
+  private final CommSettingRepository commSettingRepository;
 
   @Override
   public JapiResponse create(InvoiceRequest payload) throws StripeException {
     try {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
+
+      CommissionSettingModel commissionSettingModel = userWorkspaceModel.getCommission();
+
       ProductCreateParams productCreateParams = ProductCreateParams.builder().setName(payload.getProductName()).build();
 
       Product product = Product.create(productCreateParams);
 
       PriceCreateParams priceCreateParams = PriceCreateParams.builder()
           .setProduct(product.getId())
-          .setUnitAmount(payload.getUnitAmount())
+          .setUnitAmount(payload.getUnitPrice().longValue())
           .setCurrency(payload.getCurrency())
           .build();
 
@@ -64,7 +81,47 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       InvoiceItem invoiceItem = InvoiceItem.create(params);
 
-      return JapiResponse.success(invoiceItem.getInvoice());
+      ProductModel productModel = productRepository.save(
+        ProductModel.builder()
+          .item(payload.getProductName())
+          .qty(payload.getQty())
+          .unitPrice(payload.getUnitPrice())
+          .description(payload.getProductDescription())
+          .stripeProductId(product.getId())
+          .build()
+      );
+
+      LocalDateTime localDateTime = LocalDateTime.now();
+      ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+      long milliseconds = zonedDateTime.toInstant().toEpochMilli();
+
+
+      InvoiceModel invoiceModel = repository.save(
+        InvoiceModel.builder()
+          .stripeInvoiceId(invoice.getId())
+          .subject(payload.getSubject())
+          .currency(payload.getCurrency())
+          .customer(customerModel)
+          .dueDate(payload.getDueDate())
+          .stripeInvoiceItem(invoiceItem.getInvoice())
+          .userWorkspace(userWorkspaceModel)
+          .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+          .product(productModel)
+          .status(InvoiceStatus.CREATED)
+          .snapshotCommPercent(commissionSettingModel.getCommission())
+          .snapshotCommInterval(commissionSettingModel.getInterval())
+          .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
+          .snapshotCommAggregate(commissionSettingModel.getAggregate())
+//          .merchantFee()
+          .invoiceCode("INV" + milliseconds)
+          .stripeInvoicePdf(invoice.getInvoicePdf())
+          .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
+          .build()
+      );
+
+      InvoiceRecord invoiceRecord = invoiceDtoMapper.apply(invoiceModel);
+
+      return JapiResponse.success(invoiceRecord);
     } catch (Exception e) { throw e; }
   }
 
@@ -73,5 +130,24 @@ public class InvoiceServiceImpl implements InvoiceService {
     try {
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getWorkspaceInvoicesToCustomers(UUID workspaceId) {
+    try {
+      List<InvoiceModel> invoiceModels = repository.findByWorkspaceInvoices(workspaceId);
+
+      List<InvoiceRecord> invoiceRecords = new ArrayList<>();
+      if (!invoiceModels.isEmpty()) {
+        invoiceRecords = invoiceModels.stream().map(invoiceDtoMapper).toList();
+      }
+
+      return JapiResponse.success(invoiceRecords);
+    } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getInvoice(String invoiceCode) {
+    return null;
   }
 }

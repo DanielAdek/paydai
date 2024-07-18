@@ -14,4 +14,8 @@ public interface InvoiceRepositoryImpl extends InvoiceRepository, JpaRepository<
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE customer_id=?1")
   List<InvoiceModel> findByCustomerId(UUID customerId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE workspace_id=?1")
+  List<InvoiceModel> findByWorkspaceInvoices(UUID workspaceId);
 }

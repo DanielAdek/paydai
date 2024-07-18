@@ -15,17 +15,22 @@ import com.paydai.api.presentation.dto.invite.InviteDtoMapper;
 import com.paydai.api.presentation.dto.invite.InviteRecord;
 import com.paydai.api.presentation.dto.role.RoleDtoMapper;
 import com.paydai.api.presentation.dto.role.RoleRecord;
+import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import com.paydai.api.presentation.request.EmailRequest;
 import com.paydai.api.presentation.request.InviteRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +45,7 @@ public class InviteServiceImpl implements InviteService {
   private final InviteDtoMapper inviteDtoMapper;
   private final EmailSenderService emailSenderService;
   private final AuthDtoMapper authenticationDTOMapper;
+  private final WorkspaceDtoMapper workspaceDtoMapper;
   private final CommSettingRepository commSettingRepository;
   private final UserWorkspaceRepository userWorkspaceRepository;
 
@@ -58,23 +64,27 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public JapiResponse createInvite(InviteRequest payload) throws MessagingException {
     try {
+      InviteModel inviteModel;
+      inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
 
-      InviteModel buildInvite = InviteModel.builder()
-        .inviteCode(this.generateInviteCode())
-        .companyEmail(payload.getCompanyEmail())
-        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-        .commission(payload.getCommission())
-        .interval(payload.getInterval())
-        .intervalUnit(payload.getIntervalUnit())
-        .role(RoleModel.builder().roleId(payload.getRoleId()).build())
-        .build();
+      if (inviteModel == null) {
+        InviteModel buildInvite = InviteModel.builder()
+          .inviteCode(this.generateInviteCode())
+          .companyEmail(payload.getCompanyEmail())
+          .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+          .commission(payload.getCommission())
+          .interval(payload.getInterval())
+          .intervalUnit(payload.getIntervalUnit())
+          .role(RoleModel.builder().id(payload.getRoleId()).build())
+          .build();
 
-      if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
+        if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
 
-      // Check if invite already exiting if so then update instead of save;
-      InviteModel inviteModel = repository.save(buildInvite);
+        // Check if invite already exiting if so then update instead of save;
+        inviteModel = repository.save(buildInvite);
+      }
 
-      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + buildInvite.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
+      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + inviteModel.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
 
       InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
 
@@ -138,24 +148,26 @@ public class InviteServiceImpl implements InviteService {
       );
 
 
+      // Create commission setting
+      CommissionSettingModel commissionSettingModel = commSettingRepository.save(
+        CommissionSettingModel.builder()
+          .commission(inviteModel.getCommission())
+          .interval(inviteModel.getInterval())
+          .aggregate(inviteModel.getAggregate())
+          .intervalUnit(inviteModel.getIntervalUnit())
+          .build()
+      );
+
       // Create workspace to user model
       UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.save(
         UserWorkspaceModel.builder()
           .user(emailModel.getUser())
           .workspace(inviteModel.getWorkspace())
           .role(inviteModel.getRole())
+          .email(emailAddedWorkspace)
+          .commission(commissionSettingModel)
           .build()
       );
-
-      // Create commission setting
-      CommissionSettingModel buildCommSettings = CommissionSettingModel.builder()
-          .commission(inviteModel.getCommission())
-          .interval(inviteModel.getInterval())
-          .aggregate(inviteModel.getAggregate())
-          .intervalUnit(inviteModel.getIntervalUnit())
-          .userWorkspace(userWorkspaceModel)
-          .build();
-      commSettingRepository.save(buildCommSettings);
 
       // generate token
       String jwt = jwtService.generateToken(emailModel.getUser());
@@ -165,11 +177,31 @@ public class InviteServiceImpl implements InviteService {
 
       // send welcome to paydai to email company
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, roleDtoMapper.apply(userWorkspaceModel.getRole()));
+      RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+
+      WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+
+      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
       return JapiResponse.success(auth);
+    }  catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getWorkspaceInvites(UUID workspaceId) {
+    try {
+      List<InviteModel> inviteModels = repository.findWorkspaceInvites(workspaceId);
+
+      List<InviteRecord> inviteRecords = inviteModels
+        .stream()
+        .map(inviteModel -> inviteDtoMapper.apply(
+          InviteDto.getInviteDtoData(inviteModel, "")
+        ))
+        .toList();
+
+      return JapiResponse.success(inviteRecords);
     }  catch (Exception e) { throw e; }
   }
 }

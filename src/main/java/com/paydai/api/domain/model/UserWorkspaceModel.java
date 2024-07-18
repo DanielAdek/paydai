@@ -30,13 +30,17 @@ public class UserWorkspaceModel {
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "role_id")
   private RoleModel role;
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "email_id")
   private EmailModel email;
+
+  @ManyToOne
+  @JoinColumn(name = "comm_setting_id")
+  private CommissionSettingModel commission;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

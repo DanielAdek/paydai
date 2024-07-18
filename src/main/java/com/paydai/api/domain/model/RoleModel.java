@@ -21,7 +21,7 @@ import java.util.UUID;
 public class RoleModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID roleId;
+  private UUID id;
 
   @Column
   private String role;

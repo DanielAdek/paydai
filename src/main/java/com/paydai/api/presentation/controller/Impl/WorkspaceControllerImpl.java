@@ -83,4 +83,23 @@ public class WorkspaceControllerImpl implements WorkspaceController {
     JapiResponse response = service.getWorkspaceSalesReps(workspaceId, roleId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
+
+  @Operation(
+    summary = "A merchant workspace teams reps API endpoint",
+    description = "GET response to show DTO"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("/teams")
+  @Override
+  public ResponseEntity<JapiResponse> getWorkspaceTeams(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getWorkspaceTeams(workspaceId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
 }

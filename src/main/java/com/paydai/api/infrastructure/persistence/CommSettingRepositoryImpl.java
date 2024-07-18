@@ -11,6 +11,6 @@ import java.util.UUID;
 @Repository
 public interface CommSettingRepositoryImpl extends CommSettingRepository, JpaRepository<CommissionSettingModel, UUID> {
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM commission_setting_tbl")
+  @Query(nativeQuery = true, value = "SELECT * FROM commission_setting_tbl WHERE workspace_id=?1")
   CommissionSettingModel findCommissionByWorkSpace(UUID workspaceId);
 }

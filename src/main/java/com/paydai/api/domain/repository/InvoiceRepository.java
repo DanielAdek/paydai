@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface InvoiceRepository {
   List<InvoiceModel> findByCustomerId(UUID customerId);
   InvoiceModel save(InvoiceModel buildInvoice);
+  List<InvoiceModel> findByWorkspaceInvoices(UUID workspaceId);
 }

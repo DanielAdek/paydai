@@ -6,6 +6,7 @@ import com.paydai.api.domain.model.UserModel;
 import com.paydai.api.domain.model.UserType;
 import com.paydai.api.presentation.dto.role.RoleDtoMapper;
 import com.paydai.api.presentation.dto.role.RoleRecord;
+import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuthModelDto {
   private UUID id;
+  private String firstName;
+  private String lastName;
   private UserType userType;
   private String email;
   private EmailType emailType;
@@ -28,10 +31,13 @@ public class AuthModelDto {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private RoleRecord role;
+  private WorkspaceRecord workspace;
 
-  public static AuthModelDto getAuthData(UserModel user, EmailModel email, String token, RoleRecord role) {
+  public static AuthModelDto getAuthData(UserModel user, EmailModel email, String token, RoleRecord role, WorkspaceRecord workspace) {
     return new AuthModelDto(
       user.getId(),
+      user.getFirstName(),
+      user.getLastName(),
       user.getUserType(),
       email.getEmail(),
       email.getEmailType(),
@@ -39,7 +45,8 @@ public class AuthModelDto {
       user.getStripeId(),
       user.getCreatedAt(),
       user.getUpdatedAt(),
-      role
+      role,
+      workspace
     );
   }
 }
