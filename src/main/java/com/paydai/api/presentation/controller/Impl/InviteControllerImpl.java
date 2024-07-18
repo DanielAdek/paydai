@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/invite")
@@ -58,6 +60,23 @@ public class InviteControllerImpl implements InviteController {
   @PostMapping(path = "/accept")
   public ResponseEntity<JapiResponse> acceptInvite(@RequestBody RegisterRequest request, @RequestParam String inviteCode) {
     JapiResponse response = service.acceptInvite(request, inviteCode);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+
+  @Operation(
+    summary = "Workspace invites API endpoint",
+    description = "POST response to show auth DTO, the auth-data and token"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @GetMapping("workspace")
+  public ResponseEntity<JapiResponse> getWorkspaceInvite(UUID workspaceId) {
+    JapiResponse response = service.getWorkspaceInvites(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

@@ -38,6 +38,10 @@ public class UserWorkspaceModel {
   @JoinColumn(name = "email_id")
   private EmailModel email;
 
+  @ManyToOne
+  @JoinColumn(name = "comm_setting_id")
+  private CommissionSettingModel commission;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 

@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping(path = "/api/v1/customer")
 @RequiredArgsConstructor
@@ -59,6 +61,25 @@ public class CustomerControllerImpl implements CustomerController {
   @GetMapping
   public ResponseEntity<JapiResponse> getCustomers() {
     JapiResponse response = service.getCustomers();
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Get one customer API endpoint",
+    description = "POST response to show auth DTO, the invoice data"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("/q")
+  public ResponseEntity<JapiResponse> getOneCustomer(@RequestParam  UUID customerId) {
+    JapiResponse response = service.getOneCustomer(customerId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

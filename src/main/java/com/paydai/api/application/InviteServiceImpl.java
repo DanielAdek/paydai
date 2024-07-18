@@ -23,11 +23,14 @@ import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -145,24 +148,26 @@ public class InviteServiceImpl implements InviteService {
       );
 
 
+      // Create commission setting
+      CommissionSettingModel commissionSettingModel = commSettingRepository.save(
+        CommissionSettingModel.builder()
+          .commission(inviteModel.getCommission())
+          .interval(inviteModel.getInterval())
+          .aggregate(inviteModel.getAggregate())
+          .intervalUnit(inviteModel.getIntervalUnit())
+          .build()
+      );
+
       // Create workspace to user model
       UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.save(
         UserWorkspaceModel.builder()
           .user(emailModel.getUser())
           .workspace(inviteModel.getWorkspace())
           .role(inviteModel.getRole())
+          .email(emailAddedWorkspace)
+          .commission(commissionSettingModel)
           .build()
       );
-
-      // Create commission setting
-      CommissionSettingModel buildCommSettings = CommissionSettingModel.builder()
-          .commission(inviteModel.getCommission())
-          .interval(inviteModel.getInterval())
-          .aggregate(inviteModel.getAggregate())
-          .intervalUnit(inviteModel.getIntervalUnit())
-          .userWorkspace(userWorkspaceModel)
-          .build();
-      commSettingRepository.save(buildCommSettings);
 
       // generate token
       String jwt = jwtService.generateToken(emailModel.getUser());
@@ -181,6 +186,22 @@ public class InviteServiceImpl implements InviteService {
       AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
       return JapiResponse.success(auth);
+    }  catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getWorkspaceInvites(UUID workspaceId) {
+    try {
+      List<InviteModel> inviteModels = repository.findWorkspaceInvites(workspaceId);
+
+      List<InviteRecord> inviteRecords = inviteModels
+        .stream()
+        .map(inviteModel -> inviteDtoMapper.apply(
+          InviteDto.getInviteDtoData(inviteModel, "")
+        ))
+        .toList();
+
+      return JapiResponse.success(inviteRecords);
     }  catch (Exception e) { throw e; }
   }
 }

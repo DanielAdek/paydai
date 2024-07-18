@@ -22,4 +22,12 @@ public interface UserWorkspaceRepositoryImpl extends UserWorkspaceRepository, Jp
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE user_id=?1")
   UserWorkspaceModel findUserWorkspaceRole(UUID userId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE user_id=?1 AND workspace_id=?2")
+  UserWorkspaceModel findOneByUserId(UUID userId, UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE workspace_id=?1")
+  List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId);
 }

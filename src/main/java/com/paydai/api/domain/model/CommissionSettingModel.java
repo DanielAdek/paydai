@@ -37,10 +37,6 @@ public class CommissionSettingModel {
   @Column(name = "interval_unit")
   private String intervalUnit;
 
-  @OneToOne
-  @JoinColumn(name = "user_workspace_id")
-  private UserWorkspaceModel userWorkspace;
-
   @CreationTimestamp
   @Column(name = "created_at")
   private LocalDateTime createdAt;

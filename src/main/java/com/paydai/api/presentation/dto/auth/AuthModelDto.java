@@ -21,6 +21,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuthModelDto {
   private UUID id;
+  private String firstName;
+  private String lastName;
   private UserType userType;
   private String email;
   private EmailType emailType;
@@ -34,6 +36,8 @@ public class AuthModelDto {
   public static AuthModelDto getAuthData(UserModel user, EmailModel email, String token, RoleRecord role, WorkspaceRecord workspace) {
     return new AuthModelDto(
       user.getId(),
+      user.getFirstName(),
+      user.getLastName(),
       user.getUserType(),
       email.getEmail(),
       email.getEmailType(),

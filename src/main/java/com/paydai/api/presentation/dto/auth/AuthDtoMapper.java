@@ -14,6 +14,8 @@ public class AuthDtoMapper implements Function<AuthModelDto, AuthRecordDto> {
   public AuthRecordDto apply(AuthModelDto authModelDto) {
     return new AuthRecordDto(
       authModelDto.getId(),
+      authModelDto.getFirstName(),
+      authModelDto.getLastName(),
       authModelDto.getUserType(),
       authModelDto.getEmail(),
       authModelDto.getEmailType(),

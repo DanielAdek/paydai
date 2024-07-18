@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,6 +78,14 @@ public class CustomerServiceImpl implements CustomerService {
         .collect(Collectors.toList());
 
       return JapiResponse.success(customerRecords);
+    } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getOneCustomer(UUID customerId) {
+    try {
+      CustomerModel customerModel = repository.findByCustomerId(customerId);
+      return JapiResponse.success(customerDtoMapper.apply(CustomerDto.getCustomerDto(customerModel)));
     } catch (Exception e) { throw e; }
   }
 }

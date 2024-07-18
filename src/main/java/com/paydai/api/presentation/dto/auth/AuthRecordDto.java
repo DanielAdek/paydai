@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public record AuthRecordDto (
   UUID userId,
+  String firstName,
+  String lastName,
   UserType userType,
   String email,
   EmailType emailType,

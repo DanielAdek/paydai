@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface InvoiceService {
   JapiResponse create(InvoiceRequest payload) throws StripeException;
   JapiResponse getInvoiceToCustomer(UUID customerId);
+  JapiResponse getWorkspaceInvoicesToCustomers(UUID workspaceId);
+  JapiResponse getInvoice(String invoiceCode);
 }

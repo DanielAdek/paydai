@@ -24,8 +24,15 @@ public class InvoiceDtoMapper implements Function<InvoiceModel, InvoiceRecord> {
       invoiceModel.getCustomer().getEmail(),
       invoiceModel.getProduct().getItem(),
       invoiceModel.getProduct().getQty(),
+      invoiceModel.getProduct().getUnitPrice(),
       invoiceModel.getProduct().getDescription(),
-      invoiceModel.getProduct().getUnitPrice()
+      invoiceModel.getProduct().getUnitPrice(),
+      invoiceModel.getSnapshotCommPercent(),
+      invoiceModel.getSnapshotCommAggregate(),
+      invoiceModel.getSnapshotCommInterval(),
+      invoiceModel.getSnapshotCommIntervalUnit(),
+      invoiceModel.getUserWorkspace().getUser().getFirstName(),
+      invoiceModel.getStatus()
     );
   }
 }

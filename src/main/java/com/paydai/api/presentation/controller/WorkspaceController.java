@@ -13,4 +13,5 @@ public interface WorkspaceController {
   ResponseEntity<JapiResponse> getWorkspace();
   ResponseEntity<JapiResponse> getSalesRepWorkspaces();
   ResponseEntity<JapiResponse> getWorkspaceSalesReps(@RequestParam UUID workspaceId, @RequestParam UUID roleId);
+  ResponseEntity<JapiResponse> getWorkspaceTeams(@RequestParam UUID workspaceId);
 }

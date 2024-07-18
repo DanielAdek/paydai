@@ -24,6 +24,5 @@ public class InvoiceRequest {
   private Double unitPrice;
   private String productDescription;
 
-  // price
-  private Long unitAmount;
+  private UUID workspaceId;
 }

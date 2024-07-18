@@ -10,4 +10,5 @@ public interface WorkspaceService {
   JapiResponse createWorkspace(WorkspaceRequest payload);
   JapiResponse getSalesRepWorkspaces();
   JapiResponse getWorkspaceSalesReps(UUID workspaceId, UUID roleId);
+  JapiResponse getWorkspaceTeams(UUID workspaceId);
 }

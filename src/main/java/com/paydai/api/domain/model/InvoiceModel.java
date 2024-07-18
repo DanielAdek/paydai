@@ -32,6 +32,10 @@ public class InvoiceModel {
   private LocalDateTime dueDate;
 
   @Column
+  @Enumerated(EnumType.STRING)
+  private InvoiceStatus status;
+
+  @Column
   private String currency;
 
   @Column(name = "merchant_fee")
@@ -39,6 +43,22 @@ public class InvoiceModel {
 
   @Column(name = "sales_rep_fee")
   private String saleRepFee; //
+
+  @Column(name = "snapshot_comm_percent")
+  private Double snapshotCommPercent;
+
+  @Column(name = "snapshot_comm_aggregate")
+  private AggregateType snapshotCommAggregate;
+
+  @Column(name = "snapshot_comm_interval")
+  private int snapshotCommInterval;
+
+  @Column(name = "snapshot_comm_interval_unit")
+  private String snapshotCommIntervalUnit;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
 
   @ManyToOne
   @JoinColumn(name = "user_workspace_id")
