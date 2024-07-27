@@ -44,7 +44,10 @@ public class UserModel implements UserDetails {
   private String extraField;
 
   @Column(name = "merchant_fee")
-  private Double merchantFee; // default debit 1.5
+  private Float merchantFee; // default debit 1.5
+
+  @Column(name = "sales_rep_fee")
+  private Float salesRepFee; // default to 0.5
 
   @CreationTimestamp
   @Column(name = "created_at")

@@ -57,10 +57,10 @@ public class InvoiceServiceImpl implements InvoiceService {
       CustomerModel customerModel = customerRepository.findByCustomerId(payload.getCustomerId());
 
       CustomerCreateParams customerCreateParams = CustomerCreateParams.builder()
-          .setName(customerModel.getName())
-          .setEmail(customerModel.getEmail())
-          .setDescription(customerModel.getDescription())
-          .build();
+        .setName(customerModel.getName())
+        .setEmail(customerModel.getEmail())
+        .setDescription(customerModel.getDescription())
+        .build();
 
       Customer customer = Customer.create(customerCreateParams);
 

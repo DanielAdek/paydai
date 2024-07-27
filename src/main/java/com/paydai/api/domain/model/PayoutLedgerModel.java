@@ -24,15 +24,23 @@ public class PayoutLedgerModel {
 
   private Double amount;
 
+  private Float fee;
+
   private String credit;
 
-  @ManyToOne
-  @JoinColumn(name = "user_workspace_id")
-  private UserWorkspaceModel userWorkspace;
+  @Column(name = "payout_date")
+  private LocalDateTime payoutDate;
+
+  @Enumerated(EnumType.STRING)
+  private PayoutStatusType status;
 
   @ManyToOne
   @JoinColumn(name = "invoice_id")
   private InvoiceModel invoice;
+
+  @ManyToOne
+  @JoinColumn(name = "user_workspace_id")
+  private UserWorkspaceModel userWorkspace;
 
   @CreationTimestamp
   @Column(name = "created_at")

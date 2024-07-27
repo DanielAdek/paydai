@@ -39,13 +39,13 @@ public class InvoiceModel {
   private String currency;
 
   @Column(name = "merchant_fee")
-  private Double merchantFee; // 1.5 this should take value at point of invoice create from user table
+  private Float merchantFee; // 1.5 this should take value at point of invoice create from user table
 
   @Column(name = "sales_rep_fee")
-  private String saleRepFee; //
+  private Float salesRepFee; //
 
   @Column(name = "snapshot_comm_percent")
-  private Double snapshotCommPercent;
+  private Float snapshotCommPercent;
 
   @Column(name = "snapshot_comm_aggregate")
   private AggregateType snapshotCommAggregate;

@@ -35,7 +35,7 @@ public class WebSecurityBeanConfig {
           "api/v1/auth/**",
             "api/v1/permission/**",
             "api/v1/invite/accept",
-            "api/v1/invoice/webhook",
+            "api/v1/webhook",
             "/swagger-ui/**",
             "/v3/api-docs/**"
           )

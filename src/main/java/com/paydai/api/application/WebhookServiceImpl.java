@@ -3,8 +3,10 @@ package com.paydai.api.application;
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.repository.WebhookRepository;
 import com.paydai.api.domain.service.WebhookService;
+import com.paydai.api.presentation.dto.webhook.WebhookRegister;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.model.*;
+import com.stripe.param.WebhookEndpointCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -73,8 +75,15 @@ public class WebhookServiceImpl implements WebhookService {
     } catch (Exception e) { throw e; }
   }
 
+  @Override
+  public JapiResponse registerWebhook(WebhookRegister webhookRegister) {
+    try {
+      WebhookEndpointCreateParams params = WebhookEndpointCreateParams.builder().build();
 
-  private void handlePaymentIntentSucceeded(PaymentIntent paymentIntent) {
-
+      return JapiResponse.success(null);
+    } catch (Exception e) { throw e; }
   }
+
+
+  private void handlePaymentIntentSucceeded(PaymentIntent paymentIntent) {}
 }
