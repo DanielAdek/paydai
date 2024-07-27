@@ -47,10 +47,10 @@ public class InvoiceServiceImpl implements InvoiceService {
       Product product = Product.create(productCreateParams);
 
       PriceCreateParams priceCreateParams = PriceCreateParams.builder()
-          .setProduct(product.getId())
-          .setUnitAmount(payload.getUnitPrice().longValue())
-          .setCurrency(payload.getCurrency())
-          .build();
+        .setProduct(product.getId())
+        .setUnitAmount(payload.getUnitPrice().longValue())
+        .setCurrency(payload.getCurrency())
+        .build();
 
       Price price = Price.create(priceCreateParams);
 
@@ -69,8 +69,8 @@ public class InvoiceServiceImpl implements InvoiceService {
           .setCustomer(customer.getId())
           .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
           .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
-          .setOnBehalfOf(userWorkspaceModel.getWorkspace().getOwner().getStripeId())
-          .setApplicationFeeAmount(10L)
+//          .setOnBehalfOf(userWorkspaceModel.getWorkspace().getOwner().getStripeId())
+//          .setApplicationFeeAmount(10L)
           .build();
 
       Invoice invoice = Invoice.create(invoiceCreateParams);

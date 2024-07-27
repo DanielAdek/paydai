@@ -1,9 +1,11 @@
 package com.paydai.api.presentation.controller.Impl;
 
 import com.paydai.api.domain.service.InvoiceService;
+import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.controller.InvoiceController;
 import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +28,11 @@ import java.util.UUID;
 @Tag(name = "Invoice", description = "APIs for invoices")
 public class InvoiceControllerImpl implements InvoiceController {
   private final InvoiceService service;
+  private final AppConfig config;
+
+  @PostConstruct
+  public void init() { Stripe.apiKey = config.getStripeKey(); }
+
   @Operation(
     summary = "Invoice create API endpoint",
     description = "POST response to show auth DTO, the invoice data"

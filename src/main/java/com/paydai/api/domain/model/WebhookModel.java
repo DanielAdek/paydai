@@ -26,10 +26,9 @@ public class WebhookModel {
 
   private String url;
 
-  @ElementCollection
-  @CollectionTable(name = "webhook_events", joinColumns = @JoinColumn(name = "webhook_id"))
-  @Column(name = "event")
-  private List<String> events;
+  private String event;
+
+  private String reponseJson;
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
@@ -38,4 +37,9 @@ public class WebhookModel {
   @UpdateTimestamp
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  //  @ElementCollection
+  //  @CollectionTable(name = "webhook_events", joinColumns = @JoinColumn(name = "webhook_id"))
+  //  @Column(name = "event")
+  //  private List<String> events;
 }

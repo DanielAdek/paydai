@@ -9,7 +9,7 @@ public record InviteRecord(
   UUID inviteId,
   String email,
   String inviteCode,
-  Double commission,
+  Float commission,
   AggregateType aggregate,
   int interval,
   String duration,

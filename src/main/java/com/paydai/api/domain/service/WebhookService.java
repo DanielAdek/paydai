@@ -8,5 +8,4 @@ import com.stripe.model.Event;
 public interface WebhookService {
   JapiResponse handleConnectEvents(String payload, Event event);
   JapiResponse handleAccountEvents(String payload, Event event);
-  JapiResponse registerWebhook(WebhookRegister webhookRegister);
 }

@@ -20,6 +20,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_tbl")
 public class UserModel implements UserDetails {
+
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
@@ -44,10 +45,10 @@ public class UserModel implements UserDetails {
   private String extraField;
 
   @Column(name = "merchant_fee")
-  private Float merchantFee; // default debit 1.5
+  private Float merchantFee = 1.5F;
 
   @Column(name = "sales_rep_fee")
-  private Float salesRepFee; // default to 0.5
+  private Float salesRepFee = 0.5F;
 
   @CreationTimestamp
   @Column(name = "created_at")
@@ -66,31 +67,24 @@ public class UserModel implements UserDetails {
   @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private WorkspaceModel workspace;
 
-//  @Override
-//  public Collection<? extends GrantedAuthority> getAuthorities() {
-//    return userWorkspaces.stream()
-//      .map(UserWorkspaceModel::getRole)
-//      .flatMap(role -> role.getPermissions().stream())
-//      .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
-//      .collect(Collectors.toSet());
-//  }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-      String authority = (userType != null) ? userType.name() : UserType.SALES_REP.name();
-      return List.of(new SimpleGrantedAuthority(authority));
-    }
+  // Override UserDetails methods
+  @Override
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+    String authority = (userType != null) ? userType.name() : UserType.SALES_REP.name();
+    return List.of(new SimpleGrantedAuthority(authority));
+  }
 
   @Override
-  public String getUsername() { return String.valueOf(id); }
+  public String getUsername() {
+    return String.valueOf(id);
+  }
 
   @Override
   public String getPassword() {
-    // Return password from one of the associated emails
     return emails.stream()
       .filter(email -> email.getPasswordHash() != null)
       .findFirst()
-      .map(email -> email.getPasswordHash())
+      .map(EmailModel::getPasswordHash)
       .orElse(null);
   }
 

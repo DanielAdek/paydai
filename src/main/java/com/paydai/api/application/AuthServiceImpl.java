@@ -54,8 +54,6 @@ public class AuthServiceImpl implements AuthService {
       // Build user data to save
       UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
 
-      if (payload.getUserType().equals(UserType.MERCHANT)) buildUser.setMerchantFee(1.5);
-
       // Save user
       UserModel userModel = repository.save(buildUser);
 

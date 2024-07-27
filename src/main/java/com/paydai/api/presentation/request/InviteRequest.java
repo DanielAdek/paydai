@@ -26,5 +26,5 @@ public class InviteRequest {
   private int interval;
   private String intervalUnit;
   private UUID roleId;
-  private Double commission;
+  private Float commission;
 }

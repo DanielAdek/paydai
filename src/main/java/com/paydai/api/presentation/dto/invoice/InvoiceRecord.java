@@ -22,7 +22,7 @@ public record InvoiceRecord(
   Double amount,
   String productDescription,
   Double productUnitPrice,
-  Double snapshotCommPercent,
+  Float snapshotCommPercent,
   AggregateType snapshotCommAggregate,
   int snapshotCommInterval,
   String snapshotCommIntervalUnit,
