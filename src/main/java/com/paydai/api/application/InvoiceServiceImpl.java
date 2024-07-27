@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.InvoiceService;
@@ -66,8 +67,10 @@ public class InvoiceServiceImpl implements InvoiceService {
       InvoiceCreateParams invoiceCreateParams =
         InvoiceCreateParams.builder()
           .setCustomer(customer.getId())
-//          .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
-//          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
+          .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
+          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
+          .setOnBehalfOf(userWorkspaceModel.getWorkspace().getOwner().getStripeId())
+          .setApplicationFeeAmount(10L)
           .build();
 
       Invoice invoice = Invoice.create(invoiceCreateParams);
@@ -148,6 +151,44 @@ public class InvoiceServiceImpl implements InvoiceService {
 
   @Override
   public JapiResponse getInvoice(String invoiceCode) {
-    return null;
+    try {
+      InvoiceModel invoiceModel = repository.findByInvoiceCode(invoiceCode);
+
+      if (invoiceModel == null) throw new NotFoundException("Invalid invoice code");
+
+      InvoiceRecord invoiceRecord = invoiceDtoMapper.apply(invoiceModel);
+
+      return JapiResponse.success(invoiceRecord);
+    } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse finalizeInvoice(String invoiceCode) throws StripeException {
+    try {
+      InvoiceModel invoiceModel = repository.findByInvoiceCode(invoiceCode);
+
+      if (invoiceModel == null) throw new NotFoundException("Invoice code is invalid");
+
+      Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId());
+
+      InvoiceFinalizeInvoiceParams invoiceFinalizeInvoiceParams = InvoiceFinalizeInvoiceParams.builder().build();
+
+      return JapiResponse.success(invoiceFinalizeInvoiceParams);
+    } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse sendInvoice(String invoiceCode) throws StripeException {
+    try {
+      InvoiceModel invoiceModel = repository.findByInvoiceCode(invoiceCode);
+
+      if (invoiceModel == null) throw new NotFoundException("Invoice code is invalid");
+
+      Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId());
+
+      InvoiceSendInvoiceParams invoiceSendInvoiceParams = InvoiceSendInvoiceParams.builder().build();
+
+      return JapiResponse.success(invoiceSendInvoiceParams);
+    } catch (Exception e) { throw e; }
   }
 }

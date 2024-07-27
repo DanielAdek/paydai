@@ -9,4 +9,5 @@ public interface InvoiceRepository {
   List<InvoiceModel> findByCustomerId(UUID customerId);
   InvoiceModel save(InvoiceModel buildInvoice);
   List<InvoiceModel> findByWorkspaceInvoices(UUID workspaceId);
+  InvoiceModel findByInvoiceCode(String code);
 }
