@@ -73,6 +73,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         commissions.put("paydaiFeeCloser", calculatePFC(payload.getRevenue()));
         commissions.put("paydaiFeeSetter", calculatePFS(payload.getRevenue()));
         commissions.put("setterCommission", calculateSalesRepCommission(payload.getRevenue(), payload.getSetterPercent()));
+        commissions.put("closerCommission", calculateSalesRepCommission(payload.getRevenue(), payload.getCloserPercent()));
         commissions.put("setterNet", calculateSalesRepNetSetter(payload.getRevenue(), payload.getSetterPercent()));
         commissions.put("closerNet", calculateSalesRepNetCloser(payload.getRevenue(), payload.getCloserPercent()));
         double paydaiTotalComm = calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue());

@@ -1,10 +1,7 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.exception.ConflictException;
-import com.paydai.api.domain.model.CustomerModel;
-import com.paydai.api.domain.model.CustomerType;
-import com.paydai.api.domain.model.RoleModel;
-import com.paydai.api.domain.model.UserModel;
+import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.CustomerRepository;
 import com.paydai.api.domain.service.CustomerService;
 import com.paydai.api.presentation.dto.customer.CustomerDto;
@@ -27,9 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
-  private final RoleDtoMapper roleDtoMapper;
   private final CustomerRepository repository;
-  private final ProfileDtoMapper profileDtoMapper;
   private final CustomerDtoMapper customerDtoMapper;
 
   @Override
@@ -39,7 +34,7 @@ public class CustomerServiceImpl implements CustomerService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      CustomerModel customerModel = repository.findByCustomerEmail(request.getEmail());
+      CustomerModel customerModel = repository.findByCustomerEmail(request.getEmail(), request.getWorkspaceId());
 
       if (customerModel != null) throw new ConflictException("Customer already exit");
 
@@ -51,9 +46,16 @@ public class CustomerServiceImpl implements CustomerService {
         .phone(request.getPhone())
         .description(request.getDescription())
         .closer(UserModel.builder().id(request.getCloserId()).build())
+        .workspace(WorkspaceModel.builder().id(request.getWorkspaceId()).build())
         .build();
 
-      if (request.getRoleId() != null) newCustomer.setCreatorRole(RoleModel.builder().id(request.getRoleId()).build());
+      if (request.getRoleId() != null) {
+        RoleModel roleModel = RoleModel.builder().id(request.getRoleId()).build();
+        newCustomer.setCreatorRole(roleModel);
+        if (roleModel.getRole().equals("setter")) {
+          newCustomer.setSetterInvolved(true);
+        }
+      }
 
       CustomerModel lead = repository.save(newCustomer);
 

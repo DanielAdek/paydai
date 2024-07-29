@@ -16,8 +16,8 @@ public interface CustomerRepositoryImpl extends CustomerRepository, JpaRepositor
   CustomerModel findByCustomerId(UUID customerId);
 
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl WHERE email=?1")
-  CustomerModel findByCustomerEmail(String email);
+  @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl WHERE email=?1 AND workspace_id=?2")
+  CustomerModel findByCustomerEmail(String email, UUID workspaceId);
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl")

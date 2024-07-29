@@ -11,7 +11,9 @@ public record CustomerRecord (
   String phone,
   CustomerType stage,
   String description,
+  UUID closerId,
   String closer,
+  UUID creatorId,
   String creator,
   String creatorRole
 ) {
