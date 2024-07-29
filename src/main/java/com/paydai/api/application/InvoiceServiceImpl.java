@@ -37,6 +37,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
+      UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
+
+      CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();
+
       ProductCreateParams productCreateParams = ProductCreateParams.builder().setName(payload.getProductName()).build();
 
       Product product = Product.create(productCreateParams);
@@ -65,8 +69,8 @@ public class InvoiceServiceImpl implements InvoiceService {
           .setCustomer(customer.getId())
           .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
           .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
-//          .setOnBehalfOf(userWorkspaceModel.getWorkspace().getOwner().getStripeId())
-//          .setApplicationFeeAmount(10L)
+          .setOnBehalfOf(closerWorkspaceModel.getWorkspace().getOwner().getStripeId())
+          .setApplicationFeeAmount(10L)
           .build();
 
       Invoice invoice = Invoice.create(invoiceCreateParams);
@@ -89,10 +93,6 @@ public class InvoiceServiceImpl implements InvoiceService {
           .stripeProductId(product.getId())
           .build()
       );
-
-      UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
-
-      CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission(); // commission of the creator of invoice (closer)
 
       UserWorkspaceModel setterWorkspaceModel = null;
       if (customerModel.getSetterInvolved()) {

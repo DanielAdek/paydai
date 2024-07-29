@@ -67,7 +67,7 @@ public class WebhookControllerImpl implements WebhookController {
     @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
   })
   @Override
-  @PostMapping
+  @PostMapping("invoice")
   public ResponseEntity handleAccountEvents(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
     try {
       System.out.println("this is the signature  =====   " + signature);
