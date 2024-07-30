@@ -10,6 +10,7 @@ import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -42,9 +43,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       CommissionSettingModel commissionSettingModel = userWorkspaceModel.getCommission();
 
+      String connectedAccountId = userWorkspaceModel.getWorkspace().getOwner().getStripeId();
+
+      RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
+
       ProductCreateParams productCreateParams = ProductCreateParams.builder().setName(payload.getProductName()).build();
 
-      Product product = Product.create(productCreateParams);
+      Product product = Product.create(productCreateParams, requestOptions);
 
       PriceCreateParams priceCreateParams = PriceCreateParams.builder()
         .setProduct(product.getId())
@@ -52,7 +57,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         .setCurrency(payload.getCurrency())
         .build();
 
-      Price price = Price.create(priceCreateParams);
+      Price price = Price.create(priceCreateParams, requestOptions);
 
       CustomerModel customerModel = customerRepository.findByCustomerId(payload.getCustomerId());
 
@@ -64,16 +69,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       Customer customer = Customer.create(customerCreateParams);
 
+      Long now = Instant.now().getEpochSecond();
+
       InvoiceCreateParams invoiceCreateParams =
         InvoiceCreateParams.builder()
           .setCustomer(customer.getId())
           .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
-          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
-//          .setOnBehalfOf(userWorkspaceModel.getWorkspace().getOwner().getStripeId())
-//          .setApplicationFeeAmount(10L)
+          .setDueDate(now) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
+          .setApplicationFeeAmount(246000L)
           .build();
 
-      Invoice invoice = Invoice.create(invoiceCreateParams);
+      Invoice invoice = Invoice.create(invoiceCreateParams, requestOptions);
 
       InvoiceItemCreateParams params =
         InvoiceItemCreateParams.builder()
