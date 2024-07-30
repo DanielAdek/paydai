@@ -39,9 +39,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
+      UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
 
-      CommissionSettingModel commissionSettingModel = userWorkspaceModel.getCommission();
+      CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();
 
       String connectedAccountId = userWorkspaceModel.getWorkspace().getOwner().getStripeId();
 
@@ -61,6 +61,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       CustomerModel customerModel = customerRepository.findByCustomerId(payload.getCustomerId());
 
+      // find customer from stripe before below
       CustomerCreateParams customerCreateParams = CustomerCreateParams.builder()
         .setName(customerModel.getName())
         .setEmail(customerModel.getEmail())
@@ -75,6 +76,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceCreateParams.builder()
           .setCustomer(customer.getId())
           .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
+          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
+          .setOnBehalfOf(closerWorkspaceModel.getWorkspace().getOwner().getStripeId())
+          .setApplicationFeeAmount(10L)
           .setDueDate(now) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
           .setApplicationFeeAmount(246000L)
           .build();
@@ -100,33 +104,42 @@ public class InvoiceServiceImpl implements InvoiceService {
           .build()
       );
 
+      UserWorkspaceModel setterWorkspaceModel = null;
+      if (customerModel.getSetterInvolved()) {
+        setterWorkspaceModel = userWorkspaceRepository.findOneByUserId(customerModel.getCreator().getId(), payload.getWorkspaceId());
+      }
+
       LocalDateTime localDateTime = LocalDateTime.now();
       ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
       long milliseconds = zonedDateTime.toInstant().toEpochMilli();
 
 
-      InvoiceModel invoiceModel = repository.save(
-        InvoiceModel.builder()
-          .stripeInvoiceId(invoice.getId())
-          .subject(payload.getSubject())
-          .currency(payload.getCurrency())
-          .customer(customerModel)
-          .dueDate(payload.getDueDate())
-          .stripeInvoiceItem(invoiceItem.getInvoice())
-          .userWorkspace(userWorkspaceModel)
-          .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-          .product(productModel)
-          .status(InvoiceStatus.CREATED)
-          .snapshotCommPercent(commissionSettingModel.getCommission())
-          .snapshotCommInterval(commissionSettingModel.getInterval())
-          .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
-          .snapshotCommAggregate(commissionSettingModel.getAggregate())
-//          .merchantFee()
-          .invoiceCode("INV" + milliseconds)
-          .stripeInvoicePdf(invoice.getInvoicePdf())
-          .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
-          .build()
-      );
+      InvoiceModel buildInvoice = InvoiceModel.builder()
+        .stripeInvoiceId(invoice.getId())
+        .subject(payload.getSubject())
+        .currency(payload.getCurrency())
+        .customer(customerModel)
+        .dueDate(payload.getDueDate())
+        .stripeInvoiceItem(invoiceItem.getInvoice())
+        .userWorkspace(closerWorkspaceModel)
+        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+        .product(productModel)
+        .status(InvoiceStatus.CREATED)
+        .snapshotCommCloserPercent(commissionSettingModel.getCommission())
+        .snapshotCommSetterPercent(0.0F)
+        .snapshotCommInterval(commissionSettingModel.getInterval())
+        .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
+        .snapshotCommAggregate(commissionSettingModel.getAggregate())
+        .invoiceCode("INV" + milliseconds)
+        .stripeInvoicePdf(invoice.getInvoicePdf())
+        .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
+        .build();
+
+      if (setterWorkspaceModel != null) {
+        buildInvoice.setSnapshotCommSetterPercent(setterWorkspaceModel.getCommission().getCommission()); // commission of the creator of customer (setter)
+      }
+
+      InvoiceModel invoiceModel = repository.save(buildInvoice);
 
       InvoiceRecord invoiceRecord = invoiceDtoMapper.apply(invoiceModel);
 
