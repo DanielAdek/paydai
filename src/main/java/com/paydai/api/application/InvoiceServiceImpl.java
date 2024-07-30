@@ -43,7 +43,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();
 
-      String connectedAccountId = userWorkspaceModel.getWorkspace().getOwner().getStripeId();
+      String connectedAccountId = closerWorkspaceModel.getWorkspace().getOwner().getStripeId();
 
       RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
 
