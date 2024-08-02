@@ -22,9 +22,9 @@ public class PayoutLedgerModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private Double amount;
+  private double amount;
 
-  private Float fee;
+  private float fee;
 
   private String credit;
 

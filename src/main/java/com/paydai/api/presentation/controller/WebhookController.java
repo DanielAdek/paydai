@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 public interface WebhookController {
-  ResponseEntity handleConnectEvents(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature);
-  ResponseEntity handleAccountEvents(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature);
+  ResponseEntity handleInvoiceEventConnectAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature);
+  ResponseEntity handleTransferEventAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature);
 }

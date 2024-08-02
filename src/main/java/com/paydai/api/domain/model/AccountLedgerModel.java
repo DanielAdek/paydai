@@ -13,32 +13,29 @@ import java.util.UUID;
 
 @Data
 @Builder
-@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "webhook_logs_tbl")
-public class WebhookModel {
+@Entity
+@Table(name = "account_ledger_tbl")
+public class AccountLedgerModel {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private String url;
+  private double revenue;
 
-  private String event;
-
-  @Column(name = "stripe_request_json", length = 2048)
-  private String stripeRequestJson;
+  private double liability;
 
   @ManyToOne
-  @JoinColumn(name = "invoice_id")
-  private InvoiceModel invoiceModel;
+  @JoinColumn(name = "user_id")
+  private UserModel user;
 
   @ManyToOne
-  @JoinColumn(name = "payout_ledger_id")
-  private PayoutLedgerModel payoutLedgerModel;
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
 
   @CreationTimestamp
-  @Column(name = "created_at", updatable = false)
+  @Column(name = "created_at")
   private LocalDateTime createdAt;
 
   @UpdateTimestamp

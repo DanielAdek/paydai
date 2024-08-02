@@ -2,6 +2,7 @@ package com.paydai.api.presentation.controller.Impl;
 
 import com.paydai.api.domain.service.CalculatorService;
 import com.paydai.api.presentation.controller.CalculatorController;
+import com.paydai.api.presentation.dto.commission.CommissionRecord;
 import com.paydai.api.presentation.request.CalcRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +37,7 @@ public class CalculatorControllerImpl implements CalculatorController {
   @PostMapping("/commissions")
   @Override
   public ResponseEntity<JapiResponse> displayCommissions(@RequestBody CalcRequest payload) {
-    JapiResponse response = service.displayCommissions(payload);
+    JapiResponse response = JapiResponse.success(service.displayCommissions(payload));
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

@@ -6,6 +6,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 
 public interface WebhookService {
-  JapiResponse handleConnectEvents(String payload, Event event);
-  JapiResponse handleAccountEvents(String payload, Event event);
+  JapiResponse handleInvoiceEventConnectAccount(String payload, Event event);
+  JapiResponse handleTransferEventAccount(String payload, Event event);
+  JapiResponse handleBalanceEventConnectAccount(String payload, Event event);
 }

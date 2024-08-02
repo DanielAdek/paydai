@@ -2,6 +2,7 @@ package com.paydai.api.presentation.dto.invoice;
 
 import com.paydai.api.domain.model.AggregateType;
 import com.paydai.api.domain.model.InvoiceStatus;
+import com.paydai.api.presentation.dto.commission.CommissionRecord;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +29,7 @@ public record InvoiceRecord(
   int snapshotCommInterval,
   String snapshotCommIntervalUnit,
   String salesRep,
-  InvoiceStatus status
+  InvoiceStatus status,
+  CommissionRecord commissionSplit
 ) {
 }

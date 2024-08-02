@@ -49,12 +49,13 @@ public class CustomerServiceImpl implements CustomerService {
         .workspace(WorkspaceModel.builder().id(request.getWorkspaceId()).build())
         .build();
 
+      if (request.getCreatorRole().equals("setter")) {
+        newCustomer.setSetterInvolved(true);
+      }
+
       if (request.getRoleId() != null) {
         RoleModel roleModel = RoleModel.builder().id(request.getRoleId()).build();
         newCustomer.setCreatorRole(roleModel);
-        if (roleModel.getRole().equals("setter")) {
-          newCustomer.setSetterInvolved(true);
-        }
       }
 
       CustomerModel lead = repository.save(newCustomer);

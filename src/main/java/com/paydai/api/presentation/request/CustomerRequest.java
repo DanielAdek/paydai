@@ -19,4 +19,5 @@ public class CustomerRequest {
   private UUID closerId;
   private String description;
   private UUID workspaceId;
+  private String creatorRole;
 }

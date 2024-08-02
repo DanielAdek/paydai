@@ -1,17 +1,18 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.model.CommSplitScenarioType;
 import com.paydai.api.domain.service.CalculatorService;
+import com.paydai.api.presentation.dto.commission.CommissionDto;
+import com.paydai.api.presentation.dto.commission.CommissionDtoMapper;
+import com.paydai.api.presentation.dto.commission.CommissionRecord;
 import com.paydai.api.presentation.request.CalcRequest;
-import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CalculatorServiceImpl implements CalculatorService {
+  private final CommissionDtoMapper commissionDtoMapper;
   private static final float MERCHANT_FEE_PERCENTAGE = 0.015F;
   private static final float SALES_REP_FEE_PERCENTAGE = 0.005F;
   private static final float SETTER_FEE_PERCENTAGE = 33.33F / 100;
@@ -58,28 +59,28 @@ public class CalculatorServiceImpl implements CalculatorService {
   }
 
   @Override
-  public JapiResponse displayCommissions(CalcRequest payload) {
+  public CommissionRecord displayCommissions(CalcRequest payload) {
     try {
-      Map<String, Object> commissions = new HashMap<>();
-      commissions.put("paydaiFeeMerchant", calculatePFMax(payload.getRevenue()));
+      CommissionDto commissionDto = CommissionDto.builder().paydaiFeeMerchant(calculatePFMax(payload.getRevenue())).build();
 
-      if (payload.getScenario() == 1) {
-        commissions.put("paydaiFeeCloserOnly", calculatePFMin(payload.getRevenue()));
-        commissions.put("closerCommission", calculateSalesRepCommission(payload.getRevenue(), payload.getCloserPercent()));
-        commissions.put("closerOnlyNet", calculateSalesRepNetCloserOnly(payload.getRevenue(), payload.getCloserPercent()));
+      if (payload.getScenario() == CommSplitScenarioType.CLOSER_ONLY) {
+        commissionDto.setPaydaiFeeCloserOnly(calculatePFMin(payload.getRevenue()));
+        commissionDto.setCloserCommission(calculateSalesRepCommission(payload.getRevenue(), payload.getCloserPercent()));
+        commissionDto.setCloserOnlyNet(calculateSalesRepNetCloserOnly(payload.getRevenue(), payload.getCloserPercent()));
         double paydaiTotalComm = calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue());
-        commissions.put("paydaiTotalComm", paydaiTotalComm);
-      } else {
-        commissions.put("paydaiFeeCloser", calculatePFC(payload.getRevenue()));
-        commissions.put("paydaiFeeSetter", calculatePFS(payload.getRevenue()));
-        commissions.put("setterCommission", calculateSalesRepCommission(payload.getRevenue(), payload.getSetterPercent()));
-        commissions.put("closerCommission", calculateSalesRepCommission(payload.getRevenue(), payload.getCloserPercent()));
-        commissions.put("setterNet", calculateSalesRepNetSetter(payload.getRevenue(), payload.getSetterPercent()));
-        commissions.put("closerNet", calculateSalesRepNetCloser(payload.getRevenue(), payload.getCloserPercent()));
-        double paydaiTotalComm = calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue());
-        commissions.put("paydaiTotalComm", paydaiTotalComm);
+        commissionDto.setPaydaiTotalComm(paydaiTotalComm);
       }
-      return JapiResponse.success(commissions);
+      if (payload.getScenario() == CommSplitScenarioType.CLOSER_AND_SETTER) {
+        commissionDto.setPaydaiFeeCloser(calculatePFC(payload.getRevenue()));
+        commissionDto.setPaydaiFeeSetter(calculatePFS(payload.getRevenue()));
+        commissionDto.setSetterCommission(calculateSalesRepCommission(payload.getRevenue(), payload.getSetterPercent()));
+        commissionDto.setCloserCommission(calculateSalesRepCommission(payload.getRevenue(), payload.getCloserPercent()));
+        commissionDto.setSetterNet(calculateSalesRepNetSetter(payload.getRevenue(), payload.getSetterPercent()));
+        commissionDto.setCloserNet(calculateSalesRepNetCloser(payload.getRevenue(), payload.getCloserPercent()));
+        double paydaiTotalComm = calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue());
+        commissionDto.setPaydaiTotalComm(paydaiTotalComm);
+      }
+      return commissionDtoMapper.apply(commissionDto);
     } catch (Exception e) { throw e; }
   }
 }

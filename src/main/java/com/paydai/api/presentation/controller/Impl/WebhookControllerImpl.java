@@ -43,11 +43,11 @@ public class WebhookControllerImpl implements WebhookController {
     @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
   })
   @Override
-  @PostMapping("connect")
-  public ResponseEntity handleConnectEvents(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature) {
+  @PostMapping("invoice/connect")
+  public ResponseEntity handleInvoiceEventConnectAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature) {
     try {
       Event event = Webhook.constructEvent(payload, signature, "whsec_e1D3moeHn2cSDpirELRrPI1rhOaLMLgw");
-      JapiResponse response = service.handleConnectEvents(payload, event);
+      JapiResponse response = service.handleInvoiceEventConnectAccount(payload, event);
       return ResponseEntity.status(response.getStatusCode()).body(response.getMessage());
     } catch (SignatureVerificationException e) {
 //      log.error("⚠️  Webhook error while validating signature.", e);
@@ -67,12 +67,11 @@ public class WebhookControllerImpl implements WebhookController {
     @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
   })
   @Override
-  @PostMapping("invoice")
-  public ResponseEntity handleAccountEvents(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
+  @PostMapping("transfer/account")
+  public ResponseEntity handleTransferEventAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
     try {
-      System.out.println("this is the signature  =====   " + signature);
       Event event = Webhook.constructEvent(payload, signature, "whsec_e1D3moeHn2cSDpirELRrPI1rhOaLMLgw");
-      JapiResponse response = service.handleAccountEvents(payload, event);
+      JapiResponse response = service.handleTransferEventAccount(payload, event);
       return ResponseEntity.ok(response.getMessage());
     } catch (SignatureVerificationException e) {
       log.error("⚠️  Webhook error while validating signature.", e);

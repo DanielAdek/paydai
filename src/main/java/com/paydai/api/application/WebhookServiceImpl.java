@@ -20,7 +20,7 @@ public class WebhookServiceImpl implements WebhookService {
   private final WebhookConstant webhookConstant;
 
   @Override
-  public JapiResponse handleConnectEvents(String payload, Event event) {
+  public JapiResponse handleInvoiceEventConnectAccount(String payload, Event event) {
     try {
       EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
@@ -36,7 +36,7 @@ public class WebhookServiceImpl implements WebhookService {
 
       if (event.getType().equals(webhookConstant.invoice_created)) {
         System.out.println("The invoice create from connect called!");
-        handleEventCallSucceeded(stripeObject);
+        processRequestFromInvoiceEvent(stripeObject);
       }
 
       if (event.getType().equals(webhookConstant.invoice_finalize)) {
@@ -55,7 +55,7 @@ public class WebhookServiceImpl implements WebhookService {
   }
 
   @Override
-  public JapiResponse handleAccountEvents(String payload, Event event) {
+  public JapiResponse handleTransferEventAccount(String payload, Event event) {
     try {
       EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
@@ -67,17 +67,12 @@ public class WebhookServiceImpl implements WebhookService {
         throw new ApiRequestException("Deserialization error");
       }
 
-      if (event.getType().equals(webhookConstant.invoice_created)) {
-        System.out.println("The invoice create from account called!");
-        handleEventCallSucceeded(stripeObject);
+      if (event.getType().equals(webhookConstant.transfer_created)) {
+        processRequestFromBalanceEvent(stripeObject);
       }
 
-      if (event.getType().equals(webhookConstant.invoice_finalize)) {
-        System.out.println("The invoice finalize from account called!");
-      }
-
-      if (event.getType().equals(webhookConstant.invoice_sent)) {
-        System.out.println("The invoice sent from account called!");
+      if (event.getType().equals(webhookConstant.transfer_reversed)) {
+        processRequestFromBalanceEvent(stripeObject);
       }
       else {
         log.warn("Unhandled event type: " + event.getType());
@@ -87,7 +82,39 @@ public class WebhookServiceImpl implements WebhookService {
     } catch (Exception e) { throw e; }
   }
 
-  private void handleEventCallSucceeded(StripeObject payload) {
+  @Override
+  public JapiResponse handleBalanceEventConnectAccount(String payload, Event event) {
+    try {
+      EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
+
+      StripeObject stripeObject;
+
+      if (dataObjectDeserializer.getObject().isPresent()) {
+        stripeObject = dataObjectDeserializer.getObject().get();
+      } else {
+        throw new ApiRequestException("Deserialization error");
+      }
+
+      if (event.getType().equals(webhookConstant.transfer_created)) {
+        processRequestFromBalanceEvent(stripeObject);
+      }
+
+      if (event.getType().equals(webhookConstant.transfer_reversed)) {
+        processRequestFromBalanceEvent(stripeObject);
+      }
+      else {
+        log.warn("Unhandled event type: " + event.getType());
+      }
+
+      return JapiResponse.success(null);
+    } catch (Exception e) { throw e; }
+  }
+
+  private void processRequestFromBalanceEvent(StripeObject payload) {
+    System.out.println(payload);
+  }
+
+  private void processRequestFromInvoiceEvent(StripeObject payload) {
     System.out.println(payload);
   }
 }
