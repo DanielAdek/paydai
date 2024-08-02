@@ -25,4 +25,7 @@ public class InvoiceRequest {
   private String productDescription;
 
   private UUID workspaceId;
+//  private UUID closerId;
+//  private UUID creatorId;
+//  private String creatorRole;
 }

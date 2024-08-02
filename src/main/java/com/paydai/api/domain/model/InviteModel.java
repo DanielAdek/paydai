@@ -29,7 +29,7 @@ public class InviteModel {
   private String inviteCode;
 
   @Column
-  private Double commission;
+  private Float commission;
 
   @Column
   private AggregateType aggregate;

@@ -12,5 +12,8 @@ import java.util.UUID;
 public interface InvoiceController {
   ResponseEntity<JapiResponse> create(@RequestBody InvoiceRequest payload) throws StripeException;
   ResponseEntity<JapiResponse> getInvoicesToCustomer(@RequestParam UUID customerId);
+  ResponseEntity<JapiResponse> getInvoice(@RequestParam String invoiceCode);
   ResponseEntity<JapiResponse> getWorkspaceInvoicesToCustomers(@RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> finalizeInvoice(@RequestParam String invoiceCode) throws StripeException;
+  ResponseEntity<JapiResponse> sendInvoice(@RequestParam String invoice) throws StripeException;
 }

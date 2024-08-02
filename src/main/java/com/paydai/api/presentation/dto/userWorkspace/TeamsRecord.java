@@ -13,7 +13,7 @@ public record TeamsRecord(
   String workspace,
   UUID commSettingId,
   String payoutSchedule,
-  Double commission,
+  Float commission,
   UUID userWorkspaceId
 ) {
 }

@@ -173,7 +173,7 @@ public class AccountServiceImpl implements AccountService {
 
       UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      Account account = Account.retrieve(userModel.getStripeId());
+       Account account = Account.retrieve(userModel.getStripeId());
 
       Map<String, Object> hashMap = new HashMap<>();
 

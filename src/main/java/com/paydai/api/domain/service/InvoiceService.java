@@ -11,4 +11,6 @@ public interface InvoiceService {
   JapiResponse getInvoiceToCustomer(UUID customerId);
   JapiResponse getWorkspaceInvoicesToCustomers(UUID workspaceId);
   JapiResponse getInvoice(String invoiceCode);
+  JapiResponse finalizeInvoice(String invoiceCode) throws StripeException;
+  JapiResponse sendInvoice(String invoice) throws StripeException;
 }

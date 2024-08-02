@@ -28,6 +28,9 @@ public class InvoiceModel {
   @Column
   private String subject;
 
+  @Column
+  private double amount;
+
   @Column(name = "due_date")
   private LocalDateTime dueDate;
 
@@ -39,13 +42,16 @@ public class InvoiceModel {
   private String currency;
 
   @Column(name = "merchant_fee")
-  private Double merchantFee; // 1.5 this should take value at point of invoice create from user table
+  private Float merchantFee; // 1.5 this should take value at point of invoice create from user table
 
   @Column(name = "sales_rep_fee")
-  private String saleRepFee; //
+  private Float salesRepFee; // 0.5 this should take value at point of invoice create from user table
 
-  @Column(name = "snapshot_comm_percent")
-  private Double snapshotCommPercent;
+  @Column(name = "snapshot_comm_setter_percent")
+  private Float snapshotCommSetterPercent;
+
+  @Column(name = "snapshot_comm_closer_percent")
+  private Float snapshotCommCloserPercent;
 
   @Column(name = "snapshot_comm_aggregate")
   private AggregateType snapshotCommAggregate;
@@ -55,6 +61,9 @@ public class InvoiceModel {
 
   @Column(name = "snapshot_comm_interval_unit")
   private String snapshotCommIntervalUnit;
+
+  @Column(name = "comm_split_scenario")
+  private CommSplitScenarioType commSplitScenario;
 
   @ManyToOne
   @JoinColumn(name = "workspace_id")
@@ -70,23 +79,20 @@ public class InvoiceModel {
   @Column(name = "stripe_invoice_item")
   private String stripeInvoiceItem;
 
-  @Column(name = "stripe_invoice_pdf")
+  @Column(name = "stripe_invoice_pdf", length = 512)
   private String stripeInvoicePdf;
 
-  @Column(name = "stripe_invoice_hosted_url")
+  @Column(name = "stripe_invoice_hosted_url", length = 512)
   private String stripeInvoiceHostedUrl;
 
-  @Column(name = "stripe_invoice_details")
-  private String stripeInvoiceDetails; // String(Object) raw data; upon created
+  @Column(name = "stripe_invoice_details", length = 2048)
+  private String stripeInvoiceDetails;
 
   @Column(name = "stripe_invoice_status")
-  private Boolean stripeInvoiceStatus;
+  private String stripeInvoiceStatus;
 
   @Column(name = "calculated_commission")
-  private Double calculatedComm; // json
-
-  @Column(name = "stripe_invoice_webhook")
-  private String stripeInvoiceWebhook; // raw upon stripe return
+  private Double calculatedComm;
 
   @ManyToOne
   @JoinColumn(name = "customer_id")

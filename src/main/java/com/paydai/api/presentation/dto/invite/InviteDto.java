@@ -19,7 +19,7 @@ public class InviteDto {
   private UUID inviteId;
   private String email;
   private String inviteCode;
-  private Double commission;
+  private Float commission;
   private AggregateType aggregate;
   private int interval;
   private String duration;

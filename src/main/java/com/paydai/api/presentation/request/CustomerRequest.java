@@ -18,4 +18,6 @@ public class CustomerRequest {
   private String email;
   private UUID closerId;
   private String description;
+  private UUID workspaceId;
+  private String creatorRole;
 }

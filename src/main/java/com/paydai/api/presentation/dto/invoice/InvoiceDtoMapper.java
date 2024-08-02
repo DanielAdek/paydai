@@ -1,38 +1,39 @@
 package com.paydai.api.presentation.dto.invoice;
 
-import com.paydai.api.domain.model.InvoiceModel;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
 
 @Service
-public class InvoiceDtoMapper implements Function<InvoiceModel, InvoiceRecord> {
+public class InvoiceDtoMapper implements Function<InvoiceDto, InvoiceRecord> {
 
   @Override
-  public InvoiceRecord apply(InvoiceModel invoiceModel) {
+  public InvoiceRecord apply(InvoiceDto invoiceDto) {
     return new InvoiceRecord(
-      invoiceModel.getInvoiceCode(),
-      invoiceModel.getSubject(),
-      invoiceModel.getCurrency(),
-      invoiceModel.getDueDate(),
-      invoiceModel.getStripeInvoiceId(),
-      invoiceModel.getStripeInvoiceItem(),
-      invoiceModel.getStripeInvoicePdf(),
-      invoiceModel.getStripeInvoiceHostedUrl(),
-      invoiceModel.getCreatedAt(),
-      invoiceModel.getCustomer().getName(),
-      invoiceModel.getCustomer().getEmail(),
-      invoiceModel.getProduct().getItem(),
-      invoiceModel.getProduct().getQty(),
-      invoiceModel.getProduct().getUnitPrice(),
-      invoiceModel.getProduct().getDescription(),
-      invoiceModel.getProduct().getUnitPrice(),
-      invoiceModel.getSnapshotCommPercent(),
-      invoiceModel.getSnapshotCommAggregate(),
-      invoiceModel.getSnapshotCommInterval(),
-      invoiceModel.getSnapshotCommIntervalUnit(),
-      invoiceModel.getUserWorkspace().getUser().getFirstName(),
-      invoiceModel.getStatus()
+      invoiceDto.getInvoiceCode(),
+      invoiceDto.getSubject(),
+      invoiceDto.getCurrency(),
+      invoiceDto.getDueDate(),
+      invoiceDto.getStripeInvoiceId(),
+      invoiceDto.getStripeInvoiceItem(),
+      invoiceDto.getStripeInvoicePdf(),
+      invoiceDto.getStripeInvoiceHostedUrl(),
+      invoiceDto.getCreatedAt(),
+      invoiceDto.getCustomerName(),
+      invoiceDto.getCustomerEmail(),
+      invoiceDto.getProductName(),
+      invoiceDto.getProductQty(),
+      invoiceDto.getProductUnitPrice(),
+      invoiceDto.getProductDescription(),
+      invoiceDto.getProductUnitPrice(),
+      invoiceDto.getSnapshotCommCloserPercent(),
+      invoiceDto.getSnapshotCommSetterPercent(),
+      invoiceDto.getSnapshotCommAggregate(),
+      invoiceDto.getSnapshotCommInterval(),
+      invoiceDto.getSnapshotCommIntervalUnit(),
+      invoiceDto.getSalesRep(),
+      invoiceDto.getStatus(),
+      invoiceDto.getCommissionSplit()
     );
   }
 }

@@ -32,6 +32,8 @@ public class CustomerModel {
 
   private String phone;
 
+  private Boolean setterInvolved;
+
   @ManyToOne
   @JoinColumn(name = "closer_id")
   private UserModel closer;
@@ -43,6 +45,10 @@ public class CustomerModel {
   @ManyToOne
   @JoinColumn(name = "role_id")
   private RoleModel creatorRole;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
 
   @Column
   @Enumerated(EnumType.STRING)

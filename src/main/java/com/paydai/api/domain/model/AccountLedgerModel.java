@@ -16,31 +16,23 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "payout_ledger_tbl")
-public class PayoutLedgerModel {
+@Table(name = "account_ledger_tbl")
+public class AccountLedgerModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double amount;
+  private double revenue;
 
-  private float fee;
-
-  private String credit;
-
-  @Column(name = "payout_date")
-  private LocalDateTime payoutDate;
-
-  @Enumerated(EnumType.STRING)
-  private PayoutStatusType status;
+  private double liability;
 
   @ManyToOne
-  @JoinColumn(name = "invoice_id")
-  private InvoiceModel invoice;
+  @JoinColumn(name = "user_id")
+  private UserModel user;
 
   @ManyToOne
-  @JoinColumn(name = "user_workspace_id")
-  private UserWorkspaceModel userWorkspace;
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
 
   @CreationTimestamp
   @Column(name = "created_at")

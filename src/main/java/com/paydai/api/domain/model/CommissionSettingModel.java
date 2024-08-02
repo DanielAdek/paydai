@@ -23,7 +23,7 @@ public class CommissionSettingModel {
   private UUID id;
 
   @Column
-  private Double commission;
+  private Float commission;
 
   @Column
   private AggregateType aggregate;

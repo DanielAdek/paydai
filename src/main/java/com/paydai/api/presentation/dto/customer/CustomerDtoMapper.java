@@ -16,7 +16,9 @@ public class CustomerDtoMapper implements Function<CustomerDto, CustomerRecord> 
       customerDto.getPhone(),
       customerDto.getStage(),
       customerDto.getDescription(),
+      customerDto.getCloserId(),
       customerDto.getCloser(),
+      customerDto.getCreatorId(),
       customerDto.getCreator(),
       customerDto.getCreatorRole()
     );
