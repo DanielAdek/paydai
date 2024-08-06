@@ -14,13 +14,13 @@ public interface InvoiceRepository {
   InvoiceModel findByInvoiceCode(String code);
   void updateInvoiceByInvoiceCode(
     String invoiceCode,
-    double commission,
     String stripeInvoiceDetails,
     String stripeInvoiceHostUrl,
     String stripeInvoicePdf,
     String stripeInvoiceStatus,
-    String status
+    InvoiceStatus status
   );
-  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus);
+  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
   void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
+  InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
 }

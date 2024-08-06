@@ -10,6 +10,9 @@ public class CommissionDtoMapper implements Function<CommissionDto, CommissionRe
   public CommissionRecord apply(CommissionDto commissionDto) {
     return new CommissionRecord(
       commissionDto.getPaydaiFeeMerchant(),
+      commissionDto.getPaydaiFeeSetterPercent(),
+      commissionDto.getPaydaiFeeCloserPercent(),
+      commissionDto.getPaydaiFeeMerchantPercent(),
       commissionDto.getPaydaiFeeCloser(),
       commissionDto.getCloserCommission(),
       commissionDto.getCloserOnlyNet(),
@@ -18,7 +21,8 @@ public class CommissionDtoMapper implements Function<CommissionDto, CommissionRe
       commissionDto.getPaydaiFeeSetter(),
       commissionDto.getSetterCommission(),
       commissionDto.getSetterNet(),
-      commissionDto.getCloserNet()
+      commissionDto.getCloserNet(),
+      commissionDto.getPaydaiApplicationFee()
     );
   }
 }

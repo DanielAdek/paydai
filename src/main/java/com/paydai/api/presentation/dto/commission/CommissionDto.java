@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CommissionDto {
   private double paydaiFeeMerchant;
+  private float paydaiFeeSetterPercent;
+  private float paydaiFeeCloserPercent;
+  private float paydaiFeeMerchantPercent;
   private double paydaiFeeCloserOnly;
   private double closerCommission;
   private double closerOnlyNet;
@@ -20,4 +23,5 @@ public class CommissionDto {
   private double setterCommission;
   private double setterNet;
   private double closerNet;
+  private double paydaiApplicationFee;
 }

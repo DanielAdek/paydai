@@ -20,4 +20,7 @@ public class WebhookConstant {
   // TRANSFER WEBHOOK EVENTS
   public final String transfer_created = "transfer.created";
   public final String transfer_reversed = "transfer.reversed";
+
+  // BALANCE AVAILABLE
+  public final String balance = "balance.available";
 }

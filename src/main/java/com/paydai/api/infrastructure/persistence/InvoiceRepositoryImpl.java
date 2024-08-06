@@ -30,26 +30,30 @@ public interface InvoiceRepositoryImpl extends InvoiceRepository, JpaRepository<
   @Override
   @Transactional
   @Modifying
-  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET calculated_commission=:commission, stripe_invoice_details=:stripeInvoiceDetails, stripe_invoice_hosted_url=:stripeInvoiceHostUrl, stripe_invoice_status=:stripeInvoiceStatus, stripe_invoice_pdf=:stripeInvoicePdf, status=:status WHERE invoice_code=:invoiceCode")
+  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_details=:stripeInvoiceDetails, stripe_invoice_hosted_url=:stripeInvoiceHostUrl, stripe_invoice_status=:stripeInvoiceStatus, stripe_invoice_pdf=:stripeInvoicePdf, status=:status WHERE invoice_code=:invoiceCode")
   void updateInvoiceByInvoiceCode(
     @Param("invoiceCode") String invoiceCode,
-    @Param("commission") double commission,
+//    @Param("commission") double commission,
     @Param("stripeInvoiceDetails") String stripeInvoiceDetails,
     @Param("stripeInvoiceHostUrl") String stripeInvoiceHostUrl,
     @Param("stripeInvoicePdf") String stripeInvoicePdf,
     @Param("stripeInvoiceStatus") String stripeInvoiceStatus,
-    @Param("status") String status
+    @Param("status") InvoiceStatus status
   );
 
   @Override
   @Transactional
   @Modifying
-  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2 WHERE invoice_code=?1")
-  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus);
+  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1")
+  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
 
   @Override
   @Transactional
   @Modifying
   @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1")
   void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE stripe_invoice_code=?1")
+  InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
 }

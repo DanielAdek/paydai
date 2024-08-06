@@ -18,6 +18,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "invoice_tbl")
 public class InvoiceModel {
+  //TODO SECTION: INVOICE
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
@@ -31,6 +32,9 @@ public class InvoiceModel {
   @Column
   private double amount;
 
+  @Column
+  private int amtSmUnit;
+
   @Column(name = "due_date")
   private LocalDateTime dueDate;
 
@@ -41,17 +45,33 @@ public class InvoiceModel {
   @Column
   private String currency;
 
-  @Column(name = "merchant_fee")
-  private Float merchantFee; // 1.5 this should take value at point of invoice create from user table
-
-  @Column(name = "sales_rep_fee")
-  private Float salesRepFee; // 0.5 this should take value at point of invoice create from user table
-
+  //TODO SECTION: SNAPSHOT COMMISSION
   @Column(name = "snapshot_comm_setter_percent")
   private Float snapshotCommSetterPercent;
 
+  @Column(name = "snapshot_setter_fee_percent")
+  private Float snapshotSetterFeePercent;
+
+  @Column(name = "snapshot_comm_setter")
+  private double snapshotCommSetter;
+
+  @Column(name = "snapshot_comm_setter_net")
+  private double snapshotCommSetterNet;
+
   @Column(name = "snapshot_comm_closer_percent")
   private Float snapshotCommCloserPercent;
+
+  @Column(name = "snapshot_closer_fee_percent")
+  private Float snapshotCloserFeePercent;
+
+  @Column(name = "snapshot_comm_closer")
+  private double snapshotCommCloser;
+
+  @Column(name = "snapshot_comm_closer_net")
+  private double snapshotCommCloserNet;
+
+  @Column(name = "snapshot_merchant_fee_percent")
+  private Float snapshotMerchantFeePercent;
 
   @Column(name = "snapshot_comm_aggregate")
   private AggregateType snapshotCommAggregate;
@@ -62,17 +82,16 @@ public class InvoiceModel {
   @Column(name = "snapshot_comm_interval_unit")
   private String snapshotCommIntervalUnit;
 
+  @Column(name = "snapshot_application_fee")
+  private double applicationFee;
+
+  @Column(name = "snapshot_platform_fee")
+  private double platformFee;
+
   @Column(name = "comm_split_scenario")
   private CommSplitScenarioType commSplitScenario;
 
-  @ManyToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
-
-  @ManyToOne
-  @JoinColumn(name = "user_workspace_id")
-  private UserWorkspaceModel userWorkspace;
-
+  // TODO SECTION: STRIPE DETAILS
   @Column(name = "stripe_invoice_id")
   private String stripeInvoiceId;
 
@@ -91,9 +110,7 @@ public class InvoiceModel {
   @Column(name = "stripe_invoice_status")
   private String stripeInvoiceStatus;
 
-  @Column(name = "calculated_commission")
-  private Double calculatedComm;
-
+  //TODO SECTION: JOINING
   @ManyToOne
   @JoinColumn(name = "customer_id")
   private CustomerModel customer;
@@ -101,6 +118,14 @@ public class InvoiceModel {
   @ManyToOne
   @JoinColumn(name = "product_id")
   private ProductModel product;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
+
+  @ManyToOne
+  @JoinColumn(name = "user_workspace_id")
+  private UserWorkspaceModel userWorkspace;
 
   @CreationTimestamp
   @Column(name = "created_at")

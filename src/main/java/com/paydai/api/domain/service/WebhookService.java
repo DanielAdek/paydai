@@ -7,6 +7,6 @@ import com.stripe.model.Event;
 
 public interface WebhookService {
   JapiResponse handleInvoiceEventConnectAccount(String payload, Event event);
-  JapiResponse handleTransferEventAccount(String payload, Event event);
+  JapiResponse handleTransferEventAccount(String payload, Event event) throws StripeException;
   JapiResponse handleBalanceEventConnectAccount(String payload, Event event);
 }

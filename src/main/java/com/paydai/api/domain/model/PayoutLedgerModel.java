@@ -24,11 +24,12 @@ public class PayoutLedgerModel {
 
   private double amount;
 
-  private float fee;
+  private double fee;
 
   private String credit;
 
   @Column(name = "payout_date")
+  @CreationTimestamp
   private LocalDateTime payoutDate;
 
   @Enumerated(EnumType.STRING)

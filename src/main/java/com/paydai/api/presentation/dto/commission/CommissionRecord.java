@@ -2,6 +2,9 @@ package com.paydai.api.presentation.dto.commission;
 
 public record CommissionRecord (
   double paydaiFeeMerchant,
+  float paydaiFeeSetterPercent,
+  float paydaiFeeCloserPercent,
+  float paydaiFeeMerchantPercent,
   double paydaiFeeCloserOnly,
   double closerCommission,
   double closerOnlyNet,
@@ -10,6 +13,7 @@ public record CommissionRecord (
   double paydaiFeeSetter,
   double setterCommission,
   double setterNet,
-  double closerNet
+  double closerNet,
+  double paydaiApplicationFee
 ) {
 }
