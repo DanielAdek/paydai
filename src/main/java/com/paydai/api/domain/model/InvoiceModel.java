@@ -32,7 +32,7 @@ public class InvoiceModel {
   @Column
   private double amount;
 
-  @Column
+  @Column(name = "amt_sm_unit")
   private int amtSmUnit;
 
   @Column(name = "due_date")

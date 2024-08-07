@@ -8,8 +8,6 @@ import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.UserRepository;
 import com.paydai.api.domain.service.AccountService;
 import com.paydai.api.infrastructure.config.AppConfig;
-import com.paydai.api.presentation.dto.account.StripeAccountDtoMapper;
-import com.paydai.api.presentation.dto.account.StripeAccountRecord;
 import com.paydai.api.presentation.request.AccountLinkRequest;
 import com.paydai.api.presentation.request.AccountRequest;
 import com.paydai.api.presentation.request.OauthRequest;
@@ -42,7 +40,6 @@ public class AccountServiceImpl implements AccountService {
   private final AppConfig config;
   private final UserRepository repository;
   private final EmailRepository emailRepository;
-  private final StripeAccountDtoMapper stripeAccountDtoMapper;
 
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 

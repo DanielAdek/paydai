@@ -1,9 +1,6 @@
 package com.paydai.api.application;
 
-import com.paydai.api.domain.model.CustomerModel;
-import com.paydai.api.domain.model.InvoiceModel;
-import com.paydai.api.domain.model.PayoutLedgerModel;
-import com.paydai.api.domain.model.PayoutStatusType;
+import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.AccountLedgerRepository;
 import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.PayoutLedgerRepository;
@@ -12,12 +9,10 @@ import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Transfer;
 import com.stripe.param.TransferCreateParams;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 
 @Slf4j
 @Service
@@ -30,12 +25,15 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
   @Override
   public JapiResponse transferToSalesRep(String stripeInvoiceCode) throws StripeException {
     try {
-      InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(stripeInvoiceCode);
+      PayoutLedgerModel payoutLedgerModel = repository.findPayoutByStripeInvoiceId(stripeInvoiceCode);
 
-      if (invoiceModel == null) {
-        log.error("The invoice code is invalid");
-        return JapiResponse.success(null);
+      if (payoutLedgerModel != null) {
+        if (payoutLedgerModel.getStatus().equals(PayoutStatusType.PAYMENT_TRANSFERED)) {
+          return JapiResponse.success(null);
+        }
       }
+
+      InvoiceModel invoiceModel = payoutLedgerModel.getInvoice();
 
       CustomerModel customerModel = invoiceModel.getCustomer();
 
@@ -47,14 +45,26 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
         .build();
 
       Transfer closerTransfer = Transfer.create(closerTransferParams);
-      PayoutLedgerModel payoutLedgerModel = PayoutLedgerModel.builder()
-        .amount(closerTransfer.getAmount())
-        .invoice(invoiceModel)
-        .userWorkspace(invoiceModel.getUserWorkspace())
-        .status(PayoutStatusType.PAYMENT_TRANSFERED)
-        .invoice(invoiceModel)
-        .build();
-      repository.save(payoutLedgerModel);
+
+      // SAVE TNX ON PAYDAI
+      repository.save(
+        PayoutLedgerModel.builder()
+          .amount(closerTransfer.getAmount())
+          .invoice(invoiceModel)
+          .userWorkspace(invoiceModel.getUserWorkspace())
+          .status(PayoutStatusType.PAYMENT_TRANSFERED)
+          .invoice(invoiceModel)
+          .build()
+      );
+
+      // UPDATE BALANCE FOR CLOSER
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .user(customerModel.getCloser())
+          .revenue(closerTransfer.getAmount())
+          .workspace(invoiceModel.getWorkspace())
+          .build()
+      );
 
       if (customerModel.getSetterInvolved()) {
         TransferCreateParams setterTransferParams = TransferCreateParams.builder()
@@ -63,14 +73,16 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
           .setDestination(customerModel.getCreator().getStripeId())
           .build();
         Transfer setterTransfer = Transfer.create(setterTransferParams);
-        PayoutLedgerModel payoutLedgerSetterModel = PayoutLedgerModel.builder()
-          .amount(setterTransfer.getAmount())
-          .invoice(invoiceModel)
-          .userWorkspace(invoiceModel.getUserWorkspace())
-          .status(PayoutStatusType.PAYMENT_TRANSFERED)
-          .invoice(invoiceModel)
-          .build();
-        repository.save(payoutLedgerSetterModel);
+
+        repository.save(
+          PayoutLedgerModel.builder()
+            .amount(setterTransfer.getAmount())
+            .invoice(invoiceModel)
+            .userWorkspace(invoiceModel.getUserWorkspace())
+            .status(PayoutStatusType.PAYMENT_TRANSFERED)
+            .invoice(invoiceModel)
+            .build()
+        );
       }
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }

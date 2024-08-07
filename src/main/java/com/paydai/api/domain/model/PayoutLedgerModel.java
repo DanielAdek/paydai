@@ -28,6 +28,9 @@ public class PayoutLedgerModel {
 
   private String credit;
 
+  @Column(name = "stripe_invoice_code")
+  private String stripeInvoiceCode;
+
   @Column(name = "payout_date")
   @CreationTimestamp
   private LocalDateTime payoutDate;

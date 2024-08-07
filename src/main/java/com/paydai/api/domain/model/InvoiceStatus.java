@@ -3,7 +3,8 @@ package com.paydai.api.domain.model;
 public enum InvoiceStatus {
   CREATED,
   FINALIZED,
-  PROCESSING,
+  SENT,
   PAID,
-  FAILED
+  FAILED,
+  REVERSED
 }

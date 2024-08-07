@@ -44,7 +44,7 @@ public interface InvoiceRepositoryImpl extends InvoiceRepository, JpaRepository<
   @Override
   @Transactional
   @Modifying
-  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1")
+  @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1 OR stripe_invoice_id=?1")
   void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
 
   @Override

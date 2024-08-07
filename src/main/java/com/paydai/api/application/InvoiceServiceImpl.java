@@ -236,8 +236,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       invoice = invoice.finalizeInvoice(invoiceFinalizeInvoiceParams, requestOptions);
 
-      // todo: calculate invoice commission for appliation fee
-
       Map<String, Object> response = invoiceDetails(invoice, invoiceModel);
 
       repository.updateInvoiceByInvoiceCode(invoiceCode, response.toString(), invoice.getHostedInvoiceUrl(), invoice.getInvoicePdf(), invoice.getStatus(), InvoiceStatus.FINALIZED);
@@ -261,7 +259,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       invoice = invoice.sendInvoice(invoiceSendInvoiceParams, requestOptions);
 
-      repository.updateInvoiceStatus(invoiceCode, invoice.getStatus(), InvoiceStatus.PROCESSING);
+      repository.updateInvoiceStatus(invoiceCode, invoice.getStatus(), InvoiceStatus.SENT);
 
       return JapiResponse.success(invoiceDetails(invoice, invoiceModel));
     } catch (Exception e) { throw e; }

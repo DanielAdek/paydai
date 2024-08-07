@@ -2,6 +2,8 @@ package com.paydai.api.application;
 
 import com.paydai.api.application.constant.WebhookConstant;
 import com.paydai.api.domain.exception.ApiRequestException;
+import com.paydai.api.domain.model.InvoiceStatus;
+import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.WebhookRepository;
 import com.paydai.api.domain.service.PayoutLedgerService;
 import com.paydai.api.domain.service.WebhookService;
@@ -20,28 +22,21 @@ import org.springframework.stereotype.Service;
 public class WebhookServiceImpl implements WebhookService {
   private final WebhookRepository repository;
   private final WebhookConstant webhookConstant;
+  private final InvoiceRepository invoiceRepository;
   private final PayoutLedgerService payoutLedgerService;
-  private final InvoiceServiceImpl invoiceService;
 
   @Override
-  public JapiResponse handleInvoiceEventConnectAccount(String payload, Event event) {
+  public JapiResponse handleInvoiceEventConnectAccount(String payload, Event event) throws StripeException {
     try {
       EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
-      StripeObject stripeObject;
+      Invoice invoice;
 
       if (dataObjectDeserializer.getObject().isPresent()) {
-//        Application application = (I) dataObjectDeserializer.getObject().get();
-        stripeObject = dataObjectDeserializer.getObject().get();
-//        String connectedAccountId = event.getAccount();
+        invoice = (Invoice) dataObjectDeserializer.getObject().get();
       } else {
         throw new ApiRequestException("Deserialization error");
       }
-
-//      if (event.getType().equals(webhookConstant.invoice_created)) {
-//        System.out.println("The invoice create from connect called!");
-//        processRequestFromInvoiceEvent(stripeObject);
-//      }
 
       if (event.getType().equals(webhookConstant.invoice_finalize)) {
         System.out.println("The invoice finalize from connect called!");
@@ -52,18 +47,15 @@ public class WebhookServiceImpl implements WebhookService {
       }
 
       if (event.getType().equals(webhookConstant.invoice_payment_succeeded)) {
-        log.info("This invoice payment success", stripeObject);
-        log.info(String.valueOf(stripeObject));
+        log.info("This invoice payment success");
+        // update invoice to paid
+        invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID);
+
+        // transfer fund to sales rep
+        payoutLedgerService.transferToSalesRep(invoice.getId());
       }
 
-      if (event.getType().equals(webhookConstant.invoice_paid)) {
-        log.info("This invoice paid", stripeObject);
-        log.info(String.valueOf(stripeObject));
-      }
-
-      else {
-        log.warn("Unhandled event type: " + event.getType());
-      }
+      if (event.getType().equals(webhookConstant.invoice_paid)) {}
 
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }

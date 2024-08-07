@@ -28,6 +28,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -41,6 +43,8 @@ public class AuthServiceImpl implements AuthService {
   private final WorkspaceRepository workspaceRepository;
   private final AuthenticationManager authenticationManager;
   private final UserWorkspaceRepository userWorkspaceRepository;
+  private final AccountLedgerRepository accountLedgerRepository;
+
   private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   @Override
@@ -68,8 +72,22 @@ public class AuthServiceImpl implements AuthService {
       // Save email
       EmailModel emailModel = emailRepository.save(buildEmail);
 
-      if (payload.getUserType().equals(UserType.MERCHANT)) workspaceRepository.save(WorkspaceModel.builder().name(payload.getBusiness().trim().toLowerCase()).owner(userModel).build());
+      if (payload.getUserType().equals(UserType.MERCHANT)) {
+        workspaceRepository.save(
+          WorkspaceModel.builder()
+            .name(payload.getBusiness().trim().toLowerCase())
+            .owner(userModel).build()
+        );
+      }
 
+      // create account if not exist
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .revenue(0.0)
+          .user(userModel)
+          .liability(0.0)
+          .build()
+      );
       // Generate token
       String token = jwtService.generateToken(userModel);
 
@@ -104,6 +122,19 @@ public class AuthServiceImpl implements AuthService {
       RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
 
       WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+
+      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUserWorkspace(emailModel.getUser().getId(), Objects.requireNonNull(workspace).workspaceId());
+
+      if (accountLedgerModel == null) {
+        accountLedgerRepository.save(
+          AccountLedgerModel.builder()
+            .revenue(0.0)
+            .liability(0.0)
+            .user(emailModel.getUser())
+            .workspace(userWorkspaceModel.getWorkspace())
+            .build()
+        );
+      }
 
       AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
