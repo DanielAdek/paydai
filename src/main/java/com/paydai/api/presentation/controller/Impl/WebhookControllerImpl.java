@@ -46,13 +46,14 @@ public class WebhookControllerImpl implements WebhookController {
   @PostMapping("invoice/connect")
   public ResponseEntity handleInvoiceEventConnectAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature) {
     try {
-      Event event = Webhook.constructEvent(payload, signature, "whsec_e1D3moeHn2cSDpirELRrPI1rhOaLMLgw");
+      Event event = Webhook.constructEvent(payload, signature, config.getStripeWebhookSecretInvoiceConnect());
       JapiResponse response = service.handleInvoiceEventConnectAccount(payload, event);
-      return ResponseEntity.status(response.getStatusCode()).body(response.getMessage());
+      return ResponseEntity.ok(response.getMessage());
     } catch (SignatureVerificationException e) {
-//      log.error("⚠️  Webhook error while validating signature.", e);
+      log.error("⚠️ Webhook error while validating signature.", e);
       return ResponseEntity.status(400).body("Invalid signature");
     } catch (Exception e) {
+      log.error(e.getMessage(), e);
       return ResponseEntity.status(500).body("Internal Server Exception");
     }
   }
@@ -70,7 +71,7 @@ public class WebhookControllerImpl implements WebhookController {
   @PostMapping("transfer/account")
   public ResponseEntity handleTransferEventAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
     try {
-      Event event = Webhook.constructEvent(payload, signature, "whsec_e1D3moeHn2cSDpirELRrPI1rhOaLMLgw");
+      Event event = Webhook.constructEvent(payload, signature, config.getStripeWebhookSecretTransfer());
       JapiResponse response = service.handleTransferEventAccount(payload, event);
       return ResponseEntity.ok(response.getMessage());
     } catch (SignatureVerificationException e) {
@@ -78,6 +79,34 @@ public class WebhookControllerImpl implements WebhookController {
       return ResponseEntity.status(400).body("Invalid signature");
     } catch (ApiRequestException e) {
       log.error("⚠️  Webhook error while validating signature.", e);
+      return ResponseEntity.status(400).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Internal Server Exception");
+    }
+  }
+
+  @Operation(
+    summary = "Account webhook API endpoint",
+    description = "Get response to show webhook DTO, the invoice data"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @PostMapping("balance/account")
+  public ResponseEntity handleBalanceEventAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
+    try {
+      log.info("A log here from balance/account");
+      Event event = Webhook.constructEvent(payload, signature, config.getStripeWebhookSecretBal());
+      JapiResponse response = service.handleBalanceEventConnectAccount(payload, event);
+      return ResponseEntity.ok(response.getMessage());
+    } catch (SignatureVerificationException e) {
+      log.error("⚠️ Webhook error while validating signature.", e);
+      return ResponseEntity.status(400).body("Invalid signature");
+    } catch (ApiRequestException e) {
+      log.error("⚠️ Webhook error while validating signature.", e);
       return ResponseEntity.status(400).body(e.getMessage());
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Internal Server Exception");

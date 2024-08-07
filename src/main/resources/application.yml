@@ -41,5 +41,10 @@ application:
   stripe:
     secret_key: ${STRIPE_SECRET_KEY}
     base_url: ${STRIPE_BASE_API}
+    webhook:
+      secret:
+        balance: ${STRIPE_WEBHOOK_SECRET_BALANCE}
+        transfer: ${STRIPE_WEBHOOK_SECRET_TRANSFER}
+        invoice_connect: ${STRIPE_WEBHOOK_SECRET_INVOICE_CONNECT}
   paydai:
     client_callback: ${PAYDAI_RETURN_CALLBACK_URL}

@@ -2,10 +2,14 @@ package com.paydai.api.application;
 
 import com.paydai.api.application.constant.WebhookConstant;
 import com.paydai.api.domain.exception.ApiRequestException;
+import com.paydai.api.domain.model.InvoiceStatus;
+import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.WebhookRepository;
+import com.paydai.api.domain.service.PayoutLedgerService;
 import com.paydai.api.domain.service.WebhookService;
 import com.paydai.api.presentation.dto.webhook.WebhookRegister;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.param.WebhookEndpointCreateParams;
 import lombok.RequiredArgsConstructor;
@@ -18,25 +22,20 @@ import org.springframework.stereotype.Service;
 public class WebhookServiceImpl implements WebhookService {
   private final WebhookRepository repository;
   private final WebhookConstant webhookConstant;
+  private final InvoiceRepository invoiceRepository;
+  private final PayoutLedgerService payoutLedgerService;
 
   @Override
-  public JapiResponse handleInvoiceEventConnectAccount(String payload, Event event) {
+  public JapiResponse handleInvoiceEventConnectAccount(String payload, Event event) throws StripeException {
     try {
       EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
-      StripeObject stripeObject;
+      Invoice invoice;
 
       if (dataObjectDeserializer.getObject().isPresent()) {
-        Application application = (Application) dataObjectDeserializer.getObject().get();
-        stripeObject = dataObjectDeserializer.getObject().get();
-        String connectedAccountId = event.getAccount();
+        invoice = (Invoice) dataObjectDeserializer.getObject().get();
       } else {
         throw new ApiRequestException("Deserialization error");
-      }
-
-      if (event.getType().equals(webhookConstant.invoice_created)) {
-        System.out.println("The invoice create from connect called!");
-        processRequestFromInvoiceEvent(stripeObject);
       }
 
       if (event.getType().equals(webhookConstant.invoice_finalize)) {
@@ -46,16 +45,24 @@ public class WebhookServiceImpl implements WebhookService {
       if (event.getType().equals(webhookConstant.invoice_sent)) {
         System.out.println("The invoice sent from connect called!");
       }
-      else {
-        log.warn("Unhandled event type: " + event.getType());
+
+      if (event.getType().equals(webhookConstant.invoice_payment_succeeded)) {
+        log.info("This invoice payment success");
+        // update invoice to paid
+        invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID);
+
+        // transfer fund to sales rep
+        payoutLedgerService.transferToSalesRep(invoice.getId());
       }
+
+      if (event.getType().equals(webhookConstant.invoice_paid)) {}
 
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }
   }
 
   @Override
-  public JapiResponse handleTransferEventAccount(String payload, Event event) {
+  public JapiResponse handleTransferEventAccount(String payload, Event event) throws StripeException {
     try {
       EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
@@ -68,7 +75,8 @@ public class WebhookServiceImpl implements WebhookService {
       }
 
       if (event.getType().equals(webhookConstant.transfer_created)) {
-        processRequestFromBalanceEvent(stripeObject);
+        log.info("This is triggered", stripeObject);
+//        payoutLedgerService.transferToSalesRep(stripeObject);
       }
 
       if (event.getType().equals(webhookConstant.transfer_reversed)) {
@@ -95,13 +103,12 @@ public class WebhookServiceImpl implements WebhookService {
         throw new ApiRequestException("Deserialization error");
       }
 
-      if (event.getType().equals(webhookConstant.transfer_created)) {
-        processRequestFromBalanceEvent(stripeObject);
+      if (event.getType().equals(webhookConstant.balance)) {
+        log.info("The balance is available");
+        // handle transfer here
+        log.info("This is the object stripe upon balance", stripeObject);
       }
 
-      if (event.getType().equals(webhookConstant.transfer_reversed)) {
-        processRequestFromBalanceEvent(stripeObject);
-      }
       else {
         log.warn("Unhandled event type: " + event.getType());
       }

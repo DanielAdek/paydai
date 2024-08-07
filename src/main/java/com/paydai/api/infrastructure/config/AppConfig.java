@@ -9,19 +9,32 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 public class AppConfig {
-  // SECTION FOR OPEN API DOC
+  // SECTION FOR URLs
   @Value("${application.server.url}")
   private String apiBaseUrl;
 
+  @Value("${application.paydai.client_callback}")
+  private String paydaiClientBaseUrl;
+
+
+  // SECTION FOR STRIPE
   @Value("${application.stripe.secret_key}")
   private String stripeKey;
 
   @Value("${application.stripe.base_url}")
   private String stripeBaseApi;
 
-  @Value("${application.paydai.client_callback}")
-  private String paydaiClientBaseUrl;
+  @Value("${application.stripe.webhook.secret.balance}")
+  private String stripeWebhookSecretBal;
 
+  @Value("${application.stripe.webhook.secret.transfer}")
+  private String stripeWebhookSecretTransfer;
+
+  @Value("${application.stripe.webhook.secret.invoice_connect}")
+  private String stripeWebhookSecretInvoiceConnect;
+
+
+  // OTHERS
   @Value("${application.security.jwt_secret.key}")
   private String secretKey;
 
