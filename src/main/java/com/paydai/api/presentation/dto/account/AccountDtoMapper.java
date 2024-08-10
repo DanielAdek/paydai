@@ -11,7 +11,7 @@ public class AccountDtoMapper implements Function<AccountLedgerModel, AccountRec
   @Override
   public AccountRecord apply(AccountLedgerModel accountLedger) {
     return new AccountRecord(
-      accountLedger.getRevenue(),
+      accountLedger.getBalance(),
       accountLedger.getLiability(),
       accountLedger.getUser().getId(),
       accountLedger.getWorkspace().getId()

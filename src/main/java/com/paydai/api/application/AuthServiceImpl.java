@@ -83,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
       // create account if not exist
       accountLedgerRepository.save(
         AccountLedgerModel.builder()
-          .revenue(0.0)
+          .balance(0.0)
           .user(userModel)
           .liability(0.0)
           .build()
@@ -128,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
       if (accountLedgerModel == null) {
         accountLedgerRepository.save(
           AccountLedgerModel.builder()
-            .revenue(0.0)
+            .balance(0.0)
             .liability(0.0)
             .user(emailModel.getUser())
             .workspace(userWorkspaceModel.getWorkspace())

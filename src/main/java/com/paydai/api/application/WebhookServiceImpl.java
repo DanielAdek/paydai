@@ -49,7 +49,7 @@ public class WebhookServiceImpl implements WebhookService {
       if (event.getType().equals(webhookConstant.invoice_payment_succeeded)) {
         log.info("This invoice payment success");
         // update invoice to paid
-        invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID);
+        invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID.toString());
 
         // transfer fund to sales rep
         payoutLedgerService.transferToSalesRep(invoice.getId());

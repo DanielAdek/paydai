@@ -41,13 +41,13 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
         }
       }
 
-      InvoiceModel invoiceModel = payoutLedgerModel.getInvoice();
+      InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(stripeInvoiceCode);
 
       CustomerModel customerModel = invoiceModel.getCustomer();
 
       // TRANSFER TO CLOSER
       TransferCreateParams closerTransferParams = TransferCreateParams.builder()
-        .setAmount(Double.valueOf(invoiceModel.getSnapshotCommCloserNet()).longValue())
+        .setAmount(Double.valueOf(invoiceModel.getSnapshotCommCloserNet()).longValue() * 100)
         .setCurrency(invoiceModel.getCurrency())
         .setDestination(customerModel.getCloser().getStripeId())
         .build();
@@ -69,14 +69,14 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
       accountLedgerRepository.save(
         AccountLedgerModel.builder()
           .user(customerModel.getCloser())
-          .revenue(closerTransfer.getAmount())
+          .balance(closerTransfer.getAmount())
           .workspace(invoiceModel.getWorkspace())
           .build()
       );
 
       if (customerModel.getSetterInvolved()) {
         TransferCreateParams setterTransferParams = TransferCreateParams.builder()
-          .setAmount(Double.valueOf(invoiceModel.getSnapshotCommSetterNet()).longValue())
+          .setAmount(Double.valueOf(invoiceModel.getSnapshotCommSetterNet()).longValue() * 100)
           .setCurrency(invoiceModel.getCurrency())
           .setDestination(customerModel.getCreator().getStripeId())
           .build();

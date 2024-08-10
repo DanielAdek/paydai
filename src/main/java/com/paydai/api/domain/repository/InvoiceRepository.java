@@ -18,9 +18,9 @@ public interface InvoiceRepository {
     String stripeInvoiceHostUrl,
     String stripeInvoicePdf,
     String stripeInvoiceStatus,
-    InvoiceStatus status
+    String status
   );
-  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
-  void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
+  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, String status);
+  void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, String status);
   InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
 }

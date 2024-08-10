@@ -65,7 +65,6 @@ public class CalculatorServiceImpl implements CalculatorService {
 
       CommissionDto commissionDto = CommissionDto.builder()
         .paydaiFeeMerchant(paydaiFeeMerchant)
-        .paydaiFeeCloserPercent(SALES_REP_FEE_PERCENTAGE)
         .paydaiFeeMerchantPercent(MERCHANT_FEE_PERCENTAGE)
         .build();
 
@@ -78,10 +77,10 @@ public class CalculatorServiceImpl implements CalculatorService {
         commissionDto.setPaydaiFeeCloserOnly(calculatePFMin(payload.getRevenue()));
 
         // Set closer's net income
-        commissionDto.setCloserOnlyNet(calculateSalesRepNetCloserOnly(payload.getRevenue(), payload.getCloserPercent()));
+        commissionDto.setCloserNet(calculateSalesRepNetCloserOnly(payload.getRevenue(), payload.getCloserPercent()));
 
         // Set Paydai's income
-        commissionDto.setPaydaiFeeCloserPercent(CLOSER_FEE_PERCENTAGE);
+        commissionDto.setPaydaiFeeCloserPercent(SALES_REP_FEE_PERCENTAGE);
         commissionDto.setPaydaiTotalComm(calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue()));
         commissionDto.setPaydaiApplicationFee(paydaiFeeMerchant + closerCommission);
       }
@@ -104,6 +103,7 @@ public class CalculatorServiceImpl implements CalculatorService {
         commissionDto.setPaydaiTotalComm(calculatePFMax(payload.getRevenue()) + calculatePFMin(payload.getRevenue()));
         commissionDto.setPaydaiApplicationFee(setterCommission + closerCommission + paydaiFeeMerchant);
         commissionDto.setPaydaiFeeSetterPercent(SETTER_FEE_PERCENTAGE);
+        commissionDto.setPaydaiFeeCloserPercent(CLOSER_FEE_PERCENTAGE);
       }
       return commissionDtoMapper.apply(commissionDto);
     } catch (Exception e) { throw e; }

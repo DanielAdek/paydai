@@ -22,7 +22,7 @@ public class AccountLedgerModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double revenue;
+  private double balance;
 
   private double liability;
 
