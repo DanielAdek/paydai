@@ -1,10 +1,13 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.AccountLedgerRepository;
 import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.PayoutLedgerRepository;
 import com.paydai.api.domain.service.PayoutLedgerService;
+import com.paydai.api.presentation.dto.payout.PayoutDtoMapper;
+import com.paydai.api.presentation.dto.payout.PayoutRecord;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Transfer;
@@ -13,12 +16,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PayoutLedgerServiceImpl implements PayoutLedgerService {
   private final PayoutLedgerRepository repository;
+  private final PayoutDtoMapper payoutDtoMapper;
   private final InvoiceRepository invoiceRepository;
   private final AccountLedgerRepository accountLedgerRepository;
 
@@ -33,13 +41,13 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
         }
       }
 
-      InvoiceModel invoiceModel = payoutLedgerModel.getInvoice();
+      InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(stripeInvoiceCode);
 
       CustomerModel customerModel = invoiceModel.getCustomer();
 
       // TRANSFER TO CLOSER
       TransferCreateParams closerTransferParams = TransferCreateParams.builder()
-        .setAmount(Double.valueOf(invoiceModel.getSnapshotCommCloserNet()).longValue())
+        .setAmount(Double.valueOf(invoiceModel.getSnapshotCommCloserNet()).longValue() * 100)
         .setCurrency(invoiceModel.getCurrency())
         .setDestination(customerModel.getCloser().getStripeId())
         .build();
@@ -61,14 +69,14 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
       accountLedgerRepository.save(
         AccountLedgerModel.builder()
           .user(customerModel.getCloser())
-          .revenue(closerTransfer.getAmount())
+          .balance(closerTransfer.getAmount())
           .workspace(invoiceModel.getWorkspace())
           .build()
       );
 
       if (customerModel.getSetterInvolved()) {
         TransferCreateParams setterTransferParams = TransferCreateParams.builder()
-          .setAmount(Double.valueOf(invoiceModel.getSnapshotCommSetterNet()).longValue())
+          .setAmount(Double.valueOf(invoiceModel.getSnapshotCommSetterNet()).longValue() * 100)
           .setCurrency(invoiceModel.getCurrency())
           .setDestination(customerModel.getCreator().getStripeId())
           .build();
@@ -86,5 +94,30 @@ public class PayoutLedgerServiceImpl implements PayoutLedgerService {
       }
       return JapiResponse.success(null);
     } catch (Exception e) { throw e; }
+  }
+
+  @Override
+  public JapiResponse getPayoutLedgerTransactions(UUID userId, UUID workspaceId) {
+    try {
+      List<PayoutLedgerModel> payoutLedgerModels = repository.findPayoutTransactions(userId, workspaceId);
+
+      if (payoutLedgerModels.isEmpty()) {
+        return JapiResponse.success(payoutLedgerModels);
+      }
+      List<PayoutRecord> payoutRecord = payoutLedgerModels.stream().map(payoutDtoMapper).toList();
+      return JapiResponse.success(payoutRecord);
+    } catch (Exception e) { throw e;}
+  }
+
+  @Override
+  public JapiResponse getPayoutLedgerTransactions(UUID userId) {
+    try {
+      List<PayoutLedgerModel> payoutLedgerModels = repository.findPayoutTransactions(userId);
+      if (payoutLedgerModels.isEmpty()) {
+        return JapiResponse.success(payoutLedgerModels);
+      }
+      List<PayoutRecord> payoutRecord = payoutLedgerModels.stream().map(payoutDtoMapper).toList();
+      return JapiResponse.success(payoutRecord);
+    } catch (Exception e) { throw e;}
   }
 }

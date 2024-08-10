@@ -38,22 +38,22 @@ public interface InvoiceRepositoryImpl extends InvoiceRepository, JpaRepository<
     @Param("stripeInvoiceHostUrl") String stripeInvoiceHostUrl,
     @Param("stripeInvoicePdf") String stripeInvoicePdf,
     @Param("stripeInvoiceStatus") String stripeInvoiceStatus,
-    @Param("status") InvoiceStatus status
+    @Param("status") String status
   );
 
   @Override
   @Transactional
   @Modifying
   @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1 OR stripe_invoice_id=?1")
-  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
+  void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, String status);
 
   @Override
   @Transactional
   @Modifying
   @Query(nativeQuery = true, value = "UPDATE invoice_tbl SET stripe_invoice_status=?2, status=?3 WHERE invoice_code=?1")
-  void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, InvoiceStatus status);
+  void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, String status);
 
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE stripe_invoice_code=?1")
+  @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE stripe_invoice_id=?1")
   InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
 }

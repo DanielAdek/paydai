@@ -56,13 +56,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       Product product = Product.create(productCreateParams, requestOptions);
 
-      Double invoice_amount = payload.getQty() > 0 ? Double.valueOf(payload.getQty() * payload.getUnitPrice()) : payload.getUnitPrice();
-
-      invoice_amount = invoice_amount * 100;
-
       PriceCreateParams priceCreateParams = PriceCreateParams.builder()
         .setProduct(product.getId())
-        .setUnitAmount(invoice_amount.longValue())
+        .setUnitAmount(payload.getUnitPrice().longValue() * 100)
         .setCurrency(payload.getCurrency())
         .build();
 
@@ -97,6 +93,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       Customer customer = Customer.create(customerCreateParams, requestOptions);
 
+      Double invoice_amount = payload.getQty() > 0 ? Double.valueOf(payload.getQty() * payload.getUnitPrice()) : payload.getUnitPrice();
+
       // CALCULATE COMMISSIONS
       CalcRequest calcRequest = CalcRequest.builder()
         .revenue(invoice_amount)
@@ -120,7 +118,7 @@ public class InvoiceServiceImpl implements InvoiceService {
           .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE) // set if you want to send invoice
 //          .setDaysUntilDue(30L) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
           .setDueDate(now) // set if you want Stripe to mark an invoice as past due, you must add the days_until_due parameter
-          .setApplicationFeeAmount(applicationFee) // todo ensure to use actual application fee
+          .setApplicationFeeAmount(applicationFee * 100)
           .build();
 
       Invoice invoice = Invoice.create(invoiceCreateParams, requestOptions);
@@ -149,13 +147,12 @@ public class InvoiceServiceImpl implements InvoiceService {
       ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
       long milliseconds = zonedDateTime.toInstant().toEpochMilli();
 
-      double invoice_total_amount = payload.getQty() > 0 ? payload.getQty() * payload.getUnitPrice() : payload.getUnitPrice();
-
       InvoiceModel buildInvoice = InvoiceModel.builder()
         .stripeInvoiceId(invoice.getId())
         .subject(payload.getSubject())
         .currency(payload.getCurrency())
-        .amount(invoice_total_amount)
+        .amount(invoice_amount)
+        .amtSmUnit(100)
         .customer(customerModel)
         .dueDate(payload.getDueDate())
         .stripeInvoiceItem(invoiceItem.getInvoice())
@@ -238,7 +235,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       Map<String, Object> response = invoiceDetails(invoice, invoiceModel);
 
-      repository.updateInvoiceByInvoiceCode(invoiceCode, response.toString(), invoice.getHostedInvoiceUrl(), invoice.getInvoicePdf(), invoice.getStatus(), InvoiceStatus.FINALIZED);
+      repository.updateInvoiceByInvoiceCode(invoiceCode, response.toString(), invoice.getHostedInvoiceUrl(), invoice.getInvoicePdf(), invoice.getStatus(), String.valueOf(InvoiceStatus.FINALIZED));
 
       return JapiResponse.success(response);
     } catch (Exception e) { throw e; }
@@ -259,7 +256,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       invoice = invoice.sendInvoice(invoiceSendInvoiceParams, requestOptions);
 
-      repository.updateInvoiceStatus(invoiceCode, invoice.getStatus(), InvoiceStatus.SENT);
+      repository.updateInvoiceStatus(invoiceCode, invoice.getStatus(), InvoiceStatus.SENT.toString());
 
       return JapiResponse.success(invoiceDetails(invoice, invoiceModel));
     } catch (Exception e) { throw e; }
