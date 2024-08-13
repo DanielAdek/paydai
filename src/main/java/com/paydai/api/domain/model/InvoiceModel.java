@@ -32,8 +32,8 @@ public class InvoiceModel {
   @Column
   private double amount;
 
-  @Column(name = "amt_sm_unit")
-  private int amtSmUnit;
+  @Column(name = "amt_unit_measure")
+  private int unit;
 
   @Column(name = "due_date")
   private LocalDateTime dueDate;
@@ -88,6 +88,7 @@ public class InvoiceModel {
   @Column(name = "snapshot_platform_fee")
   private double platformFee;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "comm_split_scenario")
   private CommSplitScenarioType commSplitScenario;
 

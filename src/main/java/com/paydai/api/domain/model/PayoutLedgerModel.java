@@ -22,11 +22,13 @@ public class PayoutLedgerModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double amount;
+  private double revenue;
 
   private double fee;
 
-  private String credit;
+  private double credit;
+
+  private String currency;
 
   @Column(name = "stripe_invoice_code")
   private String stripeInvoiceCode;
@@ -41,6 +43,14 @@ public class PayoutLedgerModel {
   @ManyToOne
   @JoinColumn(name = "invoice_id")
   private InvoiceModel invoice;
+
+  @ManyToOne
+  @JoinColumn(name = "workspace_id")
+  private WorkspaceModel workspace;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private UserModel user;
 
   @ManyToOne
   @JoinColumn(name = "user_workspace_id")

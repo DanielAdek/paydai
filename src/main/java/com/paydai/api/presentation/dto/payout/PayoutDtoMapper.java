@@ -10,12 +10,15 @@ public class PayoutDtoMapper implements Function<PayoutLedgerModel, PayoutRecord
   @Override
   public PayoutRecord apply(PayoutLedgerModel payoutLedgerModel) {
     return new PayoutRecord(
-      payoutLedgerModel.getAmount(),
+      payoutLedgerModel.getRevenue(),
+      payoutLedgerModel.getCredit(),
       payoutLedgerModel.getFee(),
       payoutLedgerModel.getPayoutDate(),
       payoutLedgerModel.getStripeInvoiceCode(),
       payoutLedgerModel.getInvoice().getInvoiceCode(),
-      payoutLedgerModel.getStatus()
+      payoutLedgerModel.getStatus(),
+      payoutLedgerModel.getCreatedAt(),
+      payoutLedgerModel.getUpdatedAt()
     );
   }
 }

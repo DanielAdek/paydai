@@ -7,6 +7,5 @@ import java.util.UUID;
 
 public interface AccountLedgerRepository {
   AccountLedgerModel save(AccountLedgerModel buildAccountLedger);
-  AccountLedgerModel findAccountLedgerByUserWorkspace(UUID userId, UUID workspaceId);
-  List<AccountLedgerModel> findAccountLedgerByUser(UUID uuid);
+  AccountLedgerModel findAccountLedgerByUser(UUID uuid);
 }

@@ -13,8 +13,7 @@ public class AccountDtoMapper implements Function<AccountLedgerModel, AccountRec
     return new AccountRecord(
       accountLedger.getBalance(),
       accountLedger.getLiability(),
-      accountLedger.getUser().getId(),
-      accountLedger.getWorkspace().getId()
+      accountLedger.getUser().getId()
     );
   }
 }

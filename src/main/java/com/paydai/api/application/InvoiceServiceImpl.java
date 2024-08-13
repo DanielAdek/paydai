@@ -68,17 +68,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       UserWorkspaceModel setterWorkspaceModel = null;
 
-      float setterCommission = 0.0F;
+      float setterCommissionPercent = 0.0F;
 
       CommSplitScenarioType scenarioType = CommSplitScenarioType.CLOSER_ONLY;
 
       if (customerModel != null) {
         Boolean setterInvolved = customerModel.getSetterInvolved();
         if (setterInvolved != null && setterInvolved) {
-          setterWorkspaceModel = userWorkspaceRepository.findOneByUserId(customerModel.getCreator().getId(), payload.getWorkspaceId());
+          setterWorkspaceModel = userWorkspaceRepository.findOneByUserId(customerModel.getSetter().getId(), payload.getWorkspaceId());
 
           if (setterWorkspaceModel != null) {
-            setterCommission = setterWorkspaceModel.getCommission().getCommission();
+            setterCommissionPercent = setterWorkspaceModel.getCommission().getCommission();
             scenarioType = CommSplitScenarioType.CLOSER_AND_SETTER;
           }
         }
@@ -103,7 +103,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         .build();
 
       if (calcRequest.getScenario().equals(CommSplitScenarioType.CLOSER_AND_SETTER)) {
-        calcRequest.setSetterPercent(setterCommission);
+        calcRequest.setSetterPercent(setterCommissionPercent);
       }
 
       CommissionRecord commissionRecord = calculatorService.displayCommissions(calcRequest);
@@ -148,38 +148,40 @@ public class InvoiceServiceImpl implements InvoiceService {
       long milliseconds = zonedDateTime.toInstant().toEpochMilli();
 
       InvoiceModel buildInvoice = InvoiceModel.builder()
-        .stripeInvoiceId(invoice.getId())
         .subject(payload.getSubject())
         .currency(payload.getCurrency())
         .amount(invoice_amount)
-        .amtSmUnit(100)
-        .customer(customerModel)
+        .unit(100)
         .dueDate(payload.getDueDate())
-        .stripeInvoiceItem(invoiceItem.getInvoice())
-        .userWorkspace(closerWorkspaceModel)
-        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-        .product(productModel)
         .status(InvoiceStatus.CREATED)
-        .snapshotCommCloserPercent(commissionSettingModel.getCommission())
-        .snapshotCloserFeePercent(commissionRecord.paydaiFeeCloserPercent())
-        .snapshotCommSetterPercent(0.0F)
+        .invoiceCode("INV" + milliseconds)
         .applicationFee(commissionRecord.paydaiApplicationFee())
         .platformFee(commissionRecord.paydaiTotalComm())
-        .snapshotMerchantFeePercent(commissionRecord.paydaiFeeMerchantPercent())
+        .commSplitScenario(CommSplitScenarioType.CLOSER_ONLY)
+        .snapshotCommCloserPercent(commissionSettingModel.getCommission())
+        .snapshotCloserFeePercent(commissionRecord.paydaiFeeCloserPercent())
         .snapshotCommCloserNet(commissionRecord.closerNet())
+        .snapshotCommCloser(commissionRecord.closerCommission())
+        .snapshotCommSetterPercent(0.0F)
+        .snapshotMerchantFeePercent(commissionRecord.paydaiFeeMerchantPercent())
         .snapshotCommInterval(commissionSettingModel.getInterval())
         .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
         .snapshotCommAggregate(commissionSettingModel.getAggregate())
-        .commSplitScenario(CommSplitScenarioType.CLOSER_ONLY)
-        .invoiceCode("INV" + milliseconds)
+        .stripeInvoiceItem(invoiceItem.getInvoice())
+        .stripeInvoiceId(invoice.getId())
         .stripeInvoicePdf(invoice.getInvoicePdf())
         .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
+        .customer(customerModel)
+        .product(productModel)
+        .userWorkspace(closerWorkspaceModel)
+        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
         .build();
 
       if (setterWorkspaceModel != null) {
-        buildInvoice.setSnapshotCommSetterPercent(setterCommission);
+        buildInvoice.setSnapshotCommSetterPercent(setterCommissionPercent);
         buildInvoice.setSnapshotSetterFeePercent(commissionRecord.paydaiFeeSetterPercent());
         buildInvoice.setSnapshotCommSetterNet(commissionRecord.setterNet());
+        buildInvoice.setSnapshotCommSetter(commissionRecord.setterCommission());
         buildInvoice.setCommSplitScenario(CommSplitScenarioType.CLOSER_AND_SETTER);
       }
 

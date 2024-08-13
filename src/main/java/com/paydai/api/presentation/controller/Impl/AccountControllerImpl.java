@@ -8,6 +8,7 @@ import com.paydai.api.presentation.request.AccountRequest;
 import com.paydai.api.presentation.request.OauthRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -103,5 +104,24 @@ public class AccountControllerImpl implements AccountController {
   @GetMapping(path = "/")
   public String serveIndex() {
     return service.serveIndex();
+  }
+
+  @Operation(
+    summary = "Stripe account login link get API endpoint",
+    description = "GET response to show stripe account"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @Override
+  @GetMapping("/login/link")
+  public ResponseEntity<JapiResponse> getStripeLoginLink() throws StripeException {
+    JapiResponse response = service.getStripeLoginLink();
+    return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

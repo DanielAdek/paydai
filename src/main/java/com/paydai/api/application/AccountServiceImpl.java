@@ -12,11 +12,15 @@ import com.paydai.api.presentation.request.AccountLinkRequest;
 import com.paydai.api.presentation.request.AccountRequest;
 import com.paydai.api.presentation.request.OauthRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Account;
 import com.stripe.model.AccountLink;
+import com.stripe.model.LoginLink;
 import com.stripe.model.oauth.TokenResponse;
+import com.stripe.net.RequestOptions;
 import com.stripe.param.AccountCreateParams;
 import com.stripe.param.AccountLinkCreateParams;
+import com.stripe.param.LoginLinkCreateOnAccountParams;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +127,27 @@ public class AccountServiceImpl implements AccountService {
     } catch (Exception e) {
       logger.error("Stripe::Error::" + e.getMessage());
       throw new InternalServerException(e.getMessage());
+    }
+  }
+
+  @Override
+  public JapiResponse getStripeLoginLink() throws StripeException {
+    try {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+      UserModel userModel = (UserModel) authentication.getPrincipal();
+
+      LoginLinkCreateOnAccountParams params = LoginLinkCreateOnAccountParams.builder().build();
+
+      LoginLink loginLink = LoginLink.createOnAccount(userModel.getStripeId(), params);
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("url", loginLink.getUrl());
+      response.put("createdAt", loginLink.getCreated());
+
+      return JapiResponse.success(response);
+    } catch (Exception e) {
+      throw e;
     }
   }
 

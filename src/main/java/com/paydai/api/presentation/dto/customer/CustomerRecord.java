@@ -13,8 +13,7 @@ public record CustomerRecord (
   String description,
   UUID closerId,
   String closer,
-  UUID creatorId,
-  String creator,
-  String creatorRole
+  UUID setterId,
+  String setter
 ) {
 }

@@ -2,6 +2,7 @@ package com.paydai.api.application;
 
 import com.paydai.api.domain.model.CommSplitScenarioType;
 import com.paydai.api.domain.service.CalculatorService;
+import com.paydai.api.presentation.dto.AmountDto;
 import com.paydai.api.presentation.dto.commission.CommissionDto;
 import com.paydai.api.presentation.dto.commission.CommissionDtoMapper;
 import com.paydai.api.presentation.dto.commission.CommissionRecord;
@@ -40,7 +41,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
   @Override
   public double calculateSalesRepCommission(double revenue, float salesRepPercent) {
-    return Math.round(revenue * (salesRepPercent / 100));
+    return revenue * (salesRepPercent / 100);
   }
 
   @Override
@@ -56,6 +57,11 @@ public class CalculatorServiceImpl implements CalculatorService {
   @Override
   public double calculateSalesRepNetSetter(double revenue, float setterPercent) {
     return calculateSalesRepCommission(revenue, setterPercent) - calculatePFS(revenue);
+  }
+
+  @Override
+  public AmountDto getSmAmtUnit(double smAmtUnit, String currency) {
+    return null;
   }
 
   @Override

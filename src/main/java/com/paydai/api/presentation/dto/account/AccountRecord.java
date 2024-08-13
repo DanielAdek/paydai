@@ -3,9 +3,8 @@ package com.paydai.api.presentation.dto.account;
 import java.util.UUID;
 
 public record AccountRecord(
-  double revenue,
+  double balance,
   double liability,
-  UUID user,
-  UUID workspace
+  UUID user
 ) {
 }
