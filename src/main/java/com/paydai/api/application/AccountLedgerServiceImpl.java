@@ -6,11 +6,13 @@ import com.paydai.api.domain.service.AccountLedgerService;
 import com.paydai.api.presentation.dto.account.AccountDtoMapper;
 import com.paydai.api.presentation.dto.account.AccountRecord;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Balance;
+import com.stripe.net.RequestOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -21,9 +23,9 @@ public class AccountLedgerServiceImpl implements AccountLedgerService {
   private final AccountDtoMapper accountDtoMapper;
 
   @Override
-  public JapiResponse getUserAccountLedger(UUID userId, UUID workspaceId) {
+  public JapiResponse getUserAccountLedger(UUID userId) throws StripeException {
     try {
-      AccountLedgerModel accountLedgerModel = repository.findAccountLedgerByUserWorkspace(userId, workspaceId);
+      AccountLedgerModel accountLedgerModel = updateSalesRepAccountLedgerBalance(userId);
 
       AccountRecord accountRecord = accountDtoMapper.apply(accountLedgerModel);
 
@@ -32,16 +34,19 @@ public class AccountLedgerServiceImpl implements AccountLedgerService {
   }
 
   @Override
-  public JapiResponse getUserAccountsLedger(UUID userId) {
+  public AccountLedgerModel updateSalesRepAccountLedgerBalance(UUID userId) throws StripeException {
     try {
-      List<AccountLedgerModel> accountLedgerModels = repository.findAccountLedgerByUser(userId);
+      AccountLedgerModel accountLedgerModel = repository.findAccountLedgerByUser(userId);
 
-      List<AccountRecord> accountRecords = accountLedgerModels
-        .stream()
-        .map(accountDtoMapper)
-        .toList();
+      RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(accountLedgerModel.getUser().getStripeId()).build();
 
-      return JapiResponse.success(accountRecords);
+      Balance balances = Balance.retrieve(requestOptions);
+
+      Balance.Available balAvailable = balances.getAvailable().stream().filter(bal -> bal.getCurrency().equals(accountLedgerModel.getCurrency())).findFirst().get();
+
+      accountLedgerModel.setBalance((double) balAvailable.getAmount() / 100);
+
+      return repository.save(accountLedgerModel);
     } catch (Exception e) { throw e; }
   }
 }

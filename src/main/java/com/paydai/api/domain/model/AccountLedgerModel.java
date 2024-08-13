@@ -24,15 +24,13 @@ public class AccountLedgerModel {
 
   private double balance;
 
+  private String currency;
+
   private double liability;
 
   @ManyToOne
   @JoinColumn(name = "user_id")
   private UserModel user;
-
-  @ManyToOne
-  @JoinColumn(name = "workspace_id")
-  private WorkspaceModel workspace;
 
   @CreationTimestamp
   @Column(name = "created_at")

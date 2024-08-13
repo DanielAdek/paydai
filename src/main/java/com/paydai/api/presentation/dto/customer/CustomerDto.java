@@ -23,16 +23,14 @@ public class CustomerDto {
   private String description;
   private UUID closerId;
   private String closer;
-  private UUID creatorId;
-  private String creator;
-  private String creatorRole;
+  private UUID setterId;
+  private String setter;
 
   public static CustomerDto getCustomerDto(CustomerModel customerModel) {
     UUID closerId = customerModel.getCloser() != null ? customerModel.getCloser().getId() : null;
     String closer = customerModel.getCloser() != null ? customerModel.getCloser().getFirstName() + " " + customerModel.getCloser().getLastName() : null;
-    UUID creatorId = customerModel.getCreator() != null ? customerModel.getCreator().getId() : null;
-    String creator = customerModel.getCreator() != null ? customerModel.getCreator().getFirstName() + " " + customerModel.getCreator().getLastName() : null;
-    String role = customerModel.getCreatorRole() != null ? customerModel.getCreatorRole().getRole() : "";
+    UUID setterId = customerModel.getSetter() != null ? customerModel.getSetter().getId() : null;
+    String setter = customerModel.getSetter() != null ? customerModel.getSetter().getFirstName() + " " + customerModel.getSetter().getLastName() : null;
 
     return new CustomerDto(
       customerModel.getId(),
@@ -43,9 +41,8 @@ public class CustomerDto {
       customerModel.getDescription(),
       closerId,
       closer,
-      creatorId,
-      creator,
-      role
+      setterId,
+      setter
     );
   }
 }

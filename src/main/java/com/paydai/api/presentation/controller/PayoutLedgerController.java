@@ -9,4 +9,7 @@ import java.util.UUID;
 public interface PayoutLedgerController {
   ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId, @RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId);
+  ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam UUID userId, @RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam UUID userId);
+
 }

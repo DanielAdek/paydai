@@ -20,7 +20,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_tbl")
 public class UserModel implements UserDetails {
-
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;

@@ -1,5 +1,6 @@
 package com.paydai.api.domain.service;
 
+import com.paydai.api.presentation.dto.AmountDto;
 import com.paydai.api.presentation.dto.commission.CommissionRecord;
 import com.paydai.api.presentation.request.CalcRequest;
 import com.paydai.api.presentation.response.JapiResponse;
@@ -15,5 +16,6 @@ public interface CalculatorService {
   double calculatePFC(double revenue);
   double calculateSalesRepNetCloser(double revenue, float closerPercent);
   double calculateSalesRepNetSetter(double revenue, float setterPercent);
+  AmountDto getSmAmtUnit(double smAmtUnit, String currency);
   CommissionRecord displayCommissions(CalcRequest payload);
 }

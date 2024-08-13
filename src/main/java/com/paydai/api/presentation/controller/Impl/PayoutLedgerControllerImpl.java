@@ -64,4 +64,42 @@ public class PayoutLedgerControllerImpl implements PayoutLedgerController {
     JapiResponse response = service.getPayoutLedgerTransactions(userId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
+
+  @Operation(
+    summary = "Payout transactions overview: retrieve API endpoint",
+    description = "GET response to show transaction overview"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("payout/sales-rep/overview")
+  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(UUID userId, UUID workspaceId) {
+    JapiResponse response = service.getTransactionOverview(userId, workspaceId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Payout transactions overview: retrieve API endpoint",
+    description = "GET response to show transaction overview"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("payout/user/overview")
+  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(UUID userId) {
+    JapiResponse response = service.getTransactionOverview(userId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
 }

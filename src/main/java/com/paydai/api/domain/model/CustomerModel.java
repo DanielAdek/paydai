@@ -39,12 +39,12 @@ public class CustomerModel {
   private UserModel closer;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
-  private UserModel creator;
+  @JoinColumn(name = "setter_id")
+  private UserModel setter;
 
   @ManyToOne
-  @JoinColumn(name = "role_id")
-  private RoleModel creatorRole;
+  @JoinColumn(name = "manager_id")
+  private UserModel manager;
 
   @ManyToOne
   @JoinColumn(name = "workspace_id")

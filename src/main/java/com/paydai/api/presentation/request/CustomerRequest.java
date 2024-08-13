@@ -13,9 +13,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CustomerRequest {
   private String name;
-  private UUID roleId;
   private String phone;
   private String email;
+  private UUID setterId;
   private UUID closerId;
   private String description;
   private UUID workspaceId;

@@ -9,4 +9,6 @@ public interface PayoutLedgerService {
   JapiResponse transferToSalesRep(String stripeInvoiceCode) throws StripeException;
   JapiResponse getPayoutLedgerTransactions(UUID userId, UUID workspaceId);
   JapiResponse getPayoutLedgerTransactions(UUID userId);
+  JapiResponse getTransactionOverview(UUID userId, UUID workspaceId);
+  JapiResponse getTransactionOverview(UUID userId);
 }

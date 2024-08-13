@@ -81,13 +81,18 @@ public class AuthServiceImpl implements AuthService {
       }
 
       // create account if not exist
-      accountLedgerRepository.save(
-        AccountLedgerModel.builder()
-          .balance(0.0)
-          .user(userModel)
-          .liability(0.0)
-          .build()
-      );
+      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
+
+      if (accountLedgerModel == null) {
+        accountLedgerRepository.save(
+          AccountLedgerModel.builder()
+            .balance(0.0)
+            .liability(0.0)
+            .user(userModel)
+            .build()
+        );
+      }
+
       // Generate token
       String token = jwtService.generateToken(userModel);
 
@@ -123,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
 
       WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
 
-      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUserWorkspace(emailModel.getUser().getId(), Objects.requireNonNull(workspace).workspaceId());
+      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
 
       if (accountLedgerModel == null) {
         accountLedgerRepository.save(
@@ -131,7 +136,6 @@ public class AuthServiceImpl implements AuthService {
             .balance(0.0)
             .liability(0.0)
             .user(emailModel.getUser())
-            .workspace(userWorkspaceModel.getWorkspace())
             .build()
         );
       }

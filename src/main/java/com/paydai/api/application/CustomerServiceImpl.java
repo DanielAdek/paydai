@@ -30,16 +30,11 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public JapiResponse create(CustomerRequest request) {
     try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-      UserModel userModel = (UserModel) authentication.getPrincipal();
-
       CustomerModel customerModel = repository.findByCustomerEmail(request.getEmail(), request.getWorkspaceId());
 
       if (customerModel != null) throw new ConflictException("Customer already exit");
 
       CustomerModel newCustomer = CustomerModel.builder()
-        .creator(userModel)
         .name(request.getName())
         .stage(CustomerType.LEAD)
         .email(request.getEmail())
@@ -51,11 +46,7 @@ public class CustomerServiceImpl implements CustomerService {
 
       if (request.getCreatorRole().equals("setter")) {
         newCustomer.setSetterInvolved(true);
-      }
-
-      if (request.getRoleId() != null) {
-        RoleModel roleModel = RoleModel.builder().id(request.getRoleId()).build();
-        newCustomer.setCreatorRole(roleModel);
+        newCustomer.setSetter(UserModel.builder().id(request.getSetterId()).build());
       }
 
       CustomerModel lead = repository.save(newCustomer);
