@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.model.PermissionModel;
 import com.paydai.api.domain.repository.PermissionRepository;
 import com.paydai.api.domain.service.PermissionService;
@@ -20,23 +21,21 @@ public class PermissionServiceImpl implements PermissionService {
   private final PermissionDtoMapper permissionDtoMapper;
 
   @Override
+  @TryCatchException
   public JapiResponse getPermissions() {
-    try {
-      List<PermissionModel> permissionModels = repository.findAllPermissions();
-      return JapiResponse.success(permissionModels);
-    } catch (Exception e) { throw e; }
+    List<PermissionModel> permissionModels = repository.findAllPermissions();
+    return JapiResponse.success(permissionModels);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse create(PermissionRequest payload) {
-    try {
-      PermissionModel buildPermission = PermissionModel.builder().permission(payload.getPermission()).build();
+    PermissionModel buildPermission = PermissionModel.builder().permission(payload.getPermission()).build();
 
-      PermissionModel permissionModel = repository.save(buildPermission);
+    PermissionModel permissionModel = repository.save(buildPermission);
 
-      PermissionRecord permissionDto = permissionDtoMapper.apply(permissionModel);
+    PermissionRecord permissionDto = permissionDtoMapper.apply(permissionModel);
 
-      return JapiResponse.success(permissionDto);
-    } catch (Exception e) { throw e; }
+    return JapiResponse.success(permissionDto);
   }
 }

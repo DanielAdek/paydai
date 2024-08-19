@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
@@ -62,146 +63,143 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
+  @TryCatchException
   public JapiResponse createInvite(InviteRequest payload) throws MessagingException {
-    try {
-      InviteModel inviteModel;
-      inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
+    InviteModel inviteModel;
+    inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
 
-      if (inviteModel == null) {
-        InviteModel buildInvite = InviteModel.builder()
-          .inviteCode(this.generateInviteCode())
-          .companyEmail(payload.getCompanyEmail())
-          .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-          .commission(payload.getCommission())
-          .interval(payload.getInterval())
-          .intervalUnit(payload.getIntervalUnit())
-          .role(RoleModel.builder().id(payload.getRoleId()).build())
-          .build();
-
-        if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
-
-        // Check if invite already exiting if so then update instead of save;
-        inviteModel = repository.save(buildInvite);
-      }
-
-      String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + inviteModel.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
-
-      InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
-
-      InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
-
-      // SEND EMAIL NOTIFICATION
-      EmailRequest buildEmail = EmailRequest.builder()
-        .toEmail(payload.getCompanyEmail())
-        .subject("You have been invited to join a workspace")
-        .isHTML(true)
-        .message(link)
+    if (inviteModel == null) {
+      InviteModel buildInvite = InviteModel.builder()
+        .inviteCode(this.generateInviteCode())
+        .companyEmail(payload.getCompanyEmail())
+        .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+        .commission(payload.getCommission())
+        .interval(payload.getInterval())
+        .intervalUnit(payload.getIntervalUnit())
+        .role(RoleModel.builder().id(payload.getRoleId()).build())
         .build();
-      emailSenderService.sendMail(buildEmail);
 
-      return JapiResponse.success(inviteRecord);
-    } catch (Exception e) { throw e; }
+      if (payload.getAggregate() != null) buildInvite.setAggregate(payload.getAggregate());
+
+      // Check if invite already exiting if so then update instead of save;
+      inviteModel = repository.save(buildInvite);
+    }
+
+    String link = appConfig.getPaydaiClientBaseUrl() + "/signup/invite?code=" + inviteModel.getInviteCode() + "&c_email=" + payload.getCompanyEmail();
+
+    InviteDto inviteDto = InviteDto.getInviteDtoData(inviteModel, link);
+
+    InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
+
+    // SEND EMAIL NOTIFICATION
+    EmailRequest buildEmail = EmailRequest.builder()
+      .toEmail(payload.getCompanyEmail())
+      .subject("You have been invited to join a workspace")
+      .isHTML(true)
+      .message(link)
+      .build();
+    emailSenderService.sendMail(buildEmail);
+
+    return JapiResponse.success(inviteRecord);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse acceptInvite(RegisterRequest request, String inviteCode) {
-    try {
-      // Check if invite exit
-      InviteModel inviteModel = repository.findByInvite(inviteCode);
+    // Check if invite exit
+    InviteModel inviteModel = repository.findByInvite(inviteCode);
 
-      if (inviteModel == null) throw new NotFoundException("Invalid invite code");
+    if (inviteModel == null) throw new NotFoundException("Invalid invite code");
 
-      String passwordHash = passwordEncoder.encode(request.getPassword());
+    String passwordHash = passwordEncoder.encode(request.getPassword());
 
-      // Check if the personal email already exit
-      EmailModel emailModel;
+    // Check if the personal email already exit
+    EmailModel emailModel;
 
-      emailModel = emailRepository.findEmailQuery(request.getEmail());
+    emailModel = emailRepository.findEmailQuery(request.getEmail());
 
-      if (emailModel == null) {
-        UserModel userModel = userRepository.save(
-          UserModel.builder()
-            .firstName(request.getFirstName())
-            .lastName(request.getLastName())
-            .userType(UserType.SALES_REP)
-            .build());
+    if (emailModel == null) {
+      UserModel userModel = userRepository.save(
+        UserModel.builder()
+          .firstName(request.getFirstName())
+          .lastName(request.getLastName())
+          .userType(UserType.SALES_REP)
+          .build());
 
-        // Create email personal
-        emailModel = emailRepository.save(
-          EmailModel.builder()
-            .email(request.getEmail())
-            .passwordHash(passwordHash)
-            .emailType(EmailType.PERSONAL)
-            .user(userModel)
-            .build()
-        );
-      }
-
-      // Create email account company
-      EmailModel emailAddedWorkspace = emailRepository.save(
+      // Create email personal
+      emailModel = emailRepository.save(
         EmailModel.builder()
-          .email(inviteModel.getCompanyEmail())
-          .emailType(EmailType.COMPANY)
+          .email(request.getEmail())
           .passwordHash(passwordHash)
-          .user(emailModel.getUser())
+          .emailType(EmailType.PERSONAL)
+          .user(userModel)
           .build()
       );
+    }
+
+    // Create email account company
+    EmailModel emailAddedWorkspace = emailRepository.save(
+      EmailModel.builder()
+        .email(inviteModel.getCompanyEmail())
+        .emailType(EmailType.COMPANY)
+        .passwordHash(passwordHash)
+        .user(emailModel.getUser())
+        .build()
+    );
 
 
-      // Create commission setting
-      CommissionSettingModel commissionSettingModel = commSettingRepository.save(
-        CommissionSettingModel.builder()
-          .commission(inviteModel.getCommission())
-          .interval(inviteModel.getInterval())
-          .aggregate(inviteModel.getAggregate())
-          .intervalUnit(inviteModel.getIntervalUnit())
-          .build()
-      );
+    // Create commission setting
+    CommissionSettingModel commissionSettingModel = commSettingRepository.save(
+      CommissionSettingModel.builder()
+        .commission(inviteModel.getCommission())
+        .interval(inviteModel.getInterval())
+        .aggregate(inviteModel.getAggregate())
+        .intervalUnit(inviteModel.getIntervalUnit())
+        .build()
+    );
 
-      // Create workspace to user model
-      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.save(
-        UserWorkspaceModel.builder()
-          .user(emailModel.getUser())
-          .workspace(inviteModel.getWorkspace())
-          .role(inviteModel.getRole())
-          .email(emailAddedWorkspace)
-          .commission(commissionSettingModel)
-          .build()
-      );
+    // Create workspace to user model
+    UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.save(
+      UserWorkspaceModel.builder()
+        .user(emailModel.getUser())
+        .workspace(inviteModel.getWorkspace())
+        .role(inviteModel.getRole())
+        .email(emailAddedWorkspace)
+        .commission(commissionSettingModel)
+        .build()
+    );
 
-      // generate token
-      String jwt = jwtService.generateToken(emailModel.getUser());
+    // generate token
+    String jwt = jwtService.generateToken(emailModel.getUser());
 
-      // delete invite from invite
-      repository.removeInvite(inviteCode);
+    // delete invite from invite
+    repository.removeInvite(inviteCode);
 
-      // send welcome to paydai to email company
+    // send welcome to paydai to email company
 
-      RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+    RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
 
-      WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+    WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
 
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
+    AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
-      AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
+    AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
-      return JapiResponse.success(auth);
-    }  catch (Exception e) { throw e; }
+    return JapiResponse.success(auth);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse getWorkspaceInvites(UUID workspaceId) {
-    try {
-      List<InviteModel> inviteModels = repository.findWorkspaceInvites(workspaceId);
+    List<InviteModel> inviteModels = repository.findWorkspaceInvites(workspaceId);
 
-      List<InviteRecord> inviteRecords = inviteModels
-        .stream()
-        .map(inviteModel -> inviteDtoMapper.apply(
-          InviteDto.getInviteDtoData(inviteModel, "")
-        ))
-        .toList();
+    List<InviteRecord> inviteRecords = inviteModels
+      .stream()
+      .map(inviteModel -> inviteDtoMapper.apply(
+        InviteDto.getInviteDtoData(inviteModel, "")
+      ))
+      .toList();
 
-      return JapiResponse.success(inviteRecords);
-    }  catch (Exception e) { throw e; }
+    return JapiResponse.success(inviteRecords);
   }
 }

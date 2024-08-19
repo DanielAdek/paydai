@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,8 +16,20 @@ public class AmountDto {
   private double lgUnitAmt;
   private int smUnit;
 
-  public AmountDto getAmountDto(double smUnitAmt, String current) {
-   String[] supportedCurrencies = {"eur", "dor", ""};
-    return AmountDto.builder().build();
+  private static final List<String> UNIT_CURRENCIES = List.of("eur", "dor", "gbp");
+  private static final List<String> NO_UNIT_CURRENCIES = List.of("jpy");
+
+  public static AmountDto getAmountDto(double _smUnitAmt, String current) {
+    String normalizedCurrent = current.toLowerCase();
+
+    if (UNIT_CURRENCIES.contains(normalizedCurrent)) {
+      return new AmountDto(_smUnitAmt, _smUnitAmt * 100, 100);
+    }
+
+    if (NO_UNIT_CURRENCIES.contains(normalizedCurrent)) {
+      return new AmountDto(_smUnitAmt, _smUnitAmt, 1);
+    }
+
+    return AmountDto.builder().smUnit(100).lgUnitAmt(_smUnitAmt * 100).smUnitAmt(_smUnitAmt).build();
   }
 }

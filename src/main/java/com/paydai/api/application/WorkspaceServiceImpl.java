@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.CommissionSettingModel;
@@ -38,86 +39,81 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   private final UserWorkspaceRepository userWorkspaceRepository;
 
   @Override
+  @TryCatchException
   public JapiResponse getWorkspace() {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      WorkspaceModel workspaceModel = repository.findByUserId(userModel.getId());
+    WorkspaceModel workspaceModel = repository.findByUserId(userModel.getId());
 
-      if (workspaceModel == null) throw new NotFoundException("Workspace not exiting");
+    if (workspaceModel == null) throw new NotFoundException("Workspace not exiting");
 
-      WorkspaceRecord workspaceRecord = workspaceDtoMapper.apply(workspaceModel);
+    WorkspaceRecord workspaceRecord = workspaceDtoMapper.apply(workspaceModel);
 
-      return JapiResponse.success(workspaceRecord);
-    } catch (Exception e) { throw e; }
+    return JapiResponse.success(workspaceRecord);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse createWorkspace(WorkspaceRequest payload) {
-    try {
-      // Get the authenticated user creating workspace;
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    // Get the authenticated user creating workspace;
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel user = (UserModel) authentication.getPrincipal();
+    UserModel user = (UserModel) authentication.getPrincipal();
 
-      // find the workspace if already existing
-      WorkspaceModel workspaceModel = repository.findByName(payload.getName().toLowerCase().trim());
+    // find the workspace if already existing
+    WorkspaceModel workspaceModel = repository.findByName(payload.getName().toLowerCase().trim());
 
-      // check if workspace already created
-      if (workspaceModel != null) throw new ConflictException("Workspace in use");
+    // check if workspace already created
+    if (workspaceModel != null) throw new ConflictException("Workspace in use");
 
-      // Build the workspace object to persist
-      WorkspaceModel buildWorkspace = WorkspaceModel.builder().owner(user).name(payload.getName().toLowerCase().trim()).build();
+    // Build the workspace object to persist
+    WorkspaceModel buildWorkspace = WorkspaceModel.builder().owner(user).name(payload.getName().toLowerCase().trim()).build();
 
-      // Persist the workspace created data
-      WorkspaceModel newWorkspace = repository.save(buildWorkspace);
+    // Persist the workspace created data
+    WorkspaceModel newWorkspace = repository.save(buildWorkspace);
 
-      return JapiResponse.success(newWorkspace);
-    } catch (Exception e) { throw e; }
+    return JapiResponse.success(newWorkspace);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse getSalesRepWorkspaces() {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel user = (UserModel) authentication.getPrincipal();
+    UserModel user = (UserModel) authentication.getPrincipal();
 
-      List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findByUserId(user.getId());
+    List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findByUserId(user.getId());
 
-      List<WorkspaceRecord> workspaces = userWorkspaceModels
-        .stream()
-        .map(userWorkspaceModel -> workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()))
-        .collect(Collectors.toList());
+    List<WorkspaceRecord> workspaces = userWorkspaceModels
+      .stream()
+      .map(userWorkspaceModel -> workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()))
+      .collect(Collectors.toList());
 
-      return JapiResponse.success(workspaces);
-    } catch (Exception e) { throw e; }
+    return JapiResponse.success(workspaces);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse getWorkspaceSalesReps(UUID workspaceId, UUID roleId) {
-    try {
-      List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId, roleId);
-      List<ProfileRecord> userWorkspaceRecords = userWorkspaceModels
-        .stream()
-        .map(userWorkspaceModel -> profileDtoMapper.apply(userWorkspaceModel.getUser()))
-        .collect(Collectors.toList());
-      return JapiResponse.success(userWorkspaceRecords);
-    } catch (Exception e) { throw e; }
+    List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId, roleId);
+    List<ProfileRecord> userWorkspaceRecords = userWorkspaceModels
+      .stream()
+      .map(userWorkspaceModel -> profileDtoMapper.apply(userWorkspaceModel.getUser()))
+      .collect(Collectors.toList());
+    return JapiResponse.success(userWorkspaceRecords);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse getWorkspaceTeams(UUID workspaceId) {
-    try {
-      List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId);
+    List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId);
 
-      List<TeamsRecord> teamsRecords = new ArrayList<>();
-      if (!userWorkspaceModels.isEmpty()) {
-        teamsRecords = userWorkspaceModels.stream().map(teamsDtoMapper).toList();
-      }
-      return JapiResponse.success(teamsRecords);
-    } catch (Exception e) { throw e; }
+    List<TeamsRecord> teamsRecords = new ArrayList<>();
+    if (!userWorkspaceModels.isEmpty()) {
+      teamsRecords = userWorkspaceModels.stream().map(teamsDtoMapper).toList();
+    }
+    return JapiResponse.success(teamsRecords);
   }
 }

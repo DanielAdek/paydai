@@ -1,8 +1,7 @@
 package com.paydai.api.application;
 
-import com.paydai.api.domain.exception.ApiRequestException;
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.ConflictException;
-import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
@@ -48,107 +47,98 @@ public class AuthServiceImpl implements AuthService {
   private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   @Override
+  @TryCatchException
   public JapiResponse create(RegisterRequest payload) {
-    try {
-      // Check if email already exist
-      EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
+    // Check if email already exist
+    EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
 
-      if (email != null) throw new ConflictException("Email in use!");
+    if (email != null) throw new ConflictException("Email in use!");
 
-      // Build user data to save
-      UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
+    // Build user data to save
+    UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
 
-      // Save user
-      UserModel userModel = repository.save(buildUser);
+    // Save user
+    UserModel userModel = repository.save(buildUser);
 
-      // Build email
-      EmailModel buildEmail = EmailModel.builder()
-          .email(payload.getEmail())
-          .user(userModel)
-          .passwordHash(passwordEncoder.encode(payload.getPassword()))
-          .emailType(EmailType.PERSONAL)
-          .build();
+    // Build email
+    EmailModel buildEmail = EmailModel.builder()
+        .email(payload.getEmail())
+        .user(userModel)
+        .passwordHash(passwordEncoder.encode(payload.getPassword()))
+        .emailType(EmailType.PERSONAL)
+        .build();
 
-      // Save email
-      EmailModel emailModel = emailRepository.save(buildEmail);
+    // Save email
+    EmailModel emailModel = emailRepository.save(buildEmail);
 
-      if (payload.getUserType().equals(UserType.MERCHANT)) {
-        workspaceRepository.save(
-          WorkspaceModel.builder()
-            .name(payload.getBusiness().trim().toLowerCase())
-            .owner(userModel).build()
-        );
-      }
-
-      // create account if not exist
-      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
-
-      if (accountLedgerModel == null) {
-        accountLedgerRepository.save(
-          AccountLedgerModel.builder()
-            .balance(0.0)
-            .liability(0.0)
-            .user(userModel)
-            .build()
-        );
-      }
-
-      // Generate token
-      String token = jwtService.generateToken(userModel);
-
-      // Build data response to send to client
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null, null);
-
-      AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
-
-      //Todo: SEND WELCOME NOTIFICATION
-
-      return JapiResponse.builder().status(true).message("Success!").statusCode(HttpStatus.CREATED).data(auth).build();
-    } catch (ConflictException e) { throw e; } catch (Exception ex) {
-      logger.info("An error occurred: {} ", ex.getMessage());
-      throw new InternalServerException(ex.getMessage(), ex);
+    if (payload.getUserType().equals(UserType.MERCHANT)) {
+      workspaceRepository.save(
+        WorkspaceModel.builder()
+          .name(payload.getBusiness().trim().toLowerCase())
+          .owner(userModel).build()
+      );
     }
+
+    // create account if not exist
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
+
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .liability(0.0)
+          .user(userModel)
+          .build()
+      );
+    }
+
+    // Generate token
+    String token = jwtService.generateToken(userModel);
+
+    // Build data response to send to client
+    AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, emailModel, token, null, null);
+
+    AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
+
+    //Todo: SEND WELCOME NOTIFICATION
+
+    return JapiResponse.success(auth);
   }
 
   @Override
+  @TryCatchException
   public JapiResponse authenticate(AuthRequest authCred) {
-    try {
-      EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
+    EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
 
-      if (emailModel == null) throw new NotFoundException("Email not found");
+    if (emailModel == null) throw new NotFoundException("Email not found");
 
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getId(), authCred.getPassword()));
+    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getId(), authCred.getPassword()));
 
-      String jwt = jwtService.generateToken(emailModel.getUser());
+    String jwt = jwtService.generateToken(emailModel.getUser());
 
-      // add role and permission to user
-      UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
+    // add role and permission to user
+    UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
 
-      RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+    RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
 
-      WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+    WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
 
-      AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
 
-      if (accountLedgerModel == null) {
-        accountLedgerRepository.save(
-          AccountLedgerModel.builder()
-            .balance(0.0)
-            .liability(0.0)
-            .user(emailModel.getUser())
-            .build()
-        );
-      }
-
-      AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
-
-      AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
-
-      return JapiResponse.builder().status(true).statusCode(HttpStatus.OK).message("Success!").data(auth).build();
-    } catch (BadCredentialsException e) {
-      throw new ApiRequestException(e.getMessage(), e);
-    } catch (Exception e) {
-      throw new InternalServerException(e.getMessage());
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .liability(0.0)
+          .user(emailModel.getUser())
+          .build()
+      );
     }
+
+    AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
+
+    AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
+
+    return JapiResponse.builder().status(true).statusCode(HttpStatus.OK).message("Success!").data(auth).build();
   }
 }

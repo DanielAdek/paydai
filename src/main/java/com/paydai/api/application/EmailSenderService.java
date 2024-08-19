@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.request.EmailRequest;
 import jakarta.mail.MessagingException;
@@ -23,6 +24,7 @@ public class EmailSenderService {
   private final AppConfig appConfig;
 
   @Async
+  @TryCatchException
   public void sendMail(EmailRequest request) throws MessagingException {
     MimeMessage mimeMessage = mailSender.createMimeMessage();
     MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
