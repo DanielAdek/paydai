@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface CustomerService {
   JapiResponse create(CustomerRequest buildCustomer);
-  JapiResponse getCustomers();
+  JapiResponse getCustomers(UUID workspaceId);
   JapiResponse getOneCustomer(UUID customerId);
 }

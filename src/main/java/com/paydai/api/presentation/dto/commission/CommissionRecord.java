@@ -1,5 +1,9 @@
 package com.paydai.api.presentation.dto.commission;
 
+import com.paydai.api.domain.model.InvoiceManagerModel;
+
+import java.util.List;
+
 public record CommissionRecord (
   double paydaiFeeMerchant,
   float paydaiFeeSetterPercent,
@@ -14,6 +18,8 @@ public record CommissionRecord (
   double setterCommission,
   double setterNet,
   double closerNet,
-  double paydaiApplicationFee
+  double paydaiApplicationFee,
+  List<InvoiceManagerModel> closerManagersCommissions,
+  List<InvoiceManagerModel> setterManagersCommissions
 ) {
 }

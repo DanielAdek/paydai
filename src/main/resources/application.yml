@@ -1,13 +1,13 @@
 server:
-  port: ${APP_PORT}
+  port: ${APP_PORT:4000}
   servlet:
     context-path: /
 spring:
   mail:
-    host: ${MAIL_HOST}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    port: ${MAIL_PORT}
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    username: ${MAIL_USERNAME:devops@vaspackenergy.com}
+    password: ${MAIL_PASSWORD:Q21EJ0dDKbTkHALm}
+    port: ${MAIL_PORT:587}
     default-encoding: UTF-8
     properties:
       mail:
@@ -18,10 +18,9 @@ spring:
         mime:
           charset: UTF
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:dpg-crad7gq3esus739t9epg-a.oregon-postgres.render.com}:${DB_PORT:5432}/${DB_NAME:dbpaydai_nunt}
+    username: ${DB_USER:paydai}
+    password: ${DB_PASSWORD:N4TwO4Em3cKxW5YUIY11I1HR0n7SczD5}
   application:
     name: PaydaiServerApplication
   jpa:
@@ -30,21 +29,24 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        transaction:
+          jta:
+            platform: org.springframework.orm.jpa.vendor.SpringJtaPlatform
         format-sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 application:
   security:
     jwt_secret:
-      key: ${JWT_SECRET}
+      key: ${JWT_SECRET:423F4528482B4D6251655468576D5A7134743777217A25432A46294A404E6352}
   server:
-    url: ${BASE_URL}
+    url: ${BASE_URL:api.itspaydai.com}
   stripe:
-    secret_key: ${STRIPE_SECRET_KEY}
-    base_url: ${STRIPE_BASE_API}
+    secret_key: ${STRIPE_SECRET_KEY:sk_test_51PFJDQHll432c94ekmiEo09htbPld244hrYDeTwUlhbCAPs9Qp1MKvXU1oSNoYpjpX7CobvojBK8RfzRRJLZ15Bz00HT0NMLi4}
+    base_url: ${STRIPE_BASE_API:https://api.stripe.com}
     webhook:
       secret:
-        balance: ${STRIPE_WEBHOOK_SECRET_BALANCE}
-        transfer: ${STRIPE_WEBHOOK_SECRET_TRANSFER}
-        invoice_connect: ${STRIPE_WEBHOOK_SECRET_INVOICE_CONNECT}
+        balance: ${STRIPE_WEBHOOK_SECRET_BALANCE:whsec_d4ZlLD3jQNSFaKSnA3ydSqlGgV5W7Xuh}
+        transfer: ${STRIPE_WEBHOOK_SECRET_TRANSFER:whsec_gojMRBU7pmH0eg68QjBzyGBCdBT0b2Ee}
+        invoice_connect: ${STRIPE_WEBHOOK_SECRET_INVOICE_CONNECT:whsec_iVj4686CegWYPa9R4DDlSDrAmDFccCcS}
   paydai:
-    client_callback: ${PAYDAI_RETURN_CALLBACK_URL}
+    client_callback: ${PAYDAI_RETURN_CALLBACK_URL:https://appstage.itspaydai.com}

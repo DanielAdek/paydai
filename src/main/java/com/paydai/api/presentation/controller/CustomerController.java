@@ -11,6 +11,6 @@ import java.util.UUID;
 
 public interface CustomerController {
   ResponseEntity<JapiResponse> create(@RequestBody CustomerRequest payload);
-  ResponseEntity<JapiResponse> getCustomers();
+  ResponseEntity<JapiResponse> getCustomers(@RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> getOneCustomer(@RequestParam UUID customerId);
 }

@@ -4,12 +4,12 @@ import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
+import com.paydai.api.domain.service.InvoiceHelperService;
 import com.paydai.api.domain.service.InvoiceService;
+import com.paydai.api.domain.service.ProfileService;
 import com.paydai.api.presentation.dto.AmountDto;
 import com.paydai.api.presentation.dto.commission.CommissionRecord;
-import com.paydai.api.presentation.dto.invoice.InvoiceDto;
-import com.paydai.api.presentation.dto.invoice.InvoiceDtoMapper;
-import com.paydai.api.presentation.dto.invoice.InvoiceRecord;
+import com.paydai.api.presentation.dto.invoice.*;
 import com.paydai.api.presentation.request.CalcRequest;
 import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -30,20 +31,22 @@ import java.util.*;
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
   private final InvoiceRepository repository;
+  private final ProfileService profileService;
   private final InvoiceDtoMapper invoiceDtoMapper;
-  private final ProductRepository productRepository;
   private final CustomerRepository customerRepository;
   private final CalculatorServiceImpl calculatorService;
+  private final InvoiceHelperService invoiceHelperService;
   private final UserWorkspaceRepository userWorkspaceRepository;
 
   @Override
   @TryCatchException
+  @Transactional
   public JapiResponse create(InvoiceRequest payload) throws StripeException {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = profileService.getLoggedInUser();
 
     UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
+
+    if (closerWorkspaceModel == null) throw new NotFoundException("Invalid closer id");
 
     CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();
 
@@ -51,144 +54,30 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     AmountDto amountDto = AmountDto.getAmountDto(payload.getUnitPrice(), payload.getCurrency());
 
-    RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
+    Product product = invoiceHelperService.createProductInStripe(payload, connectedAccountId);
 
-    ProductCreateParams productCreateParams = ProductCreateParams.builder()
-      .setName(payload.getProductName())
-      .setDescription(payload.getProductDescription())
-      .build();
-
-    Product product = Product.create(productCreateParams, requestOptions);
-
-    PriceCreateParams priceCreateParams = PriceCreateParams.builder()
-      .setProduct(product.getId())
-      .setUnitAmount(Double.valueOf(amountDto.getLgUnitAmt()).longValue())
-      .setCurrency(payload.getCurrency())
-      .build();
-
-    Price price = Price.create(priceCreateParams, requestOptions);
+    Price price = invoiceHelperService.createPriceInStripe(payload, product, connectedAccountId);
 
     CustomerModel customerModel = customerRepository.findByCustomerId(payload.getCustomerId());
 
-    UserWorkspaceModel setterWorkspaceModel = null;
-
-    float setterCommissionPercent = 0.0F;
-
     CommSplitScenarioType scenarioType = CommSplitScenarioType.CLOSER_ONLY;
+    List<TeamModel> closerManagers = invoiceHelperService.getTeamMembers(closerWorkspaceModel);
+    CommissionData commissionData = invoiceHelperService.getSetterCommissionData(customerModel, payload, scenarioType);
 
-    if (customerModel != null) {
-      Boolean setterInvolved = customerModel.getSetterInvolved();
-      if (setterInvolved != null && setterInvolved) {
-        setterWorkspaceModel = userWorkspaceRepository.findOneByUserId(customerModel.getSetter().getId(), payload.getWorkspaceId());
-
-        if (setterWorkspaceModel != null) {
-          setterCommissionPercent = setterWorkspaceModel.getCommission().getCommission();
-          scenarioType = CommSplitScenarioType.CLOSER_AND_SETTER;
-        }
-      }
-    }
-
-    // find customer from stripe before below
-    CustomerCreateParams customerCreateParams = CustomerCreateParams.builder()
-      .setName(customerModel.getName())
-      .setEmail(customerModel.getEmail())
-      .setDescription(customerModel.getDescription())
-      .build();
-
-    Customer customer = Customer.create(customerCreateParams, requestOptions);
-
-    Double invoice_amount = payload.getQty() > 0 ? Double.valueOf(payload.getQty() * payload.getUnitPrice()) : payload.getUnitPrice();
+    // customer from stripe before below
+    Customer customer = invoiceHelperService.createCustomerInStripe(customerModel, connectedAccountId);
 
     // CALCULATE COMMISSIONS
-    CalcRequest calcRequest = CalcRequest.builder()
-      .revenue(invoice_amount)
-      .scenario(scenarioType)
-      .closerPercent(commissionSettingModel.getCommission())
-      .build();
-
-    if (calcRequest.getScenario().equals(CommSplitScenarioType.CLOSER_AND_SETTER)) {
-      calcRequest.setSetterPercent(setterCommissionPercent);
-    }
+    CalcRequest calcRequest = invoiceHelperService.buildCalcRequest(payload, commissionSettingModel, commissionData, scenarioType, closerManagers, commissionData.getManagerTeams());
 
     CommissionRecord commissionRecord = calculatorService.displayCommissions(calcRequest);
 
-    long applicationFee = Double.valueOf(AmountDto.getAmountDto(commissionRecord.paydaiApplicationFee(), payload.getCurrency()).getLgUnitAmt()).longValue();
+    Invoice invoice = invoiceHelperService.createStripeInvoice(payload, customer, commissionRecord, connectedAccountId);
 
-    long dueDate = LocalDate.parse(payload.getDueDate().toString()).atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+    InvoiceItem invoiceItem = invoiceHelperService.createStripeInvoiceItem(invoice, price, customer, payload, connectedAccountId);
 
-    InvoiceCreateParams invoiceCreateParams =
-      InvoiceCreateParams.builder()
-        .setCustomer(customer.getId())
-        .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
-        .setDueDate(dueDate)
-        .setApplicationFeeAmount(applicationFee)
-        .build();
+    InvoiceModel invoiceModel = invoiceHelperService.saveInvoiceToDatabase(payload, amountDto, commissionRecord, closerWorkspaceModel, customerModel, commissionSettingModel, product, invoice, invoiceItem);
 
-    Invoice invoice = Invoice.create(invoiceCreateParams, requestOptions);
-
-    InvoiceItemCreateParams params =
-      InvoiceItemCreateParams.builder()
-        .setCustomer(customer.getId())
-        .setPrice(price.getId())
-        .setQuantity((long) payload.getQty())
-        .setInvoice(invoice.getId())
-        .build();
-
-    InvoiceItem invoiceItem = InvoiceItem.create(params, requestOptions);
-
-    ProductModel productModel = productRepository.save(
-      ProductModel.builder()
-        .item(payload.getProductName())
-        .qty(payload.getQty())
-        .unitPrice(payload.getUnitPrice())
-        .description(payload.getProductDescription())
-        .stripeProductId(product.getId())
-        .build()
-    );
-
-    LocalDateTime localDateTime = LocalDateTime.now();
-    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
-    long milliseconds = zonedDateTime.toInstant().toEpochMilli();
-
-    InvoiceModel buildInvoice = InvoiceModel.builder()
-      .subject(payload.getSubject())
-      .currency(payload.getCurrency())
-      .amount(invoice_amount)
-      .unit(amountDto.getSmUnit())
-      .dueDate(payload.getDueDate())
-      .status(InvoiceStatus.CREATED)
-      .invoiceCode("INV" + milliseconds)
-      .applicationFee(commissionRecord.paydaiApplicationFee())
-      .platformFee(commissionRecord.paydaiTotalComm())
-      .commSplitScenario(CommSplitScenarioType.CLOSER_ONLY)
-      .snapshotCommCloserPercent(commissionSettingModel.getCommission())
-      .snapshotCloserFeePercent(commissionRecord.paydaiFeeCloserPercent())
-      .snapshotCommCloserNet(commissionRecord.closerNet())
-      .snapshotCommCloser(commissionRecord.closerCommission())
-      .snapshotCommSetterPercent(0.0F)
-      .snapshotMerchantFeePercent(commissionRecord.paydaiFeeMerchantPercent())
-      .snapshotCommInterval(commissionSettingModel.getInterval())
-      .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
-      .snapshotCommAggregate(commissionSettingModel.getAggregate())
-      .stripeInvoiceItem(invoiceItem.getInvoice())
-      .stripeInvoiceId(invoice.getId())
-      .stripeInvoicePdf(invoice.getInvoicePdf())
-      .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
-      .customer(customerModel)
-      .product(productModel)
-      .userWorkspace(closerWorkspaceModel)
-      .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-      .build();
-
-    if (setterWorkspaceModel != null) {
-      buildInvoice.setSnapshotCommSetterPercent(setterCommissionPercent);
-      buildInvoice.setSnapshotSetterFeePercent(commissionRecord.paydaiFeeSetterPercent());
-      buildInvoice.setSnapshotCommSetterNet(commissionRecord.setterNet());
-      buildInvoice.setSnapshotCommSetter(commissionRecord.setterCommission());
-      buildInvoice.setCommSplitScenario(CommSplitScenarioType.CLOSER_AND_SETTER);
-    }
-
-    InvoiceModel invoiceModel = repository.save(buildInvoice);
     return JapiResponse.success(getInvoiceRecordDetails(invoiceModel));
   }
 
@@ -211,10 +100,7 @@ public class InvoiceServiceImpl implements InvoiceService {
   @Override
   @TryCatchException
   public JapiResponse getInvoice(String invoiceCode) {
-    InvoiceModel invoiceModel = repository.findByInvoiceCode(invoiceCode);
-
-    if (invoiceModel == null) throw new NotFoundException("Invalid invoice code");
-
+    InvoiceModel invoiceModel = validateInvoice(invoiceCode);
     return JapiResponse.success(getInvoiceRecordDetails(invoiceModel));
   }
 
@@ -229,9 +115,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId(), requestOptions);
 
+    try {
     InvoiceFinalizeInvoiceParams invoiceFinalizeInvoiceParams = InvoiceFinalizeInvoiceParams.builder().build();
 
     invoice = invoice.finalizeInvoice(invoiceFinalizeInvoiceParams, requestOptions);
+    } catch (StripeException e) {
+      throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
+    }
 
     Map<String, Object> response = invoiceDetails(invoice, invoiceModel);
 
@@ -250,14 +140,57 @@ public class InvoiceServiceImpl implements InvoiceService {
     RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
 
     Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId(), requestOptions);
-
+    try {
     InvoiceSendInvoiceParams invoiceSendInvoiceParams = InvoiceSendInvoiceParams.builder().build();
 
     invoice = invoice.sendInvoice(invoiceSendInvoiceParams, requestOptions);
 
+    } catch (StripeException e) {
+      throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
+    }
+
     repository.updateInvoiceStatus(invoiceCode, invoice.getStatus(), InvoiceStatus.SENT.toString());
 
     return JapiResponse.success(invoiceDetails(invoice, invoiceModel));
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse filterInvoice(UUID workspaceId, InvoiceStatus status) {
+    List<InvoiceModel> invoiceModels = repository.findByFilterWorkspaceInvoices(workspaceId, status.name());
+    List<InvoiceRecord> invoiceDtos = new ArrayList<>();
+    if (!invoiceModels.isEmpty()) {
+      invoiceDtos = invoiceModels.stream().map(this::getInvoiceRecordDetails).toList();
+    }
+    return JapiResponse.success(invoiceDtos);
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse getSalesRepInvoice(String invoiceCode) {
+    InvoiceModel invoiceModel = validateInvoice(invoiceCode);
+
+    UserModel closer = invoiceModel.getUserWorkspace().getUser();
+
+    UserModel setter = invoiceModel.getCustomer().getSetter();
+
+    List<InvoiceSalesRepDto> salesReps = new ArrayList<>();
+
+    if (!invoiceModel.getInvolvedManagers().isEmpty())
+      for (InvoiceManagerModel invoiceManagerModel : invoiceModel.getInvolvedManagers()) {
+        UUID srId = invoiceManagerModel.getManager().getId();
+        double credit = invoiceManagerModel.getSnapshotCommManagerNet();
+        String name = invoiceManagerModel.getManager().getFirstName();
+        InvoiceSalesRepDto invoiceSalesRepDto = InvoiceSalesRepDto.getInvoiceSalesRepDto(srId, credit, name, "manager");
+        salesReps.add(invoiceSalesRepDto);
+      }
+
+    salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(closer.getId(), invoiceModel.getSnapshotCommCloserNet(), closer.getFirstName(), "closer"));
+
+    if (setter != null)
+        salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(setter.getId(), invoiceModel.getSnapshotCommCloserNet(), setter.getFirstName(), "setter"));
+
+    return JapiResponse.success(salesReps);
   }
 
   private InvoiceModel validateInvoice(String invoiceCode) {
@@ -296,7 +229,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     CommissionRecord commissionRecord = calculatorService.displayCommissions(calcRequest);
 
-    InvoiceDto invoiceDto = InvoiceDto.getInvoiceDto(invoiceModel, commissionRecord);
+    InvoiceDto invoiceDto = InvoiceDto.getInvoiceDto(invoiceModel, commissionRecord, invoiceModel.getInvolvedManagers());
 
     return invoiceDtoMapper.apply(invoiceDto);
   }

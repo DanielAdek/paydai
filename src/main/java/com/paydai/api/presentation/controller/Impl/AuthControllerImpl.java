@@ -5,6 +5,7 @@ import com.paydai.api.presentation.controller.AuthController;
 import com.paydai.api.presentation.request.AuthRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -50,7 +51,7 @@ public class AuthControllerImpl implements AuthController {
   })
   @Override
   @PostMapping(path = "/login")
-  public ResponseEntity<JapiResponse> authenticate(@RequestBody AuthRequest payload) {
+  public ResponseEntity<JapiResponse> authenticate(@RequestBody AuthRequest payload) throws StripeException {
     JapiResponse response = service.authenticate(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }

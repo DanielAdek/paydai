@@ -1,7 +1,8 @@
 package com.paydai.api.presentation.controller.Impl;
 
-import com.paydai.api.domain.service.PayoutLedgerService;
-import com.paydai.api.presentation.controller.PayoutLedgerController;
+import com.paydai.api.domain.service.RefundService;
+import com.paydai.api.presentation.controller.RefundController;
+import com.paydai.api.presentation.request.RefundRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,23 +14,20 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping(path = "/api/v1/transactions/")
+@RequestMapping(path = "/api/v1/refund")
 @RequiredArgsConstructor
-@Tag(name = "Transactions", description = "Payout transactions APIs tag")
-public class PayoutLedgerControllerImpl implements PayoutLedgerController {
-  private final PayoutLedgerService service;
+@Tag(name = "Refund", description = "Refund APIs tag")
+public class RefundControllerImpl implements RefundController {
+  private final RefundService service;
 
   @Operation(
-    summary = "Payout transactions retrieve API endpoint",
-    description = "GET response to show auth DTO"
+    summary = "Request Refund API endpoint",
+    description = "POST response to show request DTO"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
@@ -40,15 +38,15 @@ public class PayoutLedgerControllerImpl implements PayoutLedgerController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping("payout")
-  public ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId, @RequestParam UUID workspaceId) {
-    JapiResponse response = service.getPayoutLedgerTransactions(userId, workspaceId);
+  @PostMapping
+  public ResponseEntity<JapiResponse> create(@RequestBody RefundRequest payload) {
+    JapiResponse response = service.create(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
   @Operation(
-    summary = "Payout transactions if logged in as personal: retrieve API endpoint",
-    description = "GET response to show auth DTO"
+    summary = "Request Refund API endpoint",
+    description = "POST response to show request DTO"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
@@ -59,15 +57,15 @@ public class PayoutLedgerControllerImpl implements PayoutLedgerController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping("payout/user")
-  public ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId) {
-    JapiResponse response = service.getPayoutLedgerTransactions(userId);
+  @GetMapping("/requests")
+  public ResponseEntity<JapiResponse> getRefundRequests(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getRefundRequests(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
   @Operation(
-    summary = "Payout transactions overview: retrieve API endpoint",
-    description = "GET response to show transaction overview"
+    summary = "Request Refunds Merchant API endpoint",
+    description = "POST response to show request DTO"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
@@ -78,15 +76,15 @@ public class PayoutLedgerControllerImpl implements PayoutLedgerController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping("payout/sales-rep/overview")
-  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(UUID userId, UUID workspaceId) {
-    JapiResponse response = service.getTransactionOverview(userId, workspaceId);
+  @GetMapping("/merchant/requests")
+  public ResponseEntity<JapiResponse> getRefundsRequests(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getRefundsRequests(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
   @Operation(
-    summary = "Payout transactions overview: retrieve API endpoint",
-    description = "GET response to show transaction overview"
+    summary = "Request Refund API endpoint",
+    description = "POST response to show request DTO"
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
@@ -97,9 +95,28 @@ public class PayoutLedgerControllerImpl implements PayoutLedgerController {
   @SecurityRequirements({
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
-  @GetMapping("payout/user/overview")
-  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(UUID userId) {
-    JapiResponse response = service.getTransactionOverview(userId);
+  @GetMapping("/liability")
+  public ResponseEntity<JapiResponse> getLiabilityBalance(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getLiabilityBalance(workspaceId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Request Refund API endpoint",
+    description = "POST response to show request DTO"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("/liability/user")
+  public ResponseEntity<JapiResponse> getTotalLiability() {
+    JapiResponse response = service.getLiabilityBalance();
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

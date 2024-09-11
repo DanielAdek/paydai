@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -32,7 +33,17 @@ public class InviteModel {
   private Float commission;
 
   @Column
+  @Enumerated(EnumType.STRING)
   private AggregateType aggregate;
+
+  @Column
+  @Enumerated(EnumType.STRING)
+  private PositionType position;
+
+  @ElementCollection
+  @CollectionTable(name = "assigned_team_members", joinColumns = @JoinColumn(name = "invite_id"))
+  @Column(name = "selected_sales_rep")
+  private List<UUID> selectedSalesRep;
 
   @Column
   private int interval;

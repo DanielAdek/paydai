@@ -1,5 +1,6 @@
 package com.paydai.api.presentation.controller;
 
+import com.paydai.api.domain.model.InvoiceStatus;
 import com.paydai.api.presentation.request.InvoiceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
@@ -16,4 +17,6 @@ public interface InvoiceController {
   ResponseEntity<JapiResponse> getWorkspaceInvoicesToCustomers(@RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> finalizeInvoice(@RequestParam String invoiceCode) throws StripeException;
   ResponseEntity<JapiResponse> sendInvoice(@RequestParam String invoice) throws StripeException;
+  ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, InvoiceStatus status);
+  ResponseEntity<JapiResponse> getSalesRepInvolvedInvoice(@RequestParam String invoiceCode);
 }

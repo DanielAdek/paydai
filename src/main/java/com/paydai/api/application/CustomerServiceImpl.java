@@ -61,8 +61,8 @@ public class CustomerServiceImpl implements CustomerService {
 
   @Override
   @TryCatchException
-  public JapiResponse getCustomers() {
-    List<CustomerModel> customers = repository.findCustomers();
+  public JapiResponse getCustomers(UUID workspaceId) {
+    List<CustomerModel> customers = repository.findCustomers(workspaceId);
 
     List<CustomerRecord> customerRecords = customers
       .stream()

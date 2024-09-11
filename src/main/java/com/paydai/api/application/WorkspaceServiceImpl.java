@@ -3,13 +3,12 @@ package com.paydai.api.application;
 import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
-import com.paydai.api.domain.model.CommissionSettingModel;
-import com.paydai.api.domain.model.UserModel;
-import com.paydai.api.domain.model.UserWorkspaceModel;
-import com.paydai.api.domain.model.WorkspaceModel;
+import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.CommSettingRepository;
+import com.paydai.api.domain.repository.TeamRepository;
 import com.paydai.api.domain.repository.UserWorkspaceRepository;
 import com.paydai.api.domain.repository.WorkspaceRepository;
+import com.paydai.api.domain.service.ProfileService;
 import com.paydai.api.domain.service.WorkspaceService;
 import com.paydai.api.presentation.dto.profile.ProfileDtoMapper;
 import com.paydai.api.presentation.dto.profile.ProfileRecord;
@@ -19,9 +18,11 @@ import com.paydai.api.presentation.dto.userWorkspace.TeamsRecord;
 import com.paydai.api.presentation.dto.userWorkspace.UserWorkspaceRecord;
 import com.paydai.api.presentation.dto.workspace.WorkspaceDtoMapper;
 import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
+import com.paydai.api.presentation.request.AssignSalesRepRequest;
 import com.paydai.api.presentation.request.WorkspaceRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,13 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkspaceServiceImpl implements WorkspaceService {
   private final TeamsDtoMapper teamsDtoMapper;
+  private final TeamRepository teamRepository;
+  private final ProfileService profileService;
   private final WorkspaceRepository repository;
   private final ProfileDtoMapper profileDtoMapper;
   private final WorkspaceDtoMapper workspaceDtoMapper;
@@ -96,8 +100,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Override
   @TryCatchException
-  public JapiResponse getWorkspaceSalesReps(UUID workspaceId, UUID roleId) {
-    List<UserWorkspaceModel> userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId, roleId);
+  public JapiResponse getWorkspaceSalesReps(UUID workspaceId, Optional<UUID> roleId) {
+    List<UserWorkspaceModel> userWorkspaceModels;
+    if (roleId.isPresent()) {
+      userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId, roleId);
+    } else {
+      userWorkspaceModels = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId);
+    }
+
     List<ProfileRecord> userWorkspaceRecords = userWorkspaceModels
       .stream()
       .map(userWorkspaceModel -> profileDtoMapper.apply(userWorkspaceModel.getUser()))
@@ -115,5 +125,29 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       teamsRecords = userWorkspaceModels.stream().map(teamsDtoMapper).toList();
     }
     return JapiResponse.success(teamsRecords);
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse getManagerTeamMembers(UUID workspaceId) {
+    UserModel manager = profileService.getLoggedInUser();
+
+    List<TeamModel> teamModels = teamRepository.findByTeamManager(manager.getId(), workspaceId);
+
+    List<UserWorkspaceModel> members = teamModels.stream()
+      .map(teamModel -> userWorkspaceRepository.findOneByUserId(teamModel.getMember().getId(), workspaceId))
+      .toList();
+
+    List<TeamsRecord> teamsRecords = members.stream()
+      .map(teamsDtoMapper)
+      .toList();
+
+    return JapiResponse.success(teamsRecords.isEmpty() ? Collections.emptyList() : teamsRecords);
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse assignTeamMembers(AssignSalesRepRequest assignSalesRepRequest) {
+    return null;
   }
 }

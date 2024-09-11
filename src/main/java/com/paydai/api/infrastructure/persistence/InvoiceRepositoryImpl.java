@@ -56,4 +56,8 @@ public interface InvoiceRepositoryImpl extends InvoiceRepository, JpaRepository<
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE stripe_invoice_id=?1")
   InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM invoice_tbl WHERE workspace_id=?1 AND status=?2")
+  List<InvoiceModel> findByFilterWorkspaceInvoices(UUID workspaceId, String filter);
 }

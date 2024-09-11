@@ -23,4 +23,5 @@ public interface InvoiceRepository {
   void updateInvoiceStatus(String invoiceCode, String stripeInvoiceStatus, String status);
   void updateInvoiceStatusWebhook(String invoiceCode, String stripeInvoiceStatus, String status);
   InvoiceModel findByStripeInvoiceCode(String stripeInvoiceCode);
+  List<InvoiceModel> findByFilterWorkspaceInvoices(UUID workspaceId, String status);
 }

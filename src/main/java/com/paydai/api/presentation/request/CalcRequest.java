@@ -1,10 +1,14 @@
 package com.paydai.api.presentation.request;
 
 import com.paydai.api.domain.model.CommSplitScenarioType;
+import com.paydai.api.domain.model.TeamModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -15,4 +19,6 @@ public class CalcRequest {
   private CommSplitScenarioType scenario;
   private float setterPercent;
   private float closerPercent;
+  private List<TeamModel> closerManager;
+  private List<TeamModel> setterManager;
 }

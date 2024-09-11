@@ -1,6 +1,7 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.annotation.TryCatchException;
+import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.UserModel;
 import com.paydai.api.domain.model.UserWorkspaceModel;
 import com.paydai.api.domain.repository.UserWorkspaceRepository;
@@ -42,14 +43,23 @@ public class ProfileServiceImpl implements ProfileService {
 
     UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), workspaceId);
 
-    RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+    if (userWorkspaceModel == null) throw new NotFoundException("workspace id-" + workspaceId);
 
-    WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+    RoleRecord role = roleDtoMapper.apply(userWorkspaceModel.getRole());
 
-    AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, Objects.requireNonNull(userWorkspaceModel).getEmail(), jwt, role, workspace);
+    WorkspaceRecord workspace = workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace());
+
+    AuthModelDto buildAuthDto = AuthModelDto.getAuthData(userModel, userWorkspaceModel.getEmail(), jwt, role, workspace);
 
     AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
     return JapiResponse.success(auth);
+  }
+
+  @Override
+  @TryCatchException
+  public UserModel getLoggedInUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return (UserModel) authentication.getPrincipal();
   }
 }

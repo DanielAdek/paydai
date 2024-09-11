@@ -5,6 +5,7 @@ import com.paydai.api.domain.model.InvoiceStatus;
 import com.paydai.api.presentation.dto.commission.CommissionRecord;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record InvoiceRecord(
   String invoiceCode,
@@ -25,11 +26,11 @@ public record InvoiceRecord(
   double productUnitPrice,
   float snapshotCommCloserPercent,
   float snapshotCommSetterPercent,
-  AggregateType snapshotCommAggregate,
   int snapshotCommInterval,
   String snapshotCommIntervalUnit,
   String salesRep,
   InvoiceStatus status,
-  CommissionRecord commissionSplit
+  CommissionRecord commissionSplit,
+  List<InvolvedManagerDto> involvedManagerDto
 ) {
 }

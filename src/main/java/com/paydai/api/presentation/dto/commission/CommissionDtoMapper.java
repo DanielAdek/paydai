@@ -2,6 +2,7 @@ package com.paydai.api.presentation.dto.commission;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 @Service
@@ -22,7 +23,9 @@ public class CommissionDtoMapper implements Function<CommissionDto, CommissionRe
       commissionDto.getSetterCommission(),
       commissionDto.getSetterNet(),
       commissionDto.getCloserNet(),
-      commissionDto.getPaydaiApplicationFee()
+      commissionDto.getPaydaiApplicationFee(),
+      commissionDto.getCloserManagersCommissions() != null ? commissionDto.getCloserManagersCommissions() : new ArrayList<>(),
+      commissionDto.getSetterManagersCommissions() != null ? commissionDto.getSetterManagersCommissions() : new ArrayList<>()
     );
   }
 }

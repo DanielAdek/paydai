@@ -17,18 +17,21 @@ import com.paydai.api.presentation.dto.workspace.WorkspaceRecord;
 import com.paydai.api.presentation.request.AuthRequest;
 import com.paydai.api.presentation.request.RegisterRequest;
 import com.paydai.api.presentation.response.JapiResponse;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Account;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -44,10 +47,9 @@ public class AuthServiceImpl implements AuthService {
   private final UserWorkspaceRepository userWorkspaceRepository;
   private final AccountLedgerRepository accountLedgerRepository;
 
-  private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
-
   @Override
   @TryCatchException
+  @Transactional
   public JapiResponse create(RegisterRequest payload) {
     // Check if email already exist
     EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
@@ -79,19 +81,6 @@ public class AuthServiceImpl implements AuthService {
       );
     }
 
-    // create account if not exist
-    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
-
-    if (accountLedgerModel == null) {
-      accountLedgerRepository.save(
-        AccountLedgerModel.builder()
-          .balance(0.0)
-          .liability(0.0)
-          .user(userModel)
-          .build()
-      );
-    }
-
     // Generate token
     String token = jwtService.generateToken(userModel);
 
@@ -107,38 +96,34 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @TryCatchException
-  public JapiResponse authenticate(AuthRequest authCred) {
+  public JapiResponse authenticate(AuthRequest authCred) throws StripeException {
     EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
 
-    if (emailModel == null) throw new NotFoundException("Email not found");
+    if (emailModel == null) throw new NotFoundException("Invalid Email or password");
 
     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getId(), authCred.getPassword()));
 
     String jwt = jwtService.generateToken(emailModel.getUser());
 
     // add role and permission to user
-    UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findUserWorkspaceRole(emailModel.getUser().getId());
+    UserWorkspaceModel userWorkspaceModel;
+    RoleRecord role = null;
+    WorkspaceRecord workspace = null;
+    if (emailModel.getEmailType().equals(EmailType.COMPANY)) {
+      userWorkspaceModel = userWorkspaceRepository.findUserByEmail(emailModel.getId());
+      role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
+      workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+    }
 
-    RoleRecord role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
-
-    WorkspaceRecord workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
-
-    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(emailModel.getUser().getId());
-
-    if (accountLedgerModel == null) {
-      accountLedgerRepository.save(
-        AccountLedgerModel.builder()
-          .balance(0.0)
-          .liability(0.0)
-          .user(emailModel.getUser())
-          .build()
-      );
+    if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
+      workspace = workspaceDtoMapper.apply(workspaceRepository.findByUserId(emailModel.getUser().getId()));
+      role = new RoleRecord(UUID.randomUUID(), "merchant", LocalDateTime.now(), LocalDateTime.now());
     }
 
     AuthModelDto buildAuthDto = AuthModelDto.getAuthData(emailModel.getUser(), emailModel, jwt, role, workspace);
 
     AuthRecordDto auth = authenticationDTOMapper.apply(buildAuthDto);
 
-    return JapiResponse.builder().status(true).statusCode(HttpStatus.OK).message("Success!").data(auth).build();
+    return JapiResponse.success(auth);
   }
 }

@@ -5,6 +5,7 @@ import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.model.*;
+import com.paydai.api.domain.repository.AccountLedgerRepository;
 import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.UserRepository;
 import com.paydai.api.domain.service.AccountService;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.stripe.net.OAuth;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +47,7 @@ public class AccountServiceImpl implements AccountService {
   private final AppConfig config;
   private final UserRepository repository;
   private final EmailRepository emailRepository;
+  private final AccountLedgerRepository accountLedgerRepository;
 
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
@@ -53,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
    * @return it returns a json data with stripe accountId
    */
   @TryCatchException
+  @Transactional
   public JapiResponse createAccount(AccountRequest payload) throws StripeException {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -72,6 +76,7 @@ public class AccountServiceImpl implements AccountService {
     } else {
       accountCreateParams = AccountCreateParams.builder()
         .setEmail(emailModel.getEmail())
+//        .setDefaultCurrency("usd")
         .setType(AccountCreateParams.Type.EXPRESS)
         .setCapabilities(
           AccountCreateParams.Capabilities.builder()
@@ -92,6 +97,18 @@ public class AccountServiceImpl implements AccountService {
     Account account = Account.create(accountCreateParams);
 
     if (account == null) throw new ApiRequestException("Account did not create. Try again");
+
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(userModel.getId());
+
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .currency(account.getDefaultCurrency())
+          .user(userModel)
+          .build()
+      );
+    }
 
     // Update column stripe for user
     repository.updateUserStripe(userModel.getId(), account.getId(), emailModel.getEmail());
@@ -181,7 +198,19 @@ public class AccountServiceImpl implements AccountService {
 
     UserModel userModel = (UserModel) authentication.getPrincipal();
 
-     Account account = Account.retrieve(userModel.getStripeId());
+    Account account = Account.retrieve(userModel.getStripeId());
+
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(userModel.getId());
+
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .currency(account.getDefaultCurrency())
+          .user(userModel)
+          .build()
+      );
+    }
 
     Map<String, Object> hashMap = new HashMap<>();
 

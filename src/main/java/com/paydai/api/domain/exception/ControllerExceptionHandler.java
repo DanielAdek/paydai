@@ -22,8 +22,8 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(value = {BadCredentialException.class})
   public ResponseEntity<ApiException> handleBadCredentialException(BadCredentialException cause) {
     ApiException apiException = ApiException.builder()
-      .message(cause.getMessage())
-      .error("Invalid email or password")
+      .message("Invalid Email or Password")
+      .error(cause.getMessage())
       .statusCode(401)
       .build();
     return new ResponseEntity<>(apiException, HttpStatus.UNAUTHORIZED);
@@ -32,7 +32,7 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(value = {NotFoundException.class})
   public ResponseEntity<ApiException> handleNotFoundException(NotFoundException cause) {
     ApiException exception = ApiException.builder()
-        .message(cause.getMessage())
+        .message(cause.getMessage() + " does not exit")
         .error("Not Found Exception")
         .statusCode(404)
         .build();
@@ -52,7 +52,7 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(value = {ConflictException.class})
   public ResponseEntity<ApiException> handleConflictException(ConflictException cause) {
     ApiException exception = ApiException.builder()
-        .message(cause.getMessage())
+        .message(cause.getMessage() + " already existing!")
         .statusCode(409)
         .error("Duplicate Key violate unique constraint")
         .build();

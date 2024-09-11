@@ -8,18 +8,24 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface InviteRepositoryImpl extends InviteRepository, JpaRepository<InviteModel, UUID> {
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM invite_tbl WHERE invite_code=?1")
-  InviteModel findByInvite(String code);
+  Optional<InviteModel> findByInvite(String code);
 
   @Override
   @Modifying
   @Transactional
   @Query(nativeQuery = true, value = "DELETE FROM invite_tbl WHERE invite_code=?1")
   void removeInvite(String code);
+
+  @Modifying
+  @Transactional
+  @Query(nativeQuery = true, value = "DELETE FROM assigned_team_members WHERE invite_id = (SELECT id FROM invite_tbl WHERE invite_code = ?1)")
+  void removeAssignedTeamMembers(String inviteCode);
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM invite_tbl WHERE id=?1 AND workspace_id=?2 And company_email=?3")

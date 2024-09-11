@@ -10,5 +10,5 @@ public interface CustomerRepository {
   CustomerModel save(CustomerModel buildCustomer);
   CustomerModel findByCustomerId(UUID customerId);
   CustomerModel findByCustomerEmail(String email, UUID workspaceId);
-  List<CustomerModel> findCustomers();
+  List<CustomerModel> findCustomers(UUID workspaceId);
 }

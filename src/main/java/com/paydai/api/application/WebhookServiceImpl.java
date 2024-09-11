@@ -6,13 +6,11 @@ import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.model.InvoiceStatus;
 import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.WebhookRepository;
-import com.paydai.api.domain.service.PayoutLedgerService;
+import com.paydai.api.domain.service.TransactionService;
 import com.paydai.api.domain.service.WebhookService;
-import com.paydai.api.presentation.dto.webhook.WebhookRegister;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
-import com.stripe.param.WebhookEndpointCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +22,7 @@ public class WebhookServiceImpl implements WebhookService {
   private final WebhookRepository repository;
   private final WebhookConstant webhookConstant;
   private final InvoiceRepository invoiceRepository;
-  private final PayoutLedgerService payoutLedgerService;
+  private final TransactionService payoutLedgerService;
 
   @Override
   @TryCatchException
@@ -105,7 +103,7 @@ public class WebhookServiceImpl implements WebhookService {
     if (event.getType().equals(webhookConstant.balance)) {
       log.info("The balance is available");
       // handle transfer here
-      log.info("This is the object stripe upon balance", stripeObject);
+      log.info(String.valueOf(stripeObject));
     }
 
     else {
