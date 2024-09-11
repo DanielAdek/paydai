@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 *.xml
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -26,6 +27,7 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
+/resources/*.yml
 !**/src/main/**/build/
 !**/src/test/**/build/
 
