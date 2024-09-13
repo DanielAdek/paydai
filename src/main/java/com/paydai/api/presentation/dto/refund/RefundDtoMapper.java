@@ -15,6 +15,7 @@ public class RefundDtoMapper implements Function<RefundModel, RefundRecord> {
     assert debtor != null;
     return new RefundRecord(
       refundModel.getAmount(),
+      refundModel.getTotalPaid(),
       refundModel.getReason(),
        debtor.getFirstName() + " " + debtor.getLastName(),
       debtor.getId(),

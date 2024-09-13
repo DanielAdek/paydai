@@ -1,5 +1,5 @@
 package com.paydai.api.domain.model;
 
 public enum TxnType {
-  DIRECT_TRANSFER, PAYOUT, INVOICE_SETTLEMENT
+  DIRECT_TRANSFER, PAYOUT, INVOICE_SETTLEMENT, REFUND
 }

@@ -24,6 +24,9 @@ public class RefundModel {
 
   private double amount;
 
+  @Column(name = "total_paid")
+  private double totalPaid;
+
   private String reason;
 
   @Enumerated(EnumType.STRING)

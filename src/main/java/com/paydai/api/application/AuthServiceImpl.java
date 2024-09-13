@@ -45,7 +45,6 @@ public class AuthServiceImpl implements AuthService {
   private final WorkspaceRepository workspaceRepository;
   private final AuthenticationManager authenticationManager;
   private final UserWorkspaceRepository userWorkspaceRepository;
-  private final AccountLedgerRepository accountLedgerRepository;
 
   @Override
   @TryCatchException

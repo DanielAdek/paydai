@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record RefundRecord (
   double amount,
+  double totalPaid,
   String reason,
   String debtor,
   UUID debtorId,

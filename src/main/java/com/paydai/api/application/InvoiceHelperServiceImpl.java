@@ -72,7 +72,7 @@ public class InvoiceHelperServiceImpl implements InvoiceHelperService {
   @Override
   public CommissionData getSetterCommissionData(CustomerModel customerModel, InvoiceRequest payload, CommSplitScenarioType scenarioType) {
     if (customerModel != null && Boolean.TRUE.equals(customerModel.getSetterInvolved())) {
-      return fetchSetterCommissionData(customerModel, payload, scenarioType);
+      return fetchSetterCommissionData(customerModel, payload, CommSplitScenarioType.CLOSER_AND_SETTER);
     }
     return new CommissionData(Collections.emptyList(), 0.0F);
   }
@@ -102,7 +102,6 @@ public class InvoiceHelperServiceImpl implements InvoiceHelperService {
   @Override
   public CalcRequest buildCalcRequest(InvoiceRequest payload, CommissionSettingModel commissionSettingModel, CommissionData commissionData, CommSplitScenarioType scenarioType, List<TeamModel> closerManagers, List<TeamModel> setterManagers) {
     Double invoiceAmount = getInvoiceAmount(payload);
-
     return CalcRequest.builder()
       .revenue(invoiceAmount)
       .scenario(scenarioType)
@@ -122,14 +121,12 @@ public class InvoiceHelperServiceImpl implements InvoiceHelperService {
   public Invoice createStripeInvoice(InvoiceRequest payload, Customer customer, CommissionRecord commissionRecord, String connectedAccountId) throws StripeException {
     long applicationFee = Double.valueOf(AmountDto.getAmountDto(commissionRecord.paydaiApplicationFee(), payload.getCurrency()).getLgUnitAmt()).longValue();
     long dueDate = payload.getDueDate().atZone(ZoneOffset.UTC).toEpochSecond();
-
     InvoiceCreateParams invoiceCreateParams = InvoiceCreateParams.builder()
       .setCustomer(customer.getId())
       .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
       .setDueDate(dueDate)
       .setApplicationFeeAmount(applicationFee)
       .build();
-
     RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
     return Invoice.create(invoiceCreateParams, requestOptions);
   }
@@ -170,7 +167,6 @@ public class InvoiceHelperServiceImpl implements InvoiceHelperService {
       .snapshotCloserFeePercent(commissionRecord.paydaiFeeCloserPercent())
       .snapshotCommCloserNet(commissionRecord.closerNet())
       .snapshotCommCloser(commissionRecord.closerCommission())
-      .snapshotCommSetterPercent(0.0F)
       .snapshotMerchantFeePercent(commissionRecord.paydaiFeeMerchantPercent())
       .snapshotCommInterval(commissionSettingModel.getInterval())
       .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())

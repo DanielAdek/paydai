@@ -26,7 +26,6 @@ public class RefundServiceImpl implements RefundService {
   private final ProfileService profileService;
   private final RefundDtoMapper refundDtoMapper;
   private final InvoiceRepository invoiceRepository;
-  private final UserWorkspaceRepository userWorkspaceRepository;
 
   @Override
   @TryCatchException
@@ -46,6 +45,7 @@ public class RefundServiceImpl implements RefundService {
     RefundModel refundModel = repository.save(
       RefundModel.builder()
         .amount(payload.getAmount())
+        .totalPaid(0.0)
         .status(RefundStatus.PENDING)
         .reason(payload.getReason())
         .user(userModel)
