@@ -26,8 +26,6 @@ public class AccountLedgerModel {
 
   private String currency;
 
-  private double liability;
-
   @ManyToOne
   @JoinColumn(name = "user_id")
   private UserModel user;

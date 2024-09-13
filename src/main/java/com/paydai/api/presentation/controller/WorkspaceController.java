@@ -7,11 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface WorkspaceController {
   ResponseEntity<JapiResponse> getWorkspace();
   ResponseEntity<JapiResponse> getSalesRepWorkspaces();
-  ResponseEntity<JapiResponse> getWorkspaceSalesReps(@RequestParam UUID workspaceId, @RequestParam UUID roleId);
+  ResponseEntity<JapiResponse> getWorkspaceSalesReps(@RequestParam UUID workspaceId, @RequestParam Optional<UUID> roleId);
   ResponseEntity<JapiResponse> getWorkspaceTeams(@RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> getManagerTeamMembers(@RequestParam UUID workspaceId);
 }

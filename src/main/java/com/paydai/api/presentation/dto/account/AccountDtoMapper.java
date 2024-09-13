@@ -12,7 +12,6 @@ public class AccountDtoMapper implements Function<AccountLedgerModel, AccountRec
   public AccountRecord apply(AccountLedgerModel accountLedger) {
     return new AccountRecord(
       accountLedger.getBalance(),
-      accountLedger.getLiability(),
       accountLedger.getUser().getId()
     );
   }

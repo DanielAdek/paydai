@@ -1,5 +1,6 @@
 package com.paydai.api.presentation.controller.Impl;
 
+import com.paydai.api.domain.model.InvoiceStatus;
 import com.paydai.api.domain.service.InvoiceService;
 import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.controller.InvoiceController;
@@ -104,7 +105,7 @@ public class InvoiceControllerImpl implements InvoiceController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping("workspace")
-  public ResponseEntity<JapiResponse> getWorkspaceInvoicesToCustomers(UUID workspaceId) {
+  public ResponseEntity<JapiResponse> getWorkspaceInvoicesToCustomers(@RequestParam UUID workspaceId) {
     JapiResponse response = service.getWorkspaceInvoicesToCustomers(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -123,7 +124,7 @@ public class InvoiceControllerImpl implements InvoiceController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping("finalize")
-  public ResponseEntity<JapiResponse> finalizeInvoice(String invoiceCode) throws StripeException {
+  public ResponseEntity<JapiResponse> finalizeInvoice(@RequestParam String invoiceCode) throws StripeException {
     JapiResponse response = service.finalizeInvoice(invoiceCode);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -142,8 +143,46 @@ public class InvoiceControllerImpl implements InvoiceController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping("send")
-  public ResponseEntity<JapiResponse> sendInvoice(String invoice) throws StripeException {
+  public ResponseEntity<JapiResponse> sendInvoice(@RequestParam String invoice) throws StripeException {
     JapiResponse response = service.sendInvoice(invoice);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "filter invoice by status API endpoint",
+    description = "GET response to show invoice DTO, the invoice data"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("filter")
+  public ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, @RequestParam InvoiceStatus status) {
+    JapiResponse response = service.filterInvoice(workspaceId, status);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Sales reps invoiced by status API endpoint",
+    description = "GET response to show invoice DTO, the invoice data"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @Override
+  @GetMapping("/sales-rep/involved")
+  public ResponseEntity<JapiResponse> getSalesRepInvolvedInvoice(@RequestParam String invoiceCode) {
+    JapiResponse response = service.getSalesRepInvoice(invoiceCode);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

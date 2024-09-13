@@ -1,5 +1,6 @@
 package com.paydai.api.presentation.request;
 
+import com.paydai.api.domain.model.AggregateCustomRep;
 import com.paydai.api.domain.model.AggregateType;
 import com.paydai.api.domain.model.EmailModel;
 import com.paydai.api.domain.model.RoleModel;
@@ -12,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -20,11 +22,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InviteRequest {
-  private String companyEmail;
-  private UUID workspaceId;
-  private AggregateType aggregate;
-  private int interval;
-  private String intervalUnit;
   private UUID roleId;
+  private int interval;
   private Float commission;
+  private UUID workspaceId;
+  private String companyEmail;
+  private String intervalUnit;
+  private AggregateType aggregate;
+  private List<UUID> selectedSalesRep;
+  private AggregateCustomRep aggregateCustomRep;
 }

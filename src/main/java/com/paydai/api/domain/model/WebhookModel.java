@@ -35,7 +35,7 @@ public class WebhookModel {
 
   @ManyToOne
   @JoinColumn(name = "payout_ledger_id")
-  private PayoutLedgerModel payoutLedgerModel;
+  private TransactionModel payoutLedgerModel;
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)

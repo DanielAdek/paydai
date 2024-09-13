@@ -1,9 +1,11 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.ApiRequestException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.InternalServerException;
 import com.paydai.api.domain.model.*;
+import com.paydai.api.domain.repository.AccountLedgerRepository;
 import com.paydai.api.domain.repository.EmailRepository;
 import com.paydai.api.domain.repository.UserRepository;
 import com.paydai.api.domain.service.AccountService;
@@ -37,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.stripe.net.OAuth;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +47,7 @@ public class AccountServiceImpl implements AccountService {
   private final AppConfig config;
   private final UserRepository repository;
   private final EmailRepository emailRepository;
+  private final AccountLedgerRepository accountLedgerRepository;
 
   private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
@@ -51,59 +55,69 @@ public class AccountServiceImpl implements AccountService {
    * @desc This method is used to create stripe account
    * @return it returns a json data with stripe accountId
    */
-  public JapiResponse createAccount(AccountRequest payload) {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  @TryCatchException
+  @Transactional
+  public JapiResponse createAccount(AccountRequest payload) throws StripeException {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      if (userModel.getStripeId() != null) throw new ConflictException("Stripe account already exit!");
+    if (userModel.getStripeId() != null) throw new ConflictException("Stripe account already exit!");
 
-      EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getId());
+    EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getId());
 
-      AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
-        AccountCreateParams.Type.EXPRESS;
+    AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
+      AccountCreateParams.Type.EXPRESS;
 
-      AccountCreateParams accountCreateParams;
+    AccountCreateParams accountCreateParams;
 
-      if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
-        accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
-      } else {
-        accountCreateParams = AccountCreateParams.builder()
-          .setEmail(emailModel.getEmail())
-          .setType(AccountCreateParams.Type.EXPRESS)
-          .setCapabilities(
-            AccountCreateParams.Capabilities.builder()
-              .setCardPayments(
-                AccountCreateParams.Capabilities.CardPayments.builder()
-                  .setRequested(true)
-                  .build()
-              )
-              .setTransfers(
-                AccountCreateParams.Capabilities.Transfers.builder().setRequested(true).build()
-              )
-              .build()
-          )
-          .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
-          .build();
-      }
-
-      Account account = Account.create(accountCreateParams);
-
-      if (account == null) throw new ApiRequestException("Account did not create. Try again");
-
-      // Update column stripe for user
-      repository.updateUserStripe(userModel.getId(), account.getId(), emailModel.getEmail());
-
-      Map<String, Object> response = new HashMap<>();
-      response.put("userId", userModel.getId());
-      response.put("stripeId", account.getId());
-
-      return JapiResponse.success(response);
-    } catch (ConflictException e) {throw e; } catch (Exception e) {
-      logger.error("Stripe::Error:: " + e.getMessage());
-      throw new InternalServerException(e.getMessage());
+    if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
+      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
+    } else {
+      accountCreateParams = AccountCreateParams.builder()
+        .setEmail(emailModel.getEmail())
+//        .setDefaultCurrency("usd")
+        .setType(AccountCreateParams.Type.EXPRESS)
+        .setCapabilities(
+          AccountCreateParams.Capabilities.builder()
+            .setCardPayments(
+              AccountCreateParams.Capabilities.CardPayments.builder()
+                .setRequested(true)
+                .build()
+            )
+            .setTransfers(
+              AccountCreateParams.Capabilities.Transfers.builder().setRequested(true).build()
+            )
+            .build()
+        )
+        .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
+        .build();
     }
+
+    Account account = Account.create(accountCreateParams);
+
+    if (account == null) throw new ApiRequestException("Account did not create. Try again");
+
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(userModel.getId());
+
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .currency(account.getDefaultCurrency())
+          .user(userModel)
+          .build()
+      );
+    }
+
+    // Update column stripe for user
+    repository.updateUserStripe(userModel.getId(), account.getId(), emailModel.getEmail());
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("userId", userModel.getId());
+    response.put("stripeId", account.getId());
+
+    return JapiResponse.success(response);
   }
 
   /**
@@ -111,44 +125,37 @@ public class AccountServiceImpl implements AccountService {
    * @param payload
    * @return it returns a json response containing account Url
    */
-  public JapiResponse createAccountLink(AccountLinkRequest payload) {
-    try {
-      String connectedAccountId = payload.getAccountId();
+  @TryCatchException
+  public JapiResponse createAccountLink(AccountLinkRequest payload) throws StripeException {
+    String connectedAccountId = payload.getAccountId();
 
-      AccountLink accountLink = AccountLink.create(
-        AccountLinkCreateParams.builder()
-          .setAccount(connectedAccountId)
-          .setReturnUrl(config.getPaydaiClientBaseUrl() + "/stripereturn/")
-          .setRefreshUrl(config.getPaydaiClientBaseUrl() + "/striperefresh/" + connectedAccountId)
-          .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
-          .build()
-      );
-      return JapiResponse.success(accountLink.getUrl());
-    } catch (Exception e) {
-      logger.error("Stripe::Error::" + e.getMessage());
-      throw new InternalServerException(e.getMessage());
-    }
+    AccountLink accountLink = AccountLink.create(
+      AccountLinkCreateParams.builder()
+        .setAccount(connectedAccountId)
+        .setReturnUrl(config.getPaydaiClientBaseUrl() + "/stripereturn/")
+        .setRefreshUrl(config.getPaydaiClientBaseUrl() + "/striperefresh/" + connectedAccountId)
+        .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
+        .build()
+    );
+    return JapiResponse.success(accountLink.getUrl());
   }
 
   @Override
+  @TryCatchException
   public JapiResponse getStripeLoginLink() throws StripeException {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      LoginLinkCreateOnAccountParams params = LoginLinkCreateOnAccountParams.builder().build();
+    LoginLinkCreateOnAccountParams params = LoginLinkCreateOnAccountParams.builder().build();
 
-      LoginLink loginLink = LoginLink.createOnAccount(userModel.getStripeId(), params);
+    LoginLink loginLink = LoginLink.createOnAccount(userModel.getStripeId(), params);
 
-      Map<String, Object> response = new HashMap<>();
-      response.put("url", loginLink.getUrl());
-      response.put("createdAt", loginLink.getCreated());
+    Map<String, Object> response = new HashMap<>();
+    response.put("url", loginLink.getUrl());
+    response.put("createdAt", loginLink.getCreated());
 
-      return JapiResponse.success(response);
-    } catch (Exception e) {
-      throw e;
-    }
+    return JapiResponse.success(response);
   }
 
   /**
@@ -157,30 +164,26 @@ public class AccountServiceImpl implements AccountService {
    * @return it returns a json response containing account Url
    */
   @Override
-  public JapiResponse authenticate(OauthRequest payload) {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  @TryCatchException
+  public JapiResponse authenticate(OauthRequest payload) throws StripeException {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
 
-      Map<String, Object> hashMap = new HashMap<>();
+    Map<String, Object> hashMap = new HashMap<>();
 
-      hashMap.put("grant_type", "authorization_code");
+    hashMap.put("grant_type", "authorization_code");
 
-      hashMap.put("code", payload.getCode());
+    hashMap.put("code", payload.getCode());
 
-      TokenResponse response = OAuth.token(hashMap, null);
+    TokenResponse response = OAuth.token(hashMap, null);
 
-      hashMap.put("stripeId", response.getStripeUserId());
+    hashMap.put("stripeId", response.getStripeUserId());
 
-      // Update column stripe for user
-      repository.updateUserStripe(userModel.getId(), response.getStripeUserId(), "");
+    // Update column stripe for user
+    repository.updateUserStripe(userModel.getId(), response.getStripeUserId(), "");
 
-      return JapiResponse.success(hashMap);
-    } catch (Exception ex) {
-      logger.info("An error occurred: {} ", ex.getMessage());
-      throw new InternalServerException(ex.getMessage(), ex);
-    }
+    return JapiResponse.success(hashMap);
   }
 
   /**
@@ -189,30 +192,38 @@ public class AccountServiceImpl implements AccountService {
    * @return it returns a json response containing account Url
    */
   @Override
-  public JapiResponse getStripeAccount(String accountId) {
-    try {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  @TryCatchException
+  public JapiResponse getStripeAccount(String accountId) throws StripeException {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-      UserModel userModel = (UserModel) authentication.getPrincipal();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
 
-       Account account = Account.retrieve(userModel.getStripeId());
+    Account account = Account.retrieve(userModel.getStripeId());
 
-      Map<String, Object> hashMap = new HashMap<>();
+    AccountLedgerModel accountLedgerModel = accountLedgerRepository.findAccountLedgerByUser(userModel.getId());
 
-      if (account != null) {
-        hashMap.put("type", account.getType());
-        hashMap.put("email", account.getEmail());
-        hashMap.put("stripeId", account.getId());
-        hashMap.put("country", account.getCountry());
-        hashMap.put("detailsSubmitted", account.getDetailsSubmitted());
-        hashMap.put("defaultCurrency", account.getDefaultCurrency());
-      }
-
-      return JapiResponse.success(hashMap);
-    } catch (Exception ex) {
-      logger.info("An error occurred: {} ", ex.getMessage());
-      throw new InternalServerException(ex.getMessage(), ex);
+    if (accountLedgerModel == null) {
+      accountLedgerRepository.save(
+        AccountLedgerModel.builder()
+          .balance(0.0)
+          .currency(account.getDefaultCurrency())
+          .user(userModel)
+          .build()
+      );
     }
+
+    Map<String, Object> hashMap = new HashMap<>();
+
+    if (account != null) {
+      hashMap.put("type", account.getType());
+      hashMap.put("email", account.getEmail());
+      hashMap.put("stripeId", account.getId());
+      hashMap.put("country", account.getCountry());
+      hashMap.put("detailsSubmitted", account.getDetailsSubmitted());
+      hashMap.put("defaultCurrency", account.getDefaultCurrency());
+    }
+
+    return JapiResponse.success(hashMap);
   }
 
   /**

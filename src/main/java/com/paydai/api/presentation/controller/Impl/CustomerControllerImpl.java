@@ -59,8 +59,8 @@ public class CustomerControllerImpl implements CustomerController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping
-  public ResponseEntity<JapiResponse> getCustomers() {
-    JapiResponse response = service.getCustomers();
+  public ResponseEntity<JapiResponse> getCustomers(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getCustomers(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 

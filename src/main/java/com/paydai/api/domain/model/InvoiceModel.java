@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -45,6 +46,9 @@ public class InvoiceModel {
   @Column
   private String currency;
 
+  @Column(name = "sales_manager_involved")
+  private boolean managerInvolved;
+
   //TODO SECTION: SNAPSHOT COMMISSION
   @Column(name = "snapshot_comm_setter_percent")
   private Float snapshotCommSetterPercent;
@@ -72,9 +76,6 @@ public class InvoiceModel {
 
   @Column(name = "snapshot_merchant_fee_percent")
   private Float snapshotMerchantFeePercent;
-
-  @Column(name = "snapshot_comm_aggregate")
-  private AggregateType snapshotCommAggregate;
 
   @Column(name = "snapshot_comm_interval")
   private int snapshotCommInterval;
@@ -127,6 +128,9 @@ public class InvoiceModel {
   @ManyToOne
   @JoinColumn(name = "user_workspace_id")
   private UserWorkspaceModel userWorkspace;
+
+  @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<InvoiceManagerModel> involvedManagers;
 
   @CreationTimestamp
   @Column(name = "created_at")

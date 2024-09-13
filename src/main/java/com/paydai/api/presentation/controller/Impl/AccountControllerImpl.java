@@ -47,7 +47,7 @@ public class AccountControllerImpl implements AccountController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @PostMapping(path = "/account")
-  public ResponseEntity<JapiResponse> createAccount(@RequestBody() AccountRequest payload) {
+  public ResponseEntity<JapiResponse> createAccount(@RequestBody() AccountRequest payload) throws StripeException {
     JapiResponse response = service.createAccount(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -57,7 +57,7 @@ public class AccountControllerImpl implements AccountController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @PostMapping(path = "/account_link")
-  public ResponseEntity<JapiResponse> createAccountLink(@RequestBody AccountLinkRequest payload) {
+  public ResponseEntity<JapiResponse> createAccountLink(@RequestBody AccountLinkRequest payload) throws StripeException {
     JapiResponse response = service.createAccountLink(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -76,7 +76,7 @@ public class AccountControllerImpl implements AccountController {
   })
   @Override
   @PostMapping("/oauth")
-  public ResponseEntity<JapiResponse> authenticate(@RequestBody OauthRequest payload) {
+  public ResponseEntity<JapiResponse> authenticate(@RequestBody OauthRequest payload) throws StripeException {
     JapiResponse response = service.authenticate(payload);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -95,7 +95,7 @@ public class AccountControllerImpl implements AccountController {
   })
   @Override
   @GetMapping("/account")
-  public ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId) {
+  public ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId) throws StripeException {
     JapiResponse response = service.getStripeAccount(accountId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }

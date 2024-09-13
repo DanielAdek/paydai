@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -17,7 +18,7 @@ public interface UserWorkspaceRepositoryImpl extends UserWorkspaceRepository, Jp
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE workspace_id=?1 and role_id=?2")
-  List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId, UUID roleId);
+  List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId, Optional<UUID> roleId);
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE user_id=?1")
@@ -30,4 +31,12 @@ public interface UserWorkspaceRepositoryImpl extends UserWorkspaceRepository, Jp
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE workspace_id=?1")
   List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM user_workspace_bridge_tbl WHERE email_id=?1")
+  UserWorkspaceModel findUserByEmail(UUID emailId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT  * FROM user_workspace_bridge_tbl WHERE role_id=?1 AND workspace_id=?2")
+  List<UserWorkspaceModel> findUserByRoleWorkspaces(UUID roleId, UUID workspaceId);
 }

@@ -1,5 +1,6 @@
 package com.paydai.api.application;
 
+import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.model.AccountLedgerModel;
 import com.paydai.api.domain.repository.AccountLedgerRepository;
 import com.paydai.api.domain.service.AccountLedgerService;
@@ -23,30 +24,28 @@ public class AccountLedgerServiceImpl implements AccountLedgerService {
   private final AccountDtoMapper accountDtoMapper;
 
   @Override
+  @TryCatchException
   public JapiResponse getUserAccountLedger(UUID userId) throws StripeException {
-    try {
-      AccountLedgerModel accountLedgerModel = updateSalesRepAccountLedgerBalance(userId);
+    AccountLedgerModel accountLedgerModel = updateSalesRepAccountLedgerBalance(userId);
 
-      AccountRecord accountRecord = accountDtoMapper.apply(accountLedgerModel);
+    AccountRecord accountRecord = accountDtoMapper.apply(accountLedgerModel);
 
-      return JapiResponse.success(accountRecord);
-    } catch (Exception e) { throw e; }
+    return JapiResponse.success(accountRecord);
   }
 
   @Override
+  @TryCatchException
   public AccountLedgerModel updateSalesRepAccountLedgerBalance(UUID userId) throws StripeException {
-    try {
-      AccountLedgerModel accountLedgerModel = repository.findAccountLedgerByUser(userId);
+    AccountLedgerModel accountLedgerModel = repository.findAccountLedgerByUser(userId);
 
-      RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(accountLedgerModel.getUser().getStripeId()).build();
+    RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(accountLedgerModel.getUser().getStripeId()).build();
 
-      Balance balances = Balance.retrieve(requestOptions);
+    Balance balances = Balance.retrieve(requestOptions);
 
-      Balance.Available balAvailable = balances.getAvailable().stream().filter(bal -> bal.getCurrency().equals(accountLedgerModel.getCurrency())).findFirst().get();
+    Balance.Available balAvailable = balances.getAvailable().stream().filter(bal -> bal.getCurrency().equals(accountLedgerModel.getCurrency())).findFirst().get();
 
-      accountLedgerModel.setBalance((double) balAvailable.getAmount() / 100);
+    accountLedgerModel.setBalance((double) balAvailable.getAmount() / 100);
 
-      return repository.save(accountLedgerModel);
-    } catch (Exception e) { throw e; }
+    return repository.save(accountLedgerModel);
   }
 }

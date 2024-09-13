@@ -25,11 +25,8 @@ public class CommissionSettingModel {
   @Column
   private Float commission;
 
-  @Column
-  private AggregateType aggregate;
-
-  @Column(name = "next_paydai")
-  private LocalDateTime nextPaydai;
+//  @Column(name = "next_paydai")
+//  private LocalDateTime nextPaydai; // todo this should be on payout schedule table
 
   @Column
   private int interval;

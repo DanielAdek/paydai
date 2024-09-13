@@ -1,5 +1,6 @@
 package com.paydai.api.domain.exception;
 
+import com.stripe.exception.StripeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -13,18 +14,26 @@ public class ControllerExceptionHandler {
     ApiException apiException = ApiException.builder()
         .message(cause.getMessage())
         .error("Bad Request Exception")
-        .throwable(cause.getCause())
         .statusCode(400)
         .build();
     return new ResponseEntity<>(apiException, HttpStatus.BAD_REQUEST);
   };
 
+  @ExceptionHandler(value = {BadCredentialException.class})
+  public ResponseEntity<ApiException> handleBadCredentialException(BadCredentialException cause) {
+    ApiException apiException = ApiException.builder()
+      .message("Invalid Email or Password")
+      .error(cause.getMessage())
+      .statusCode(401)
+      .build();
+    return new ResponseEntity<>(apiException, HttpStatus.UNAUTHORIZED);
+  };
+
   @ExceptionHandler(value = {NotFoundException.class})
   public ResponseEntity<ApiException> handleNotFoundException(NotFoundException cause) {
     ApiException exception = ApiException.builder()
-        .message(cause.getMessage())
+        .message(cause.getMessage() + " does not exit")
         .error("Not Found Exception")
-        .throwable(cause.getCause())
         .statusCode(404)
         .build();
     return new ResponseEntity<>(exception, HttpStatus.NOT_FOUND);
@@ -33,10 +42,9 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(value = {InternalServerException.class})
   public ResponseEntity<ApiException> handleServerException(InternalServerException cause) {
     ApiException exception = ApiException.builder()
-        .message("Internal Server Error")
+        .message(cause.getMessage())
         .statusCode(500)
-        .error(cause.getMessage())
-        .throwable(cause.getCause())
+        .error("Internal Server Error")
         .build();
     return new ResponseEntity<>(exception, HttpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -44,13 +52,22 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(value = {ConflictException.class})
   public ResponseEntity<ApiException> handleConflictException(ConflictException cause) {
     ApiException exception = ApiException.builder()
-        .message(cause.getMessage())
+        .message(cause.getMessage() + " already existing!")
         .statusCode(409)
         .error("Duplicate Key violate unique constraint")
-        .throwable(cause.getCause())
         .build();
     return new ResponseEntity<>(exception, HttpStatus.CONFLICT);
   }
+
+  @ExceptionHandler(value = {StripeException.class})
+  public ResponseEntity<ApiException> handleStripeException(StripeException cause) {
+    ApiException apiException = ApiException.builder()
+      .message(cause.getMessage())
+      .error("Stripe Error")
+      .statusCode(400)
+      .build();
+    return new ResponseEntity<>(apiException, HttpStatus.SERVICE_UNAVAILABLE);
+  };
 
   @ExceptionHandler(value = {ForbiddenException.class})
   public ResponseEntity<ApiException> handleForbiddenException(ForbiddenException cause) {
@@ -58,7 +75,6 @@ public class ControllerExceptionHandler {
         .message("Access Denied")
         .statusCode(403)
         .error(cause.getMessage())
-        .throwable(cause.getCause())
         .build();
     return new ResponseEntity<>(exception, HttpStatus.FORBIDDEN);
   }

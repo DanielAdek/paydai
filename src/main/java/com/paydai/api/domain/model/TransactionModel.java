@@ -16,19 +16,31 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "payout_ledger_tbl")
-public class PayoutLedgerModel {
+@Table(name = "transaction_ledger_tbl")
+public class TransactionModel {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double revenue;
+  private double revenue; // gross income
 
   private double fee;
 
-  private double credit;
+  private double amount;
 
   private String currency;
+
+  private String remark;
+
+  private String receiver;
+
+  private String giver;
+
+  @Enumerated(EnumType.STRING)
+  private TxnEntryType entryType;
+
+  @Enumerated(EnumType.STRING)
+  private TxnType txnType;
 
   @Column(name = "stripe_invoice_code")
   private String stripeInvoiceCode;
@@ -38,7 +50,7 @@ public class PayoutLedgerModel {
   private LocalDateTime payoutDate;
 
   @Enumerated(EnumType.STRING)
-  private PayoutStatusType status;
+  private TransactionStatusType status;
 
   @ManyToOne
   @JoinColumn(name = "invoice_id")

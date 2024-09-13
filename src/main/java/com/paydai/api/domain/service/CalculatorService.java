@@ -16,6 +16,6 @@ public interface CalculatorService {
   double calculatePFC(double revenue);
   double calculateSalesRepNetCloser(double revenue, float closerPercent);
   double calculateSalesRepNetSetter(double revenue, float setterPercent);
-  AmountDto getSmAmtUnit(double smAmtUnit, String currency);
+  double formatAmount(double amount);
   CommissionRecord displayCommissions(CalcRequest payload);
 }

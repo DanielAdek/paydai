@@ -7,14 +7,10 @@ import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
 
 public interface AccountService {
-  JapiResponse createAccount(AccountRequest payload);
-
-  JapiResponse createAccountLink(AccountLinkRequest payload);
+  JapiResponse createAccount(AccountRequest payload) throws StripeException;
+  JapiResponse createAccountLink(AccountLinkRequest payload) throws StripeException;
   JapiResponse getStripeLoginLink() throws StripeException;
-
-  JapiResponse authenticate(OauthRequest payload);
-
-  JapiResponse getStripeAccount(String accountId);
-
+  JapiResponse authenticate(OauthRequest payload) throws StripeException;
+  JapiResponse getStripeAccount(String accountId) throws StripeException;
   String serveIndex();
 }

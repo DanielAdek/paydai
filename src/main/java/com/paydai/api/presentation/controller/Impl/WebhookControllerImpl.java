@@ -98,7 +98,6 @@ public class WebhookControllerImpl implements WebhookController {
   @PostMapping("balance/account")
   public ResponseEntity handleBalanceEventAccount(@RequestBody String payload, @RequestHeader("Stripe-Signature") String signature){
     try {
-      log.info("A log here from balance/account");
       Event event = Webhook.constructEvent(payload, signature, config.getStripeWebhookSecretBal());
       JapiResponse response = service.handleBalanceEventConnectAccount(payload, event);
       return ResponseEntity.ok(response.getMessage());

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public interface UserRepositoryImpl extends UserRepository, JpaRepository<UserMo
   @Query(nativeQuery = true, value = "UPDATE user_tbl SET stripe_id=:stripeId, stripe_email=:stripeEmail WHERE id=:userId")
   void updateUserStripe(@Param("userId") UUID userId, @Param("stripeId") String stripeId, @Param("stripeEmail") String stripeEmail);
 
-  //  @Override
-//  @Query(nativeQuery = true, value = "SELECT stripe_id FROM user_tbl WHERE id=?1")
-//  UserModel findUserStripeId(UUID userId);
+  @Override
+  @Query(nativeQuery = true, value = "SELECT DISTINCT stripe_id FROM user_tbl")
+  List<String> findAllUsersStripeAccounts();
 }

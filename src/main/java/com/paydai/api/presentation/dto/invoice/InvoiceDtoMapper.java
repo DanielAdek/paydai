@@ -23,17 +23,17 @@ public class InvoiceDtoMapper implements Function<InvoiceDto, InvoiceRecord> {
       invoiceDto.getCustomerEmail(),
       invoiceDto.getProductName(),
       invoiceDto.getProductQty(),
-      invoiceDto.getProductUnitPrice(),
+      invoiceDto.getAmount(),
       invoiceDto.getProductDescription(),
       invoiceDto.getProductUnitPrice(),
       invoiceDto.getSnapshotCommCloserPercent(),
       invoiceDto.getSnapshotCommSetterPercent(),
-      invoiceDto.getSnapshotCommAggregate(),
       invoiceDto.getSnapshotCommInterval(),
       invoiceDto.getSnapshotCommIntervalUnit(),
       invoiceDto.getSalesRep(),
       invoiceDto.getStatus(),
-      invoiceDto.getCommissionSplit()
+      invoiceDto.getCommissionSplit(),
+      invoiceDto.getInvolvedManagers()
     );
   }
 }

@@ -1,4 +1,4 @@
-package com.paydai.api.presentation.dto.payout;
+package com.paydai.api.presentation.dto.transaction;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PayoutTnxOverviewDto {
+public class TransactionOverviewDto {
   private double totalRevenues;
   private double totalCredits;
   private double totalFees;

@@ -4,7 +4,6 @@ import java.util.UUID;
 
 public record AccountRecord(
   double balance,
-  double liability,
   UUID user
 ) {
 }

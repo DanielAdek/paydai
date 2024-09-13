@@ -10,4 +10,5 @@ public interface RoleRepository {
   RoleModel findRole(String role);
   List<RoleModel> findRoles();
   RoleModel findByRoleId(UUID roleId);
+  RoleModel findByRole(String role);
 }

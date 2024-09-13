@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 public interface AccountController {
-  ResponseEntity<JapiResponse> createAccount(@RequestBody AccountRequest payload);
-  ResponseEntity<JapiResponse> createAccountLink(@RequestBody AccountLinkRequest payload);
-  ResponseEntity<JapiResponse> authenticate(@RequestBody OauthRequest payload);
-  ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId);
+  ResponseEntity<JapiResponse> createAccount(@RequestBody AccountRequest payload) throws StripeException;
+  ResponseEntity<JapiResponse> createAccountLink(@RequestBody AccountLinkRequest payload) throws StripeException;
+  ResponseEntity<JapiResponse> authenticate(@RequestBody OauthRequest payload) throws StripeException;
+  ResponseEntity<JapiResponse> getStripeAccount(@RequestParam String accountId) throws StripeException;
   String serveIndex();
   ResponseEntity<JapiResponse> getStripeLoginLink() throws StripeException;
 }
