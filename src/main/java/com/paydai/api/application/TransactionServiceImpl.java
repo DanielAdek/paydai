@@ -7,7 +7,6 @@ import com.paydai.api.domain.repository.InvoiceRepository;
 import com.paydai.api.domain.repository.TransactionRepository;
 import com.paydai.api.domain.repository.RefundRepository;
 import com.paydai.api.domain.repository.UserWorkspaceRepository;
-import com.paydai.api.domain.service.AccountLedgerService;
 import com.paydai.api.domain.service.TransactionService;
 import com.paydai.api.presentation.dto.transaction.TransactionDtoMapper;
 import com.paydai.api.presentation.dto.transaction.TransactionRecord;
@@ -45,7 +44,7 @@ public class TransactionServiceImpl implements TransactionService {
   public JapiResponse transferToSalesRep(String stripeInvoiceCode) throws StripeException {
     TransactionModel transactionModel = repository.findTransactionByStripeInvoiceId(stripeInvoiceCode);
 
-    if (transactionModel != null && transactionModel.getStatus().equals(TransactionStatusType.PAYMENT_TRANSFERRED)) return JapiResponse.success(null);
+    if (transactionModel != null && transactionModel.getStatus().equals(TxnStatusType.PAYMENT_TRANSFERRED)) return JapiResponse.success(null);
 
     InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(stripeInvoiceCode);
 
@@ -58,7 +57,7 @@ public class TransactionServiceImpl implements TransactionService {
     double merchantAmt = invoiceAmt - appFee;
     WorkspaceModel workspaceModel = invoiceModel.getUserWorkspace().getWorkspace();
     UserModel merchant = workspaceModel.getOwner();
-    persistTransactionToDatabase(invoiceAmt, merchantAmt, appFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, merchant, TxnType.INVOICE_SETTLEMENT, TxnEntryType.CREDIT, null, TransactionStatusType.PAYMENT_TRANSFERRED, customerModel.getName(), workspaceModel.getName(), "CUSTOMER:invoice-settlement-fund");
+    persistTransactionToDatabase(invoiceAmt, merchantAmt, appFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, merchant, TxnType.INVOICE_SETTLEMENT, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, customerModel.getName(), workspaceModel.getName(), "CUSTOMER:invoice-settlement-fund");
 
     String giver = "Paydai";
     String remark = "PAYDAI:payout-settlement-fund";
@@ -72,7 +71,7 @@ public class TransactionServiceImpl implements TransactionService {
     double clFee = clRevenue - invoiceModel.getSnapshotCommCloserNet();
     UserWorkspaceModel clUserWorkSpace = invoiceModel.getUserWorkspace();
     String closerName = closer.getFirstName() + " " + closer.getLastName();
-    persistTransactionToDatabase(clRevenue, closerNetComm, clFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, closer, TxnType.PAYOUT, TxnEntryType.CREDIT, clUserWorkSpace, TransactionStatusType.PAYMENT_TRANSFERRED, giver, closerName, remark);
+    persistTransactionToDatabase(clRevenue, closerNetComm, clFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, closer, TxnType.PAYOUT, TxnEntryType.CREDIT, clUserWorkSpace, TxnStatusType.PAYMENT_TRANSFERRED, giver, closerName, remark);
 
     // PROCESS SETTER TRANSFER IF INVOLVED
     if (customerModel.getSetterInvolved()) {
@@ -82,7 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
       double stFee = stRevenue - setterNetComm;
       double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel);
       String setterName = setter.getFirstName() + " " + setter.getLastName();
-      persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, null, TransactionStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
+      persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
       if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId());
     }
 
@@ -117,8 +116,7 @@ public class TransactionServiceImpl implements TransactionService {
               .workspace(workspaceModel)
               .txnType(TxnType.PAYOUT)
               .user(invoiceManagerModel.getManager())
-              .userWorkspace(invoiceManagerModel.getUserWorkspace())
-              .status(TransactionStatusType.PAYMENT_TRANSFERRED)
+              .status(TxnStatusType.PAYMENT_TRANSFERRED)
               .invoice(invoiceModel)
               .build()
           );
@@ -163,8 +161,7 @@ public class TransactionServiceImpl implements TransactionService {
       .txnType(TxnType.DIRECT_TRANSFER)
       .workspace(salesRep.getWorkspace())
       .user(salesRep.getUser())
-      .userWorkspace(salesRep)
-      .status(TransactionStatusType.PAYMENT_TRANSFERRED)
+      .status(TxnStatusType.PAYMENT_TRANSFERRED)
       .build();
 
     repository.save(salesRepLedger);
@@ -183,7 +180,7 @@ public class TransactionServiceImpl implements TransactionService {
         .txnType(TxnType.DIRECT_TRANSFER)
         .workspace(salesRep.getWorkspace())
         .user(merchant)
-        .status(TransactionStatusType.PAYMENT_TRANSFERRED)
+        .status(TxnStatusType.PAYMENT_TRANSFERRED)
         .build()
     );
 
@@ -279,7 +276,7 @@ public class TransactionServiceImpl implements TransactionService {
           performTransfer(commission, currency, merchant.getStripeId());
           salesRepLiability.setTotalPaid(commission);
           salesRepLiability.setStatus(RefundStatus.PARTIALLY_PAID);
-          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TransactionStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
           // todo convert to sales rep record
 //          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, salesRep, TxnType.REFUND, TxnEntryType.DEBIT, salesRep, TransactionStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
           commission = Math.max(0, commission - liabilityAmount);
@@ -289,7 +286,7 @@ public class TransactionServiceImpl implements TransactionService {
           performTransfer(liabilityAmount, currency, merchant.getStripeId());
           salesRepLiability.setStatus(RefundStatus.PAID);
           salesRepLiability.setTotalPaid(liabilityAmount);
-          persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TransactionStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
           commission = commission - liabilityAmount;
           refundRepository.save(salesRepLiability);
         }
@@ -318,7 +315,7 @@ public class TransactionServiceImpl implements TransactionService {
 
   private TransactionModel persistTransactionToDatabase(double revenue, double amount, double fee, InvoiceModel invoiceModel, String stripeInvoiceCode, String currency,
                                                         WorkspaceModel workspaceModel, UserModel user, TxnType txnType, TxnEntryType entryType, UserWorkspaceModel userWorkspaceModel,
-                                                        TransactionStatusType transactionStatusType, String giver, String receiver, String remark) {
+                                                        TxnStatusType txnStatusType, String giver, String receiver, String remark) {
     return  repository.save(
       TransactionModel.builder()
         .revenue(revenue)
@@ -334,8 +331,7 @@ public class TransactionServiceImpl implements TransactionService {
         .user(user)
         .txnType(txnType)
         .entryType(entryType)
-        .userWorkspace(userWorkspaceModel)
-        .status(transactionStatusType)
+        .status(txnStatusType)
         .invoice(invoiceModel)
         .build()
     );

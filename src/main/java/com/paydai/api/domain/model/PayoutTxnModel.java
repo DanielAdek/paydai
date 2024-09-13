@@ -46,7 +46,7 @@ public class PayoutTxnModel {
   private LocalDateTime payoutSettleDate;
 
   @Enumerated(EnumType.STRING)
-  private TransactionStatusType status;
+  private TxnStatusType status;
 
   @ManyToOne
   @JoinColumn(name = "workspace_id")

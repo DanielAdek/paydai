@@ -1,7 +1,7 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.annotation.TryCatchException;
-import com.paydai.api.domain.model.TransactionStatusType;
+import com.paydai.api.domain.model.TxnStatusType;
 import com.paydai.api.domain.model.PayoutTxnModel;
 import com.paydai.api.domain.model.UserModel;
 import com.paydai.api.domain.model.WorkspaceModel;
@@ -72,7 +72,7 @@ public class PayoutTxnServiceImpl implements PayoutTxnService {
         .sourceType(payload.getSourceType())
         .user(userModel)
         .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
-        .status(TransactionStatusType.PAYMENT_CREATED)
+        .status(TxnStatusType.PAYMENT_CREATED)
         .build()
     );
     return JapiResponse.success(payout.getStatus());

@@ -1,6 +1,6 @@
 package com.paydai.api.presentation.dto.transaction;
 
-import com.paydai.api.domain.model.TransactionStatusType;
+import com.paydai.api.domain.model.TxnStatusType;
 import com.paydai.api.domain.model.TxnEntryType;
 import com.paydai.api.domain.model.TxnType;
 
@@ -17,7 +17,7 @@ public record TransactionRecord(
   LocalDateTime payoutDate,
   String stripeInvoiceCode,
   String invoiceCode,
-  TransactionStatusType status,
+  TxnStatusType status,
   LocalDateTime createdAt,
   LocalDateTime updatedAt
 ) {

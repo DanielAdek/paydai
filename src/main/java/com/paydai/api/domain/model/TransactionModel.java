@@ -22,7 +22,7 @@ public class TransactionModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  private double revenue; // gross income
+  private double revenue;
 
   private double fee;
 
@@ -50,7 +50,7 @@ public class TransactionModel {
   private LocalDateTime payoutDate;
 
   @Enumerated(EnumType.STRING)
-  private TransactionStatusType status;
+  private TxnStatusType status;
 
   @ManyToOne
   @JoinColumn(name = "invoice_id")
@@ -64,9 +64,9 @@ public class TransactionModel {
   @JoinColumn(name = "user_id")
   private UserModel user;
 
-  @ManyToOne
-  @JoinColumn(name = "user_workspace_id")
-  private UserWorkspaceModel userWorkspace;
+//  @ManyToOne
+//  @JoinColumn(name = "user_workspace_id")
+//  private UserWorkspaceModel userWorkspace;
 
   @CreationTimestamp
   @Column(name = "created_at")
