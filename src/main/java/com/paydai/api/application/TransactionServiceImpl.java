@@ -57,7 +57,7 @@ public class TransactionServiceImpl implements TransactionService {
     double merchantAmt = invoiceAmt - appFee;
     WorkspaceModel workspaceModel = invoiceModel.getUserWorkspace().getWorkspace();
     UserModel merchant = workspaceModel.getOwner();
-    persistTransactionToDatabase(invoiceAmt, merchantAmt, appFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, merchant, TxnType.INVOICE_SETTLEMENT, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, customerModel.getName(), workspaceModel.getName(), "CUSTOMER:invoice-settlement-fund");
+    persistTransactionToDatabase(invoiceAmt, merchantAmt, appFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, merchant, TxnType.INVOICE_SETTLEMENT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, customerModel.getName(), workspaceModel.getName(), "CUSTOMER:invoice-settlement-fund");
 
     String giver = "Paydai";
     String remark = "PAYDAI:payout-settlement-fund";
@@ -71,7 +71,7 @@ public class TransactionServiceImpl implements TransactionService {
     double clFee = clRevenue - invoiceModel.getSnapshotCommCloserNet();
     UserWorkspaceModel clUserWorkSpace = invoiceModel.getUserWorkspace();
     String closerName = closer.getFirstName() + " " + closer.getLastName();
-    persistTransactionToDatabase(clRevenue, closerNetComm, clFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, closer, TxnType.PAYOUT, TxnEntryType.CREDIT, clUserWorkSpace, TxnStatusType.PAYMENT_TRANSFERRED, giver, closerName, remark);
+    persistTransactionToDatabase(clRevenue, closerNetComm, clFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, closer, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, closerName, remark);
 
     // PROCESS SETTER TRANSFER IF INVOLVED
     if (customerModel.getSetterInvolved()) {
@@ -81,7 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
       double stFee = stRevenue - setterNetComm;
       double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel);
       String setterName = setter.getFirstName() + " " + setter.getLastName();
-      persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
+      persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
       if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId());
     }
 
@@ -142,11 +142,19 @@ public class TransactionServiceImpl implements TransactionService {
     RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(merchant.getStripeId()).build();
 
     TransferCreateParams salesTransferParams = TransferCreateParams.builder()
-      .setAmount(Double.valueOf(payload.getAmount()).longValue() * 100) //todo multiply by sm_unit
+      .setAmount(Double.valueOf(payload.getAmount()).longValue() * 100) //todo: use amount-dto
       .setCurrency(payload.getCurrency())
-      .setDestination(salesRep.getUser().getStripeId())
+      .setDestination("acct_1PFJDQHll432c94e") // todo: use environment variable
       .build();
     Transfer salesRepTransfer = Transfer.create(salesTransferParams, requestOptions);
+
+    Transfer.create(
+      TransferCreateParams.builder()
+        .setAmount(Double.valueOf(payload.getAmount()).longValue() * 100) //todo: use amount-dto
+        .setCurrency(payload.getCurrency())
+        .setDestination(salesRep.getUser().getStripeId())
+        .build()
+    );
 
     // CREDIT ENTRY
     TransactionModel salesRepLedger = TransactionModel.builder()
@@ -257,7 +265,6 @@ public class TransactionServiceImpl implements TransactionService {
 
   @TryCatchException
   private double handleLiability(UserModel salesRep, WorkspaceModel workspace, double commission, String currency, InvoiceModel invoiceModel) {
-    log.info("======== >>>>> " + salesRep.getFirstName());
     String stripeInCode = invoiceModel.getStripeInvoiceId();
     String giver = salesRep.getFirstName() + " " + salesRep.getLastName();
     String remark = "REFUND:invoice-refund-settlement";
@@ -276,9 +283,8 @@ public class TransactionServiceImpl implements TransactionService {
           performTransfer(commission, currency, merchant.getStripeId());
           salesRepLiability.setTotalPaid(commission);
           salesRepLiability.setStatus(RefundStatus.PARTIALLY_PAID);
-          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
-          // todo convert to sales rep record
-//          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, salesRep, TxnType.REFUND, TxnEntryType.DEBIT, salesRep, TransactionStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, salesRep, TxnType.REFUND, TxnEntryType.DEBIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
           commission = Math.max(0, commission - liabilityAmount);
           refundRepository.save(salesRepLiability);
           break;
@@ -286,16 +292,13 @@ public class TransactionServiceImpl implements TransactionService {
           performTransfer(liabilityAmount, currency, merchant.getStripeId());
           salesRepLiability.setStatus(RefundStatus.PAID);
           salesRepLiability.setTotalPaid(liabilityAmount);
-          persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, null, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+          persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, salesRep, TxnType.REFUND, TxnEntryType.DEBIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
           commission = commission - liabilityAmount;
           refundRepository.save(salesRepLiability);
         }
       }
-
-      log.info("Remaining commission after liabilities ===> " + commission);
     }
-
-    log.info("Returned commission ===> " + commission);
     return commission;
   }
 
@@ -313,9 +316,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
   }
 
-  private TransactionModel persistTransactionToDatabase(double revenue, double amount, double fee, InvoiceModel invoiceModel, String stripeInvoiceCode, String currency,
-                                                        WorkspaceModel workspaceModel, UserModel user, TxnType txnType, TxnEntryType entryType, UserWorkspaceModel userWorkspaceModel,
-                                                        TxnStatusType txnStatusType, String giver, String receiver, String remark) {
+  private TransactionModel persistTransactionToDatabase(double revenue, double amount, double fee, InvoiceModel invoiceModel, String stripeInvoiceCode, String currency, WorkspaceModel workspaceModel, UserModel user, TxnType txnType, TxnEntryType entryType, TxnStatusType txnStatusType, String giver, String receiver, String remark) {
     return  repository.save(
       TransactionModel.builder()
         .revenue(revenue)
