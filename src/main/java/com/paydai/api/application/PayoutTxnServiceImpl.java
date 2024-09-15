@@ -98,7 +98,7 @@ public class PayoutTxnServiceImpl implements PayoutTxnService {
   @TryCatchException
   public JapiResponse topUpAccount(double amount, String currency) throws StripeException {
     TopupCreateParams params = TopupCreateParams.builder()
-      .setAmount(Double.valueOf(amount).longValue())
+      .setAmount(Double.valueOf(amount).longValue() * 100)
       .setCurrency(currency)
       .setDescription("Top up test")
       .setStatementDescriptor("Top-up")

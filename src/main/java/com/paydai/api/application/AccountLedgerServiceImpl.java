@@ -44,7 +44,10 @@ public class AccountLedgerServiceImpl implements AccountLedgerService {
 
     Balance.Available balAvailable = balances.getAvailable().stream().filter(bal -> bal.getCurrency().equals(accountLedgerModel.getCurrency())).findFirst().get();
 
+    Balance.Pending balPending = balances.getPending().stream().filter(bal -> bal.getCurrency().equals(accountLedgerModel.getCurrency())).findFirst().get();
+
     accountLedgerModel.setBalance((double) balAvailable.getAmount() / 100);
+    accountLedgerModel.setPendBal((double) balPending.getAmount() / 100);
 
     return repository.save(accountLedgerModel);
   }

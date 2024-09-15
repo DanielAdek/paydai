@@ -21,7 +21,7 @@ public interface RefundRepositoryImpl extends RefundRepository, JpaRepository<Re
 
   @Override
   @Query(nativeQuery = true, value = "SELECT SUM(amount - total_paid)  FROM refund_tbl WHERE user_id=?1 AND workspace_id=?2 AND status <> 'PAID'")
-  double findLiabilities(UUID userId, UUID workspaceId);
+  Double findLiabilities(UUID userId, UUID workspaceId);
 
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM refund_tbl WHERE user_id=?1 AND workspace_id=?2 AND status <> 'PAID' ORDER BY created_at ASC")
@@ -29,5 +29,9 @@ public interface RefundRepositoryImpl extends RefundRepository, JpaRepository<Re
 
   @Override
   @Query(nativeQuery = true, value = "SELECT SUM(amount - total_paid) FROM refund_tbl WHERE user_id=?1 AND status <> 'PAID'")
-  double findTotalLiabilities(UUID userId);
+  Double findTotalLiabilities(UUID userId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT SUM(amount) FROM refund_tbl WHERE user_id=?1 AND workspace_id=?2 AND invoice_id=?3")
+  Double findTotalRefundPaid(UUID userId, UUID workspaceId, UUID invoiceId);
 }

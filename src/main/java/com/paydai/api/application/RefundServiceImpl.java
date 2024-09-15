@@ -60,20 +60,16 @@ public class RefundServiceImpl implements RefundService {
   @TryCatchException
   public JapiResponse getRefundRequests(UUID workspaceId) {
     UserModel userModel = profileService.getLoggedInUser();
-
     List<RefundModel> refundModels = repository.findRefundRequests(userModel.getId(), workspaceId);
-
     if (refundModels == null || refundModels.isEmpty()) {
       return JapiResponse.success(refundModels);
     }
-
     List<RefundRecord> refundRecords = refundModels.stream().map(refundDtoMapper).toList();
-
     return JapiResponse.success(refundRecords);
   }
 
   /**
-   * @desc this endpoint if for merchant use
+   * @desc this endpoint is for merchant use
    * @param workspaceId
    * @return
    */
@@ -81,13 +77,10 @@ public class RefundServiceImpl implements RefundService {
   @TryCatchException
   public JapiResponse getRefundsRequests(UUID workspaceId) {
     List<RefundModel> refundModels = repository.findRefundsRequests(workspaceId);
-
     if (refundModels == null || refundModels.isEmpty()) {
       return JapiResponse.success(refundModels);
     }
-
     List<RefundRecord> refundRecords = refundModels.stream().map(refundDtoMapper).toList();
-
     return JapiResponse.success(refundRecords);
   }
 
@@ -95,13 +88,9 @@ public class RefundServiceImpl implements RefundService {
   @TryCatchException
   public JapiResponse getLiabilityBalance(UUID workspaceId) {
     UserModel userModel = profileService.getLoggedInUser();
-
-    double liability = repository.findLiabilities(userModel.getId(), workspaceId);
-
+    double liability = Optional.ofNullable(repository.findLiabilities(userModel.getId(), workspaceId)).orElse(0.0);
     Map<String, Double> response = new HashMap<>();
-
     response.put("liability", liability);
-
     return JapiResponse.success(response);
   }
 
@@ -109,13 +98,9 @@ public class RefundServiceImpl implements RefundService {
   @TryCatchException
   public JapiResponse getLiabilityBalance() {
     UserModel userModel = profileService.getLoggedInUser();
-
-    double liability = repository.findTotalLiabilities(userModel.getId());
-
+    double liability = Optional.ofNullable(repository.findTotalLiabilities(userModel.getId())).orElse(0.0);
     Map<String, Double> response = new HashMap<>();
-
     response.put("liability", liability);
-
     return JapiResponse.success(response);
   }
 }

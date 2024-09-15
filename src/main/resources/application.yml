@@ -18,7 +18,7 @@ spring:
         mime:
           charset: UTF
   datasource:
-    url: jdbc:postgresql://${DB_HOST:dpg-crad7gq3esus739t9epg-a.oregon-postgres.render.com}:${DB_PORT:5432}/${DB_NAME:dbpaydai_nunt}
+    url: jdbc:postgresql://${DB_HOST:dpg-crad7gq3esus739t9epg-a.oregon-postgres.render.com}:5432/${DB_NAME:dbpaydai_nunt}?sslmode=require
     username: ${DB_USER:paydai}
     password: ${DB_PASSWORD:N4TwO4Em3cKxW5YUIY11I1HR0n7SczD5}
   application:
@@ -49,4 +49,5 @@ application:
         transfer: ${STRIPE_WEBHOOK_SECRET_TRANSFER:whsec_gojMRBU7pmH0eg68QjBzyGBCdBT0b2Ee}
         invoice_connect: ${STRIPE_WEBHOOK_SECRET_INVOICE_CONNECT:whsec_iVj4686CegWYPa9R4DDlSDrAmDFccCcS}
   paydai:
+    stripe_acct: ${PLATFORM_ACCT:acct_1PFJDQHll432c94e}
     client_callback: ${PAYDAI_RETURN_CALLBACK_URL:https://appstage.itspaydai.com}

@@ -32,21 +32,22 @@ import java.util.*;
 public class InvoiceServiceImpl implements InvoiceService {
   private final InvoiceRepository repository;
   private final ProfileService profileService;
+  private final TeamRepository teamRepository;
+  private final RefundRepository refundRepository;
   private final InvoiceDtoMapper invoiceDtoMapper;
+  private final ProductRepository productRepository;
   private final CustomerRepository customerRepository;
   private final CalculatorServiceImpl calculatorService;
   private final InvoiceHelperService invoiceHelperService;
   private final UserWorkspaceRepository userWorkspaceRepository;
+  private final InvoiceManagerRepository invoiceManagerRepository;
 
   @Override
   @TryCatchException
-  @Transactional
   public JapiResponse create(InvoiceRequest payload) throws StripeException {
     UserModel userModel = profileService.getLoggedInUser();
 
     UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
-
-    if (closerWorkspaceModel == null) throw new NotFoundException("Invalid closer id");
 
     CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();
 
@@ -54,32 +55,178 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     AmountDto amountDto = AmountDto.getAmountDto(payload.getUnitPrice(), payload.getCurrency());
 
-    Product product = invoiceHelperService.createProductInStripe(payload, connectedAccountId);
+    RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(connectedAccountId).build();
 
-    Price price = invoiceHelperService.createPriceInStripe(payload, product, connectedAccountId);
+    ProductCreateParams productCreateParams = ProductCreateParams.builder()
+      .setName(payload.getProductName())
+      .setDescription(payload.getProductDescription())
+      .build();
+
+    Product product = Product.create(productCreateParams, requestOptions);
+
+    PriceCreateParams priceCreateParams = PriceCreateParams.builder()
+      .setProduct(product.getId())
+      .setUnitAmount(Double.valueOf(amountDto.getLgUnitAmt()).longValue())
+      .setCurrency(payload.getCurrency())
+      .build();
+
+    Price price = Price.create(priceCreateParams, requestOptions);
 
     CustomerModel customerModel = customerRepository.findByCustomerId(payload.getCustomerId());
 
-    CommSplitScenarioType scenarioType = CommSplitScenarioType.CLOSER_ONLY;
-    List<TeamModel> closerManagers = invoiceHelperService.getTeamMembers(closerWorkspaceModel);
-    CommissionData commissionData = invoiceHelperService.getSetterCommissionData(customerModel, payload, scenarioType);
+    UserWorkspaceModel setterWorkspaceModel = null;
 
-    // customer from stripe before below
-    Customer customer = invoiceHelperService.createCustomerInStripe(customerModel, connectedAccountId);
+    float setterCommissionPercent = 0.0F;
+
+    CommSplitScenarioType scenarioType = CommSplitScenarioType.CLOSER_ONLY;
+
+    List<TeamModel> closerManagers = teamRepository.findManyTeamMembers(
+      closerWorkspaceModel.getUser().getId(),
+      closerWorkspaceModel.getWorkspace().getId()
+    );
+
+    List<TeamModel> setterManagers = Collections.emptyList();
+    if (customerModel != null && Boolean.TRUE.equals(customerModel.getSetterInvolved())) {
+      setterWorkspaceModel = userWorkspaceRepository.findOneByUserId(
+        customerModel.getSetter().getId(),
+        payload.getWorkspaceId()
+      );
+
+      if (setterWorkspaceModel != null) {
+        setterCommissionPercent = setterWorkspaceModel.getCommission().getCommission();
+        scenarioType = CommSplitScenarioType.CLOSER_AND_SETTER;
+
+        setterManagers = teamRepository.findManyTeamMembers(
+          setterWorkspaceModel.getUser().getId(),
+          setterWorkspaceModel.getWorkspace().getId()
+        );
+      }
+    }
+
+    // find customer from stripe before below
+    assert customerModel != null;
+    CustomerCreateParams customerCreateParams = CustomerCreateParams.builder()
+      .setName(customerModel.getName())
+      .setEmail(customerModel.getEmail())
+      .setDescription(customerModel.getDescription())
+      .build();
+
+    Customer customer = Customer.create(customerCreateParams, requestOptions);
+
+    Double invoice_amount = payload.getQty() > 0 ? Double.valueOf(payload.getQty() * payload.getUnitPrice()) : payload.getUnitPrice();
 
     // CALCULATE COMMISSIONS
-    CalcRequest calcRequest = invoiceHelperService.buildCalcRequest(payload, commissionSettingModel, commissionData, scenarioType, closerManagers, commissionData.getManagerTeams());
+    CalcRequest calcRequest = CalcRequest.builder()
+      .revenue(invoice_amount)
+      .scenario(scenarioType)
+      .closerPercent(commissionSettingModel.getCommission())
+      .closerManager(closerManagers)
+      .setterManager(setterManagers)
+      .build();
+
+    if (calcRequest.getScenario().equals(CommSplitScenarioType.CLOSER_AND_SETTER)) {
+      calcRequest.setSetterPercent(setterCommissionPercent);
+    }
 
     CommissionRecord commissionRecord = calculatorService.displayCommissions(calcRequest);
 
-    Invoice invoice = invoiceHelperService.createStripeInvoice(payload, customer, commissionRecord, connectedAccountId);
+    long applicationFee = Double.valueOf(AmountDto.getAmountDto(commissionRecord.paydaiApplicationFee(), payload.getCurrency()).getLgUnitAmt()).longValue();
 
-    InvoiceItem invoiceItem = invoiceHelperService.createStripeInvoiceItem(invoice, price, customer, payload, connectedAccountId);
+    long dueDate = payload.getDueDate().atZone(ZoneOffset.UTC).toEpochSecond();
 
-    InvoiceModel invoiceModel = invoiceHelperService.saveInvoiceToDatabase(payload, amountDto, commissionRecord, closerWorkspaceModel, customerModel, commissionSettingModel, product, invoice, invoiceItem);
+    InvoiceCreateParams invoiceCreateParams =
+      InvoiceCreateParams.builder()
+        .setCustomer(customer.getId())
+        .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
+        .setDueDate(dueDate)
+        .setApplicationFeeAmount(applicationFee)
+        .build();
 
+    Invoice invoice = Invoice.create(invoiceCreateParams, requestOptions);
+
+    InvoiceItemCreateParams params =
+      InvoiceItemCreateParams.builder()
+        .setCustomer(customer.getId())
+        .setPrice(price.getId())
+        .setQuantity((long) payload.getQty())
+        .setInvoice(invoice.getId())
+        .build();
+
+    InvoiceItem invoiceItem = InvoiceItem.create(params, requestOptions);
+
+    ProductModel productModel = productRepository.save(
+      ProductModel.builder()
+        .item(payload.getProductName())
+        .qty(payload.getQty())
+        .unitPrice(payload.getUnitPrice())
+        .description(payload.getProductDescription())
+        .stripeProductId(product.getId())
+        .build()
+    );
+
+    LocalDateTime localDateTime = LocalDateTime.now();
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+    long milliseconds = zonedDateTime.toInstant().toEpochMilli();
+
+    InvoiceModel buildInvoice = InvoiceModel.builder()
+      .subject(payload.getSubject())
+      .currency(payload.getCurrency())
+      .amount(invoice_amount)
+      .unit(amountDto.getSmUnit())
+      .dueDate(payload.getDueDate())
+      .status(InvoiceStatus.CREATED)
+      .invoiceCode("INV" + milliseconds)
+      .applicationFee(commissionRecord.paydaiApplicationFee())
+      .platformFee(commissionRecord.paydaiTotalComm())
+      .commSplitScenario(CommSplitScenarioType.CLOSER_ONLY)
+      .snapshotCommCloserPercent(commissionSettingModel.getCommission())
+      .snapshotCloserFeePercent(commissionRecord.paydaiFeeCloserPercent())
+      .snapshotCommCloserNet(commissionRecord.closerNet())
+      .snapshotCommCloser(commissionRecord.closerCommission())
+      .snapshotCommSetterPercent(0.0F)
+      .snapshotMerchantFeePercent(commissionRecord.paydaiFeeMerchantPercent())
+      .snapshotCommInterval(commissionSettingModel.getInterval())
+      .snapshotCommIntervalUnit(commissionSettingModel.getIntervalUnit())
+      .stripeInvoiceItem(invoiceItem.getInvoice())
+      .stripeInvoiceId(invoice.getId())
+      .stripeInvoicePdf(invoice.getInvoicePdf())
+      .stripeInvoiceHostedUrl(invoice.getHostedInvoiceUrl())
+      .customer(customerModel)
+      .product(productModel)
+      .userWorkspace(closerWorkspaceModel)
+      .workspace(WorkspaceModel.builder().id(payload.getWorkspaceId()).build())
+      .build();
+
+    if (setterWorkspaceModel != null) {
+      buildInvoice.setSnapshotCommSetterPercent(setterCommissionPercent);
+      buildInvoice.setSnapshotSetterFeePercent(commissionRecord.paydaiFeeSetterPercent());
+      buildInvoice.setSnapshotCommSetterNet(commissionRecord.setterNet());
+      buildInvoice.setSnapshotCommSetter(commissionRecord.setterCommission());
+      buildInvoice.setCommSplitScenario(CommSplitScenarioType.CLOSER_AND_SETTER);
+    }
+
+    InvoiceModel invoiceModel = repository.save(buildInvoice);
+
+    if (!commissionRecord.closerManagersCommissions().isEmpty()) {
+      commissionRecord
+        .closerManagersCommissions()
+        .forEach(invoiceManagerModel -> {
+          invoiceManagerModel.setInvoice(invoiceModel);
+          invoiceManagerRepository.save(invoiceManagerModel);
+        });
+    }
+
+    if (!commissionRecord.setterManagersCommissions().isEmpty()) {
+      commissionRecord
+        .setterManagersCommissions()
+        .forEach(invoiceManagerModel -> {
+          invoiceManagerModel.setInvoice(invoiceModel);
+          invoiceManagerRepository.save(invoiceManagerModel);
+        });
+    }
     return JapiResponse.success(getInvoiceRecordDetails(invoiceModel));
   }
+
 
   @Override
   public JapiResponse getInvoiceToCustomer(UUID customerId) {
@@ -181,14 +328,18 @@ public class InvoiceServiceImpl implements InvoiceService {
         UUID srId = invoiceManagerModel.getManager().getId();
         double credit = invoiceManagerModel.getSnapshotCommManagerNet();
         String name = invoiceManagerModel.getManager().getFirstName();
-        InvoiceSalesRepDto invoiceSalesRepDto = InvoiceSalesRepDto.getInvoiceSalesRepDto(srId, credit, name, "manager");
+        double managerRefund = Optional.ofNullable(refundRepository.findTotalRefundPaid(srId, invoiceModel.getWorkspace().getId(), invoiceModel.getId())).orElse(0.0);
+        InvoiceSalesRepDto invoiceSalesRepDto = InvoiceSalesRepDto.getInvoiceSalesRepDto(srId, credit, name, "manager", managerRefund);
         salesReps.add(invoiceSalesRepDto);
       }
 
-    salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(closer.getId(), invoiceModel.getSnapshotCommCloserNet(), closer.getFirstName(), "closer"));
+    double closerRefund = Optional.ofNullable(refundRepository.findTotalRefundPaid(closer.getId(), invoiceModel.getWorkspace().getId(), invoiceModel.getId())).orElse(0.0);
+    salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(closer.getId(), invoiceModel.getSnapshotCommCloserNet(), closer.getFirstName(), "closer", closerRefund));
 
-    if (setter != null)
-        salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(setter.getId(), invoiceModel.getSnapshotCommCloserNet(), setter.getFirstName(), "setter"));
+    if (setter != null) {
+      double setterRefund = Optional.ofNullable(refundRepository.findTotalRefundPaid(setter.getId(), invoiceModel.getWorkspace().getId(), invoiceModel.getId())).orElse(0.0);
+      salesReps.add(InvoiceSalesRepDto.getInvoiceSalesRepDto(setter.getId(), invoiceModel.getSnapshotCommCloserNet(), setter.getFirstName(), "setter", setterRefund));
+    }
 
     return JapiResponse.success(salesReps);
   }

@@ -26,6 +26,9 @@ public class AccountLedgerModel {
 
   private String currency;
 
+  @Column(name = "pending_bal")
+  private double pendBal;
+
   @ManyToOne
   @JoinColumn(name = "user_id")
   private UserModel user;

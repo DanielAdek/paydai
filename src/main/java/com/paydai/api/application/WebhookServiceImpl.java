@@ -22,7 +22,7 @@ public class WebhookServiceImpl implements WebhookService {
   private final WebhookRepository repository;
   private final WebhookConstant webhookConstant;
   private final InvoiceRepository invoiceRepository;
-  private final TransactionService payoutLedgerService;
+  private final TransactionService transactionService;
 
   @Override
   @TryCatchException
@@ -51,7 +51,7 @@ public class WebhookServiceImpl implements WebhookService {
       invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID.toString());
 
       // transfer fund to sales rep
-      payoutLedgerService.transferToSalesRep(invoice.getId());
+      transactionService.transferToSalesRep(invoice);
     }
 
     if (event.getType().equals(webhookConstant.invoice_paid)) {}
@@ -73,8 +73,8 @@ public class WebhookServiceImpl implements WebhookService {
     }
 
     if (event.getType().equals(webhookConstant.transfer_created)) {
-      log.info("This is triggered", stripeObject);
-//        payoutLedgerService.transferToSalesRep(stripeObject);
+      log.info("This is triggered " + stripeObject);
+//      payoutLedgerService.transferToSalesRep(stripeObject);
     }
 
     if (event.getType().equals(webhookConstant.transfer_reversed)) {
@@ -103,7 +103,7 @@ public class WebhookServiceImpl implements WebhookService {
     if (event.getType().equals(webhookConstant.balance)) {
       log.info("The balance is available");
       // handle transfer here
-      log.info(String.valueOf(stripeObject));
+//      log.info(String.valueOf(stripeObject));
     }
 
     else {

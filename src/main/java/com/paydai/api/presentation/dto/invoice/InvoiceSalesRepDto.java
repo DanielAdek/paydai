@@ -16,8 +16,9 @@ public class InvoiceSalesRepDto {
   private double credit;
   private String name;
   private String role;
+  private double totalRequests;
 
-  public static InvoiceSalesRepDto getInvoiceSalesRepDto(UUID srId, double credit, String name, String role) {
-    return new InvoiceSalesRepDto(srId, credit, name, role);
+  public static InvoiceSalesRepDto getInvoiceSalesRepDto(UUID srId, double credit, String name, String role, double totalRequests) {
+    return new InvoiceSalesRepDto(srId, credit, name, role, totalRequests);
   }
 }

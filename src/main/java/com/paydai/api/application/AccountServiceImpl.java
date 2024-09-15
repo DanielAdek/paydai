@@ -72,11 +72,11 @@ public class AccountServiceImpl implements AccountService {
     AccountCreateParams accountCreateParams;
 
     if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
-      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setType(accountType).build();
+      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setDefaultCurrency("usd").setType(accountType).build();
     } else {
       accountCreateParams = AccountCreateParams.builder()
         .setEmail(emailModel.getEmail())
-//        .setDefaultCurrency("usd")
+        .setDefaultCurrency("usd")
         .setType(AccountCreateParams.Type.EXPRESS)
         .setCapabilities(
           AccountCreateParams.Capabilities.builder()
@@ -104,6 +104,7 @@ public class AccountServiceImpl implements AccountService {
       accountLedgerRepository.save(
         AccountLedgerModel.builder()
           .balance(0.0)
+          .pendBal(0.0)
           .currency(account.getDefaultCurrency())
           .user(userModel)
           .build()
@@ -206,6 +207,7 @@ public class AccountServiceImpl implements AccountService {
       accountLedgerRepository.save(
         AccountLedgerModel.builder()
           .balance(0.0)
+          .pendBal(0.0)
           .currency(account.getDefaultCurrency())
           .user(userModel)
           .build()

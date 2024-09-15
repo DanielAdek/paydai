@@ -16,6 +16,9 @@ public class AppConfig {
   @Value("${application.paydai.client_callback}")
   private String paydaiClientBaseUrl;
 
+  @Value("${application.paydai.stripe_acct}")
+  private String stripeAcct;
+
 
   // SECTION FOR STRIPE
   @Value("${application.stripe.secret_key}")

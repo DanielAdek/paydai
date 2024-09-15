@@ -50,10 +50,10 @@ public class WebhookControllerImpl implements WebhookController {
       JapiResponse response = service.handleInvoiceEventConnectAccount(payload, event);
       return ResponseEntity.ok(response.getMessage());
     } catch (SignatureVerificationException e) {
-      log.error("⚠️ Webhook error while validating signature.", e);
+      log.error("⚠️ Webhook error (Invoice Connect) while validating signature." + e.getMessage());
       return ResponseEntity.status(400).body("Invalid signature");
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      log.error("Invoice Connect Webhho Error" + e.getMessage());
       return ResponseEntity.status(500).body("Internal Server Exception");
     }
   }
