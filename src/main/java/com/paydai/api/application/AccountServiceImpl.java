@@ -76,7 +76,7 @@ public class AccountServiceImpl implements AccountService {
     } else {
       accountCreateParams = AccountCreateParams.builder()
         .setEmail(emailModel.getEmail())
-//        .setDefaultCurrency("usd")
+        .setDefaultCurrency("usd")
         .setType(AccountCreateParams.Type.EXPRESS)
         .setCapabilities(
           AccountCreateParams.Capabilities.builder()

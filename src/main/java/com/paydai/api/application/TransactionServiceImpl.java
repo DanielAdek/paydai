@@ -14,6 +14,7 @@ import com.paydai.api.presentation.dto.transaction.TransactionOverviewDto;
 import com.paydai.api.presentation.request.TransferRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Invoice;
 import com.stripe.model.Transfer;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.TransferCreateParams;
@@ -41,12 +42,12 @@ public class TransactionServiceImpl implements TransactionService {
   @Override
   @TryCatchException
   @Transactional
-  public JapiResponse transferToSalesRep(String stripeInvoiceCode) throws StripeException {
-    TransactionModel transactionModel = repository.findTransactionByStripeInvoiceId(stripeInvoiceCode);
+  public JapiResponse transferToSalesRep(Invoice invoice) throws StripeException {
+    TransactionModel transactionModel = repository.findTransactionByStripeInvoiceId(invoice.getId());
 
     if (transactionModel != null && transactionModel.getStatus().equals(TxnStatusType.PAYMENT_TRANSFERRED)) return JapiResponse.success(null);
 
-    InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(stripeInvoiceCode);
+    InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(invoice.getId());
 
     String stripeInvoiceId = invoiceModel.getStripeInvoiceId();
     String currency = invoiceModel.getCurrency();
@@ -66,7 +67,7 @@ public class TransactionServiceImpl implements TransactionService {
     UserModel closer = customerModel.getCloser();
     double closerNetComm = invoiceModel.getSnapshotCommCloserNet();
     double closerNet = handleLiability(closer, workspaceModel, closerNetComm, currency, invoiceModel);
-    if (closerNet > 0) performTransfer(closerNet, currency, closer.getStripeId());
+    if (closerNet > 0) performTransfer(closerNet, currency, closer.getStripeId(), true, invoice.getCharge());
     double clRevenue = invoiceModel.getSnapshotCommCloser();
     double clFee = clRevenue - invoiceModel.getSnapshotCommCloserNet();
     UserWorkspaceModel clUserWorkSpace = invoiceModel.getUserWorkspace();
@@ -82,7 +83,7 @@ public class TransactionServiceImpl implements TransactionService {
       double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel);
       String setterName = setter.getFirstName() + " " + setter.getLastName();
       persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
-      if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId());
+      if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId(), true, invoice.getCharge());
     }
 
     List<InvoiceManagerModel> involvedManagers = invoiceModel.getInvolvedManagers();
@@ -99,7 +100,7 @@ public class TransactionServiceImpl implements TransactionService {
 
           String managerStripeId = invoiceManagerModel.getManager().getStripeId();
 
-          Transfer managerTransfer = performTransfer(managerNet, currency, managerStripeId);
+          Transfer managerTransfer = performTransfer(managerNet, currency, managerStripeId, false, "");
 
           repository.save(
             TransactionModel.builder()
@@ -110,7 +111,7 @@ public class TransactionServiceImpl implements TransactionService {
               .giver("Paydai")
               .receiver(manager.getFirstName() + " " + manager.getLastName())
               .currency(managerTransfer.getCurrency())
-              .stripeInvoiceCode(stripeInvoiceCode)
+              .stripeInvoiceCode(invoice.getId())
               .invoice(invoiceModel)
               .remark("PAYDAI:transaction-settlement-fund")
               .workspace(workspaceModel)
@@ -280,7 +281,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Ensure commission stays above 1 after liability deduction
         if (commission < liabilityAmount) {
-          performTransfer(commission, currency, merchant.getStripeId());
+          performTransfer(commission, currency, merchant.getStripeId(), false, "");
           salesRepLiability.setTotalPaid(commission);
           salesRepLiability.setStatus(RefundStatus.PARTIALLY_PAID);
           persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
@@ -289,7 +290,7 @@ public class TransactionServiceImpl implements TransactionService {
           refundRepository.save(salesRepLiability);
           break;
         } else {
-          performTransfer(liabilityAmount, currency, merchant.getStripeId());
+          performTransfer(liabilityAmount, currency, merchant.getStripeId(), false, "");
           salesRepLiability.setStatus(RefundStatus.PAID);
           salesRepLiability.setTotalPaid(liabilityAmount);
           persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
@@ -302,15 +303,17 @@ public class TransactionServiceImpl implements TransactionService {
     return commission;
   }
 
-  private Transfer performTransfer(double amount, String currency, String stripeId) {
+  private Transfer performTransfer(double amount, String currency, String stripeId, boolean useSource, String source) {
     try {
-      return Transfer.create(
-        TransferCreateParams.builder()
-        .setAmount(Double.valueOf(amount).longValue() * 100) //todo multiply by sm_unit
+     TransferCreateParams.Builder params =  TransferCreateParams.builder()
+        .setAmount(Double.valueOf(amount).longValue() * 100)
         .setCurrency(currency)
-        .setDestination(stripeId)
-        .build()
-      );
+        .setDestination(stripeId);
+     if (useSource) {
+       params.setSourceTransaction(source);
+     }
+
+      return Transfer.create(params.build());
     } catch (StripeException e) {
       throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
     }

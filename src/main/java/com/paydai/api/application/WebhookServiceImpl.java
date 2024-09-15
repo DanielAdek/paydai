@@ -51,7 +51,7 @@ public class WebhookServiceImpl implements WebhookService {
       invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID.toString());
 
       // transfer fund to sales rep
-      payoutLedgerService.transferToSalesRep(invoice.getId());
+      payoutLedgerService.transferToSalesRep(invoice);
     }
 
     if (event.getType().equals(webhookConstant.invoice_paid)) {}
