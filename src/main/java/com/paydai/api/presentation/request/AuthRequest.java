@@ -12,8 +12,9 @@ import lombok.NoArgsConstructor;
 public class AuthRequest {
   private String email;
   private String password;
+  private String loginType;
 
-  public static AuthRequest getAuthCred(String email, String password) {
-    return new AuthRequest(email, password);
+  public static AuthRequest getAuthCred(String email, String password, String loginType) {
+    return new AuthRequest(email, password, loginType);
   }
 }

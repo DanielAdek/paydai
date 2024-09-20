@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface EmailRepository {
   Optional<EmailModel> findByEmail(String email);
-  EmailModel findEmailQuery(String email);
+  EmailModel findEmailQuery(String email, String loginType);
   EmailModel save(EmailModel buildEmail);
   EmailModel findPersonalEmailByUser(UUID userId);
 }

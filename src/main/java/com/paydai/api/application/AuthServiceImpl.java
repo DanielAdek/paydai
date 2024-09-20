@@ -51,12 +51,18 @@ public class AuthServiceImpl implements AuthService {
   @Transactional
   public JapiResponse create(RegisterRequest payload) {
     // Check if email already exist
-    EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
+    EmailModel email = emailRepository.findEmailQuery(payload.getEmail(), EmailType.PERSONAL.toString());
 
     if (email != null) throw new ConflictException("Email in use!");
 
     // Build user data to save
-    UserModel buildUser = UserModel.builder().firstName(payload.getFirstName()).lastName(payload.getLastName()).userType(payload.getUserType()).build();
+    UserModel buildUser = UserModel.builder()
+      .firstName(payload.getFirstName())
+      .lastName(payload.getLastName())
+      .userType(payload.getUserType())
+      .country(payload.getCountry().getName())
+      .countryCode(payload.getCountry().getCode())
+      .build();
 
     // Save user
     UserModel userModel = repository.save(buildUser);
@@ -95,8 +101,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @TryCatchException
-  public JapiResponse authenticate(AuthRequest authCred) throws StripeException {
-    EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
+  public JapiResponse authenticate(AuthRequest authCred) {
+    EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail(), authCred.getLoginType());
 
     if (emailModel == null) throw new NotFoundException("Invalid Email or password");
 

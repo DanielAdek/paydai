@@ -26,6 +26,7 @@ public class AuthModelDto {
   private UserType userType;
   private String email;
   private EmailType emailType;
+  private String country;
   private String token;
   private String stripeId;
   private LocalDateTime createdAt;
@@ -41,6 +42,7 @@ public class AuthModelDto {
       user.getUserType(),
       email.getEmail(),
       email.getEmailType(),
+      user.getCountry(),
       token,
       user.getStripeId(),
       user.getCreatedAt(),

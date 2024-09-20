@@ -69,14 +69,13 @@ public class AccountServiceImpl implements AccountService {
     AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
       AccountCreateParams.Type.EXPRESS;
 
-    AccountCreateParams accountCreateParams;
+    AccountCreateParams.Builder accountCreateParams;
 
     if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
-      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setDefaultCurrency("usd").setType(accountType).build();
+      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setDefaultCurrency("usd").setType(accountType);
     } else {
       accountCreateParams = AccountCreateParams.builder()
         .setEmail(emailModel.getEmail())
-        .setDefaultCurrency("usd")
         .setType(AccountCreateParams.Type.EXPRESS)
         .setCapabilities(
           AccountCreateParams.Capabilities.builder()
@@ -87,14 +86,22 @@ public class AccountServiceImpl implements AccountService {
             )
             .setTransfers(
               AccountCreateParams.Capabilities.Transfers.builder().setRequested(true).build()
-            )
-            .build()
-        )
-        .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
-        .build();
+            ).build()
+        );
     }
 
-    Account account = Account.create(accountCreateParams);
+    String tosAcceptance = userModel.getCountryCode().equals("US") ? "full" : "recipient";
+
+    accountCreateParams
+      .setTosAcceptance(
+        AccountCreateParams
+          .TosAcceptance
+          .builder()
+          .setServiceAgreement(tosAcceptance)
+          .build()
+      ).setCountry(userModel.getCountryCode());
+
+    Account account = Account.create(accountCreateParams.build());
 
     if (account == null) throw new ApiRequestException("Account did not create. Try again");
 

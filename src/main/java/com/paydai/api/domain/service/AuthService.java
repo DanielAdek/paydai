@@ -8,5 +8,5 @@ import com.stripe.exception.StripeException;
 
 public interface AuthService {
   JapiResponse create(RegisterRequest payload);
-  JapiResponse authenticate(AuthRequest payload) throws StripeException;
+  JapiResponse authenticate(AuthRequest payload);
 }

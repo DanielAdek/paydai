@@ -30,6 +30,12 @@ public class UserModel implements UserDetails {
   @Column(name = "last_name")
   private String lastName;
 
+  @Column(name = "country")
+  private String country;
+
+  @Column(name = "country_code")
+  private String countryCode;
+
   @Column(name = "user_type")
   @Enumerated(EnumType.STRING)
   private UserType userType;

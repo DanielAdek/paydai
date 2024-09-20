@@ -12,21 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterRequest {
   private String email;
-
   private String business;
-
   private String firstName;
-
   private String lastName;
-
   private String password;
-
   private UserType userType;
-
-//  public static RegisterRequest getRegisterPayload(
-//    String email, String business, String password, String lastName,
-//    UserType userType, String firstName
-//  ) {
-//    return new RegisterRequest(email, business, password, firstName, lastName, userType);
-//  }
+  private CountryRequest country;
 }
