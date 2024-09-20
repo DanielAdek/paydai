@@ -150,6 +150,8 @@ public class InviteServiceImpl implements InviteService {
             .firstName(request.getFirstName())
             .lastName(request.getLastName())
             .userType(UserType.SALES_REP)
+            .country(request.getCountry().getName())
+            .countryCode(request.getCountry().getCode())
             .build()
         );
 
