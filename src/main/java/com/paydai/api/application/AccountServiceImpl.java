@@ -59,25 +59,29 @@ public class AccountServiceImpl implements AccountService {
   @Transactional
   public JapiResponse createAccount(AccountRequest payload) throws StripeException {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
     UserModel userModel = (UserModel) authentication.getPrincipal();
 
-    if (userModel.getStripeId() != null) throw new ConflictException("Stripe account already exit!");
+    if (userModel.getStripeId() != null) throw new ConflictException("Stripe account already exists!");
 
     EmailModel emailModel = emailRepository.findPersonalEmailByUser(userModel.getId());
 
-    AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT) ? AccountCreateParams.Type.STANDARD :
-      AccountCreateParams.Type.EXPRESS;
+    AccountCreateParams.Type accountType = emailModel.getUser().getUserType().equals(UserType.MERCHANT)
+      ? AccountCreateParams.Type.STANDARD
+      : AccountCreateParams.Type.EXPRESS;
 
-    AccountCreateParams.Builder accountCreateParams;
+    AccountCreateParams.Builder accountCreateParams = AccountCreateParams.builder()
+      .setEmail(emailModel.getEmail())
+      .setType(accountType);
 
+    String tosAcceptance = userModel.getCountryCode().equals("US") ? "full" : "recipient";
+
+    // Only request capabilities if tosAcceptance is "full"
     if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
-      accountCreateParams = AccountCreateParams.builder().setEmail(emailModel.getEmail()).setDefaultCurrency("usd").setType(accountType);
+      accountCreateParams.setDefaultCurrency("usd");
     } else {
-      accountCreateParams = AccountCreateParams.builder()
-        .setEmail(emailModel.getEmail())
-        .setType(AccountCreateParams.Type.EXPRESS)
-        .setCapabilities(
+      if (tosAcceptance.equals("full")) {
+        // Request capabilities only if service agreement is "full"
+        accountCreateParams.setCapabilities(
           AccountCreateParams.Capabilities.builder()
             .setCardPayments(
               AccountCreateParams.Capabilities.CardPayments.builder()
@@ -85,21 +89,31 @@ public class AccountServiceImpl implements AccountService {
                 .build()
             )
             .setTransfers(
-              AccountCreateParams.Capabilities.Transfers.builder().setRequested(true).build()
+              AccountCreateParams.Capabilities.Transfers.builder()
+                .setRequested(true)
+                .build()
             ).build()
         );
+      } else {
+        // For "recipient", only request transfers
+        accountCreateParams.setCapabilities(
+          AccountCreateParams.Capabilities.builder()
+            .setTransfers(
+              AccountCreateParams.Capabilities.Transfers.builder()
+                .setRequested(true)
+                .build()
+            ).build()
+        );
+      }
     }
-
-    String tosAcceptance = userModel.getCountryCode().equals("US") ? "full" : "recipient";
 
     accountCreateParams
       .setTosAcceptance(
-        AccountCreateParams
-          .TosAcceptance
-          .builder()
+        AccountCreateParams.TosAcceptance.builder()
           .setServiceAgreement(tosAcceptance)
           .build()
-      ).setCountry(userModel.getCountryCode());
+      )
+      .setCountry(userModel.getCountryCode());
 
     Account account = Account.create(accountCreateParams.build());
 
