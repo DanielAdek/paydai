@@ -16,10 +16,10 @@ public interface EmailRepositoryImpl extends EmailRepository, JpaRepository<Emai
   Optional<EmailModel> findByEmail(String email);
 
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM email_tbl WHERE email = ?1 AND email_type=?2")
-  EmailModel findEmailQuery(String email, String loginType);
+  @Query(nativeQuery = true, value = "SELECT * FROM email_tbl WHERE email = ?1 AND email_type='PERSONAL' AND access=true")
+  EmailModel findEmailQuery(String email);
 
   @Override
-  @Query(nativeQuery = true, value = "SELECT * FROM email_tbl WHERE user_id=?1 and email_type='PERSONAL'")
+  @Query(nativeQuery = true, value = "SELECT * FROM email_tbl WHERE user_id=?1 AND email_type='PERSONAL' AND access=true")
   EmailModel findPersonalEmailByUser(UUID userId);
 }

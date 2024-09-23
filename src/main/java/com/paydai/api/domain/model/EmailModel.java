@@ -29,6 +29,8 @@ public class EmailModel {
   @Column
   private String passwordHash;
 
+  private boolean access;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "email_type")
   private EmailType emailType;

@@ -160,6 +160,7 @@ public class InviteServiceImpl implements InviteService {
             .email(request.getEmail())
             .passwordHash(passwordHash)
             .emailType(EmailType.PERSONAL)
+            .access(true)
             .user(userModel)
             .build()
         );
@@ -170,6 +171,7 @@ public class InviteServiceImpl implements InviteService {
       EmailModel.builder()
         .email(inviteModel.getCompanyEmail())
         .emailType(EmailType.COMPANY)
+        .access(false)
         .passwordHash(passwordHash)
         .user(emailModel.getUser())
         .build()

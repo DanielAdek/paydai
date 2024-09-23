@@ -1,6 +1,7 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.annotation.TryCatchException;
+import com.paydai.api.domain.exception.BadCredentialException;
 import com.paydai.api.domain.exception.ConflictException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
@@ -51,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
   @Transactional
   public JapiResponse create(RegisterRequest payload) {
     // Check if email already exist
-    EmailModel email = emailRepository.findEmailQuery(payload.getEmail(), EmailType.PERSONAL.toString());
+    EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
 
     if (email != null) throw new ConflictException("Email in use!");
 
@@ -73,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
         .user(userModel)
         .passwordHash(passwordEncoder.encode(payload.getPassword()))
         .emailType(EmailType.PERSONAL)
+        .access(true)
         .build();
 
     // Save email
@@ -102,9 +104,11 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @TryCatchException
   public JapiResponse authenticate(AuthRequest authCred) {
-    EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail(), authCred.getLoginType());
+    EmailModel emailModel = emailRepository.findEmailQuery(authCred.getEmail());
 
     if (emailModel == null) throw new NotFoundException("Invalid Email or password");
+
+    if (!emailModel.getUser().getUserType().equals(authCred.getLoginType())) throw new BadCredentialException("Please provide valid " + authCred.getLoginType() + "'s email");
 
     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(emailModel.getUser().getId(), authCred.getPassword()));
 
@@ -114,10 +118,10 @@ public class AuthServiceImpl implements AuthService {
     UserWorkspaceModel userWorkspaceModel;
     RoleRecord role = null;
     WorkspaceRecord workspace = null;
-    if (emailModel.getEmailType().equals(EmailType.COMPANY)) {
-      userWorkspaceModel = userWorkspaceRepository.findUserByEmail(emailModel.getId());
+    if (emailModel.getUser().getUserType().equals(UserType.SALES_REP)) {
+      userWorkspaceModel = userWorkspaceRepository.findByUserId(emailModel.getUser().getId()).stream().findFirst().orElse(null);
       role = userWorkspaceModel != null ? roleDtoMapper.apply(userWorkspaceModel.getRole()) : null;
-      workspace = userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
+      workspace =  userWorkspaceModel != null ? workspaceDtoMapper.apply(userWorkspaceModel.getWorkspace()) : null;
     }
 
     if (emailModel.getUser().getUserType().equals(UserType.MERCHANT)) {
