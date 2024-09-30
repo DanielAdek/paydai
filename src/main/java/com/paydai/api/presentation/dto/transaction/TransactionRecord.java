@@ -10,6 +10,7 @@ public record TransactionRecord(
   double revenue,
   double amount,
   double fee,
+  double merchantFee,
   String giver,
   String receiver,
   TxnType txnType,

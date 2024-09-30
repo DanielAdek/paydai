@@ -16,4 +16,5 @@ public interface WorkspaceService {
   JapiResponse getWorkspaceTeams(UUID workspaceId);
   JapiResponse getManagerTeamMembers(UUID workspaceId);
   JapiResponse assignTeamMembers(AssignSalesRepRequest assignSalesRepRequest);
+  JapiResponse removeWorkspaceMember(UUID userId, UUID workspaceId);
 }

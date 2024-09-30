@@ -2,7 +2,9 @@ package com.paydai.api.infrastructure.persistence;
 
 import com.paydai.api.domain.model.CustomerModel;
 import com.paydai.api.domain.repository.CustomerRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -22,4 +24,10 @@ public interface CustomerRepositoryImpl extends CustomerRepository, JpaRepositor
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM customer_tbl WHERE workspace_id=?1")
   List<CustomerModel> findCustomers(UUID workspaceId);
+
+  @Override
+  @Modifying
+  @Transactional
+  @Query(nativeQuery = true, value = "UPDATE customer_tbl SET stage=?2 WHERE id=?1")
+  void updateCustomerStage(UUID customerId, String stage);
 }

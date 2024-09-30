@@ -5,6 +5,7 @@ import java.util.UUID;
 public record AccountRecord(
   double balance,
   double pendBal,
+  String currency,
   UUID user
 ) {
 }

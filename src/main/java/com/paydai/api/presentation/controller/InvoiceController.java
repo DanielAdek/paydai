@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceController {
@@ -17,6 +18,7 @@ public interface InvoiceController {
   ResponseEntity<JapiResponse> getWorkspaceInvoicesToCustomers(@RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> finalizeInvoice(@RequestParam String invoiceCode) throws StripeException;
   ResponseEntity<JapiResponse> sendInvoice(@RequestParam String invoice) throws StripeException;
-  ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, InvoiceStatus status);
+  ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, List<InvoiceStatus> status);
   ResponseEntity<JapiResponse> getSalesRepInvolvedInvoice(@RequestParam String invoiceCode);
+  ResponseEntity<JapiResponse> cancelInvoice(@RequestParam String invoiceCode);
 }

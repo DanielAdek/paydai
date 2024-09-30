@@ -64,10 +64,6 @@ public class TransactionModel {
   @JoinColumn(name = "user_id")
   private UserModel user;
 
-//  @ManyToOne
-//  @JoinColumn(name = "user_workspace_id")
-//  private UserWorkspaceModel userWorkspace;
-
   @CreationTimestamp
   @Column(name = "created_at")
   private LocalDateTime createdAt;

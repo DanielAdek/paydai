@@ -8,14 +8,9 @@ import com.paydai.api.domain.service.CustomerService;
 import com.paydai.api.presentation.dto.customer.CustomerDto;
 import com.paydai.api.presentation.dto.customer.CustomerDtoMapper;
 import com.paydai.api.presentation.dto.customer.CustomerRecord;
-import com.paydai.api.presentation.dto.profile.ProfileDtoMapper;
-import com.paydai.api.presentation.dto.profile.ProfileRecord;
-import com.paydai.api.presentation.dto.role.RoleDtoMapper;
 import com.paydai.api.presentation.request.CustomerRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

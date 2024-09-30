@@ -71,8 +71,7 @@ public class InviteServiceImpl implements InviteService {
   @TryCatchException
   @Transactional
   public JapiResponse createInvite(InviteRequest payload) throws MessagingException {
-    InviteModel inviteModel;
-    inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
+    InviteModel inviteModel = repository.findByInvited(payload.getRoleId(), payload.getWorkspaceId(), payload.getCompanyEmail());
 
     if (inviteModel == null) {
       InviteModel buildInvite = InviteModel.builder()
@@ -193,6 +192,7 @@ public class InviteServiceImpl implements InviteService {
         .workspace(inviteModel.getWorkspace())
         .role(inviteModel.getRole())
         .email(emailAddedWorkspace)
+        .removed(false)
         .commission(commissionSettingModel)
         .build()
     );
@@ -268,5 +268,13 @@ public class InviteServiceImpl implements InviteService {
       .toList();
 
     return JapiResponse.success(inviteRecords);
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse cancelInvite(String inviteCode) {
+    InviteModel inviteModel = repository.findByInvite(inviteCode).orElseThrow(() -> new NotFoundException("Invalid invite code"));
+    repository.removeInvite(inviteCode);
+    return JapiResponse.success(null);
   }
 }

@@ -11,4 +11,8 @@ public interface TransactionRepository {
   List<TransactionModel> findTransactions(UUID userId, UUID workspaceId);
   List<TransactionModel> findTransactions(UUID userId);
   List<TransactionModel> findTransactionsMerchant(UUID workspaceId);
+  List<TransactionModel> findTransactionsForToday(UUID userId, UUID workspaceId);
+  List<TransactionModel> findTransactionsForCurrentWeek(UUID userId, UUID workspaceId);
+  List<TransactionModel> findTransactionsForCurrentMonth(UUID userId, UUID workspaceId);
+  List<TransactionModel> findTransactionsForCurrentYear(UUID userId, UUID workspaceId);
 }

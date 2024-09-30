@@ -26,4 +26,20 @@ public interface TransactionRepositoryImpl extends TransactionRepository, JpaRep
   @Override
   @Query(nativeQuery = true, value = "SELECT * FROM transaction_ledger_tbl WHERE workspace_id=?1")
   List<TransactionModel> findTransactionsMerchant(UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM transaction_ledger_tbl WHERE user_id=?1 AND workspace_id=?2 AND DATE(payout_date) = CURRENT_DATE")
+  List<TransactionModel> findTransactionsForToday(UUID userId, UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM transaction_ledger_tbl WHERE user_id=?1 AND workspace_id=?2 AND DATE_TRUNC('week', payout_date) = DATE_TRUNC('week', CURRENT_DATE)")
+  List<TransactionModel> findTransactionsForCurrentWeek(UUID userId, UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM transaction_ledger_tbl WHERE user_id=?1 AND workspace_id=?2 AND DATE_TRUNC('month', payout_date) = DATE_TRUNC('month', CURRENT_DATE)")
+  List<TransactionModel> findTransactionsForCurrentMonth(UUID userId, UUID workspaceId);
+
+  @Override
+  @Query(nativeQuery = true, value = "SELECT * FROM transaction_ledger_tbl WHERE user_id=?1 AND workspace_id=?2 AND DATE_TRUNC('year', payout_date) = DATE_TRUNC('year', CURRENT_DATE)")
+  List<TransactionModel> findTransactionsForCurrentYear(UUID userId, UUID workspaceId);
 }

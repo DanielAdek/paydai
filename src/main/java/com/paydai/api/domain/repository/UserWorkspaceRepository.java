@@ -16,4 +16,5 @@ public interface UserWorkspaceRepository {
   List<UserWorkspaceModel> findUsersByWorkspaceId(UUID workspaceId);
   UserWorkspaceModel findUserByEmail(UUID emailId);
   List<UserWorkspaceModel> findUserByRoleWorkspaces(UUID roleId, UUID workspaceId);
+  void removeSalesRep(UUID userId, UUID workspaceId);
 }

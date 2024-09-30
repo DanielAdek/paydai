@@ -14,4 +14,5 @@ public interface InviteController {
   ResponseEntity<JapiResponse> sendInvite(@RequestBody InviteRequest request) throws MessagingException;
   ResponseEntity<JapiResponse> acceptInvite(@RequestBody RegisterRequest request, @RequestParam String inviteCode);
   ResponseEntity<JapiResponse> getWorkspaceInvite(@RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> cancelInvite(@RequestParam String inviteCode);
 }

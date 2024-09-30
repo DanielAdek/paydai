@@ -22,6 +22,8 @@ public class UserWorkspaceModel {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  private Boolean removed;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private UserModel user;

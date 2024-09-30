@@ -150,4 +150,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
   public JapiResponse assignTeamMembers(AssignSalesRepRequest assignSalesRepRequest) {
     return null;
   }
+
+  @Override
+  @TryCatchException
+  public JapiResponse removeWorkspaceMember(UUID userId, UUID workspaceId) {
+    UserWorkspaceModel userWorkspaceModel = userWorkspaceRepository.findOneByUserId(userId, workspaceId);
+    if (userWorkspaceModel == null) throw new NotFoundException("user");
+    userWorkspaceModel.setRemoved(true);
+    userWorkspaceRepository.save(userWorkspaceModel);
+    return JapiResponse.success(null);
+  }
 }

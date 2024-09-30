@@ -11,4 +11,5 @@ public interface CustomerRepository {
   CustomerModel findByCustomerId(UUID customerId);
   CustomerModel findByCustomerEmail(String email, UUID workspaceId);
   List<CustomerModel> findCustomers(UUID workspaceId);
+  void updateCustomerStage(UUID customerId, String stage);
 }

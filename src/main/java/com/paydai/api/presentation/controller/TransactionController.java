@@ -12,8 +12,9 @@ import java.util.UUID;
 public interface TransactionController {
   ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId, @RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> getPayoutLedgerTransactions(@RequestParam UUID userId);
-  ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam UUID userId, @RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam String filter, @RequestParam UUID workspaceId);
   ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam UUID userId);
   ResponseEntity<JapiResponse> directTransferToSalesRep(@RequestBody TransferRequest payload) throws StripeException;
   ResponseEntity<JapiResponse> getTransactionsMerchant(@RequestParam UUID workspaceId);
+  ResponseEntity<JapiResponse> getTransactionsChart(@RequestParam UUID workspaceId);
 }

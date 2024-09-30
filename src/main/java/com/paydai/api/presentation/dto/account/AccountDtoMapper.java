@@ -13,6 +13,7 @@ public class AccountDtoMapper implements Function<AccountLedgerModel, AccountRec
     return new AccountRecord(
       accountLedger.getBalance(),
       accountLedger.getPendBal(),
+      accountLedger.getCurrency(),
       accountLedger.getUser().getId()
     );
   }

@@ -79,4 +79,20 @@ public class InviteControllerImpl implements InviteController {
     JapiResponse response = service.getWorkspaceInvites(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
+
+  @Operation(
+    summary = "Workspace invites cancel API endpoint",
+    description = "POST response to show auth DTO, the auth-data and token"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @DeleteMapping("cancel")
+  public ResponseEntity<JapiResponse> cancelInvite(@RequestParam String inviteCode) {
+    JapiResponse response = service.cancelInvite(inviteCode);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
 }

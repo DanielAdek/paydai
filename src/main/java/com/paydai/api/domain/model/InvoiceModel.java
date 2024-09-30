@@ -46,6 +46,8 @@ public class InvoiceModel {
   @Column
   private String currency;
 
+  private Boolean canceled;
+
   @Column(name = "sales_manager_involved")
   private boolean managerInvolved;
 

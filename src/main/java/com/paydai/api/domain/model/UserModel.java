@@ -46,14 +46,14 @@ public class UserModel implements UserDetails {
   @Column(name = "stripe_email")
   private String stripeEmail;
 
-  @Column(name = "extra_field")
-  private String extraField;
-
-  @Column(name = "merchant_fee")
-  private Float merchantFee = 1.5F;
-
-  @Column(name = "sales_rep_fee")
-  private Float salesRepFee = 0.5F;
+//  @Column(name = "extra_field")
+//  private String extraField;
+//
+//  @Column(name = "merchant_fee")
+//  private Float merchantFee = 1.5F;
+//
+//  @Column(name = "sales_rep_fee")
+//  private Float salesRepFee = 0.5F;
 
   @CreationTimestamp
   @Column(name = "created_at")

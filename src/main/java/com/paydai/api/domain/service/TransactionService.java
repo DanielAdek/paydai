@@ -13,6 +13,7 @@ public interface TransactionService {
   JapiResponse getTransactions(UUID userId, UUID workspaceId);
   JapiResponse getTransactionsMerchantUse(UUID workspaceId);
   JapiResponse getTransactions(UUID userId);
-  JapiResponse getTransactionOverview(UUID userId, UUID workspaceId);
+  JapiResponse getTransactionsChart(UUID workspaceId);
+  JapiResponse getTransactionOverview(String filter, UUID workspaceId);
   JapiResponse getTransactionOverview(UUID userId);
 }

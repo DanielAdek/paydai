@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -162,7 +163,7 @@ public class InvoiceControllerImpl implements InvoiceController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping("filter")
-  public ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, @RequestParam InvoiceStatus status) {
+  public ResponseEntity<JapiResponse> filterInvoices(@RequestParam UUID workspaceId, @RequestParam List<InvoiceStatus> status) {
     JapiResponse response = service.filterInvoice(workspaceId, status);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
@@ -183,6 +184,25 @@ public class InvoiceControllerImpl implements InvoiceController {
   @GetMapping("/sales-rep/involved")
   public ResponseEntity<JapiResponse> getSalesRepInvolvedInvoice(@RequestParam String invoiceCode) {
     JapiResponse response = service.getSalesRepInvoice(invoiceCode);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Cancel invoice API endpoint",
+    description = "GET response to show invoice DTO, the invoice data"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @Override
+  @DeleteMapping("cancel")
+  public ResponseEntity<JapiResponse> cancelInvoice(@RequestParam String invoiceCode) {
+    JapiResponse response = service.cancelInvoice(invoiceCode);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

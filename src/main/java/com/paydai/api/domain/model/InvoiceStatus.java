@@ -5,6 +5,7 @@ public enum InvoiceStatus {
   FINALIZED,
   SENT,
   PAID,
+  CANCELED,
   FAILED,
   REVERSED
 }

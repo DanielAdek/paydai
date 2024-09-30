@@ -3,10 +3,7 @@ package com.paydai.api.application;
 import com.paydai.api.domain.annotation.TryCatchException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
-import com.paydai.api.domain.repository.InvoiceRepository;
-import com.paydai.api.domain.repository.TransactionRepository;
-import com.paydai.api.domain.repository.RefundRepository;
-import com.paydai.api.domain.repository.UserWorkspaceRepository;
+import com.paydai.api.domain.repository.*;
 import com.paydai.api.domain.service.TransactionService;
 import com.paydai.api.infrastructure.config.AppConfig;
 import com.paydai.api.presentation.dto.transaction.TransactionDtoMapper;
@@ -15,12 +12,9 @@ import com.paydai.api.presentation.dto.transaction.TransactionOverviewDto;
 import com.paydai.api.presentation.request.TransferRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Charge;
 import com.stripe.model.Invoice;
 import com.stripe.model.Transfer;
 import com.stripe.net.RequestOptions;
-import com.stripe.param.ChargeCreateParams;
-import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.TransferCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.*;
 
 
@@ -41,6 +37,7 @@ public class TransactionServiceImpl implements TransactionService {
   private final TransactionRepository repository;
   private final RefundRepository refundRepository;
   private final InvoiceRepository invoiceRepository;
+  private final CustomerRepository customerRepository;
   private final TransactionDtoMapper transactionDtoMapper;
   private final UserWorkspaceRepository userWorkspaceRepository;
 
@@ -60,6 +57,9 @@ public class TransactionServiceImpl implements TransactionService {
     double appFee = invoiceModel.getApplicationFee();
     CustomerModel customerModel = invoiceModel.getCustomer();
 
+    // update lead status
+    customerRepository.updateCustomerStage(customerModel.getId(), CustomerType.CUSTOMER.toString());
+
     double merchantAmt = invoiceAmt - appFee;
     WorkspaceModel workspaceModel = invoiceModel.getUserWorkspace().getWorkspace();
     UserModel merchant = workspaceModel.getOwner();
@@ -71,24 +71,25 @@ public class TransactionServiceImpl implements TransactionService {
     // TRANSFER TO CLOSER
     UserModel closer = customerModel.getCloser();
     double closerNetComm = invoiceModel.getSnapshotCommCloserNet();
-    double closerNet = handleLiability(closer, workspaceModel, closerNetComm, currency, invoiceModel/*, invoice*/);
-    if (closerNet > 0) performTransfer(closerNet, currency, closer.getStripeId()/*, true, invoice.getPaymentIntent()*/);
+    double closerNet = handleLiability(closer, workspaceModel, closerNetComm, currency, invoiceModel);
+    if (closerNet > 0) performTransfer(closerNet, currency, closer.getStripeId());
     double clRevenue = invoiceModel.getSnapshotCommCloser();
     double clFee = clRevenue - invoiceModel.getSnapshotCommCloserNet();
     String closerName = closer.getFirstName() + " " + closer.getLastName();
     persistTransactionToDatabase(clRevenue, closerNetComm, clFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, closer, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, closerName, remark);
 
     // PROCESS SETTER TRANSFER IF INVOLVED
-    if (customerModel.getSetterInvolved()) {
-      UserModel setter = customerModel.getSetter();
-      double stRevenue = invoiceModel.getSnapshotCommSetter();
-      double setterNetComm = invoiceModel.getSnapshotCommSetterNet();
-      double stFee = stRevenue - setterNetComm;
-      double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel/*, invoice*/);
-      String setterName = setter.getFirstName() + " " + setter.getLastName();
-      persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
-      if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId()/*, true, invoice.getCharge()*/);
-    }
+    if (customerModel != null)
+      if (customerModel.getSetterInvolved()) {
+        UserModel setter = customerModel.getSetter();
+        double stRevenue = invoiceModel.getSnapshotCommSetter();
+        double setterNetComm = invoiceModel.getSnapshotCommSetterNet();
+        double stFee = stRevenue - setterNetComm;
+        double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel);
+        String setterName = setter.getFirstName() + " " + setter.getLastName();
+        persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
+        if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId()/*, true, invoice.getCharge()*/);
+      }
 
     List<InvoiceManagerModel> involvedManagers = invoiceModel.getInvolvedManagers();
     if (!involvedManagers.isEmpty()) {
@@ -97,14 +98,14 @@ public class TransactionServiceImpl implements TransactionService {
 
         double managerComm = invoiceManagerModel.getSnapshotCommManagerNet();
 
-        double managerNet = handleLiability(invoiceManagerModel.getManager(), workspaceModel, managerComm, currency, invoiceModel/*, invoice*/);
+        double managerNet = handleLiability(invoiceManagerModel.getManager(), workspaceModel, managerComm, currency, invoiceModel);
 
         if (managerNet > 0) {
           currency = invoiceManagerModel.getInvoice().getCurrency();
 
           String managerStripeId = invoiceManagerModel.getManager().getStripeId();
 
-          Transfer managerTransfer = performTransfer(managerNet, currency, managerStripeId/*, true, invoice.getPaymentIntent()*/);
+          Transfer managerTransfer = performTransfer(managerNet, currency, managerStripeId);
 
           repository.save(
             TransactionModel.builder()
@@ -236,9 +237,119 @@ public class TransactionServiceImpl implements TransactionService {
 
   @Override
   @TryCatchException
-  public JapiResponse getTransactionOverview(UUID userId, UUID workspaceId) {
-    List<TransactionModel> transactionModels = repository.findTransactions(userId, workspaceId);
+  public JapiResponse getTransactionsChart(UUID workspaceId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
+    List<TransactionModel> transactionModels = repository.findTransactions(userModel.getId(), workspaceId);
+
+    if (transactionModels.isEmpty()) {
+      return JapiResponse.success(Collections.emptyMap());
+    }
+
+    // Prepopulate dailyData with default days of the week and earnings = 0
+    Map<String, Double> dailyData = new LinkedHashMap<>();
+    List<String> daysOfWeek = List.of("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+    daysOfWeek.forEach(day -> dailyData.put(day, 0.0));
+
+    // Prepopulate monthlyData with default months of the year and earnings = 0
+    Map<String, Double> monthlyData = new LinkedHashMap<>();
+    List<String> monthsOfYear = List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+    monthsOfYear.forEach(month -> monthlyData.put(month, 0.0));
+
+    // Prepopulate yearlyData with 7 years: 5 years back, current year, and next year
+    Map<String, Double> yearlyData = new LinkedHashMap<>();
+    int currentYear = LocalDate.now().getYear();
+    for (int i = currentYear - 5; i <= currentYear + 1; i++) {
+      yearlyData.put(String.valueOf(i), 0.0);
+    }
+
+    // Group transactions by day, month, and year
+    transactionModels.forEach(transaction -> {
+      // Extracting the date
+      LocalDate payoutDate = transaction.getPayoutDate().toLocalDate();
+
+      // Group by Day (Mon, Tue, etc.)
+      String dayOfWeek = payoutDate.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+      dailyData.merge(dayOfWeek, transaction.getAmount(), Double::sum);
+
+      // Group by Month (Jan, Feb, etc.)
+      String month = payoutDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+      monthlyData.merge(month, transaction.getAmount(), Double::sum);
+
+      // Group by Year (2020, 2021, etc.)
+      String year = String.valueOf(payoutDate.getYear());
+      yearlyData.merge(year, transaction.getAmount(), Double::sum);
+    });
+
+    // Prepare the final chart data in the required structure
+    Map<String, Object> chartData = new HashMap<>();
+
+    // Prepare dailyData in the required format
+    List<Map<String, Object>> dailyDataList = new ArrayList<>();
+    dailyData.forEach((day, earnings) -> {
+      Map<String, Object> dailyEntry = new HashMap<>();
+      dailyEntry.put("day", day);
+      dailyEntry.put("earnings", earnings);
+      dailyDataList.add(dailyEntry);
+    });
+
+    // Prepare monthlyData in the required format
+    List<Map<String, Object>> monthlyDataList = new ArrayList<>();
+    monthlyData.forEach((month, earnings) -> {
+      Map<String, Object> monthlyEntry = new HashMap<>();
+      monthlyEntry.put("month", month);
+      monthlyEntry.put("earnings", earnings);
+      monthlyDataList.add(monthlyEntry);
+    });
+
+    // Prepare yearlyData in the required format
+    List<Map<String, Object>> yearlyDataList = new ArrayList<>();
+    yearlyData.forEach((year, earnings) -> {
+      Map<String, Object> yearlyEntry = new HashMap<>();
+      yearlyEntry.put("year", year);
+      yearlyEntry.put("earnings", earnings);
+      yearlyDataList.add(yearlyEntry);
+    });
+
+    // Add daily, monthly, and yearly data to the final "data" map
+    Map<String, Object> data = new HashMap<>();
+    data.put("dailyData", dailyDataList);
+    data.put("monthlyData", monthlyDataList);
+    data.put("yearlyData", yearlyDataList);
+
+    // Return the response with the "data" field containing all the charts
+    chartData.put("data", data);
+    return JapiResponse.success(chartData);
+  }
+
+
+  @Override
+  @TryCatchException
+  public JapiResponse getTransactionOverview(String filter, UUID workspaceId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UserModel userModel = (UserModel) authentication.getPrincipal();
+
+    List<TransactionModel> transactionModels;
+
+    switch (filter) {
+      case "day":
+        transactionModels = repository.findTransactionsForToday(userModel.getId(), workspaceId);
+        break;
+      case "week":
+        transactionModels = repository.findTransactionsForCurrentWeek(userModel.getId(), workspaceId);
+        break;
+      case "month":
+        transactionModels = repository.findTransactionsForCurrentMonth(userModel.getId(), workspaceId);
+        break;
+      case "year":
+        transactionModels = repository.findTransactionsForCurrentYear(userModel.getId(), workspaceId);
+        break;
+      default:
+        transactionModels = repository.findTransactions(userModel.getId(), workspaceId);
+    }
+
     TransactionOverviewDto overviewDto = sumTotalTransactions(transactionModels);
+
     return JapiResponse.success(overviewDto);
   }
 

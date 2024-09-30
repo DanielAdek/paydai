@@ -1,6 +1,8 @@
 package com.paydai.api.application;
 
 import com.paydai.api.domain.annotation.TryCatchException;
+import com.paydai.api.domain.exception.ApiRequestException;
+import com.paydai.api.domain.exception.ForbiddenException;
 import com.paydai.api.domain.exception.NotFoundException;
 import com.paydai.api.domain.model.*;
 import com.paydai.api.domain.repository.*;
@@ -18,6 +20,7 @@ import com.stripe.model.*;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
@@ -207,7 +211,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     InvoiceModel invoiceModel = repository.save(buildInvoice);
 
-    if (!commissionRecord.closerManagersCommissions().isEmpty()) {
+    if (commissionRecord != null && !commissionRecord.closerManagersCommissions().isEmpty()) {
       commissionRecord
         .closerManagersCommissions()
         .forEach(invoiceManagerModel -> {
@@ -216,14 +220,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         });
     }
 
-    if (!commissionRecord.setterManagersCommissions().isEmpty()) {
-      commissionRecord
-        .setterManagersCommissions()
-        .forEach(invoiceManagerModel -> {
-          invoiceManagerModel.setInvoice(invoiceModel);
-          invoiceManagerRepository.save(invoiceManagerModel);
-        });
-    }
+      if (commissionRecord != null && !commissionRecord.setterManagersCommissions().isEmpty()) {
+        commissionRecord
+          .setterManagersCommissions()
+          .forEach(invoiceManagerModel -> {
+            invoiceManagerModel.setInvoice(invoiceModel);
+            invoiceManagerRepository.save(invoiceManagerModel);
+          });
+      }
     return JapiResponse.success(getInvoiceRecordDetails(invoiceModel));
   }
 
@@ -263,9 +267,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId(), requestOptions);
 
     try {
-    InvoiceFinalizeInvoiceParams invoiceFinalizeInvoiceParams = InvoiceFinalizeInvoiceParams.builder().build();
+      InvoiceFinalizeInvoiceParams invoiceFinalizeInvoiceParams = InvoiceFinalizeInvoiceParams.builder().build();
 
-    invoice = invoice.finalizeInvoice(invoiceFinalizeInvoiceParams, requestOptions);
+      invoice = invoice.finalizeInvoice(invoiceFinalizeInvoiceParams, requestOptions);
     } catch (StripeException e) {
       throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
     }
@@ -288,10 +292,11 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     Invoice invoice = Invoice.retrieve(invoiceModel.getStripeInvoiceId(), requestOptions);
     try {
-    InvoiceSendInvoiceParams invoiceSendInvoiceParams = InvoiceSendInvoiceParams.builder().build();
+      invoice.finalizeInvoice(InvoiceFinalizeInvoiceParams.builder().build(), requestOptions);
 
-    invoice = invoice.sendInvoice(invoiceSendInvoiceParams, requestOptions);
+      InvoiceSendInvoiceParams invoiceSendInvoiceParams = InvoiceSendInvoiceParams.builder().build();
 
+      invoice = invoice.sendInvoice(invoiceSendInvoiceParams, requestOptions);
     } catch (StripeException e) {
       throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
     }
@@ -303,8 +308,14 @@ public class InvoiceServiceImpl implements InvoiceService {
 
   @Override
   @TryCatchException
-  public JapiResponse filterInvoice(UUID workspaceId, InvoiceStatus status) {
-    List<InvoiceModel> invoiceModels = repository.findByFilterWorkspaceInvoices(workspaceId, status.name());
+  public JapiResponse filterInvoice(UUID workspaceId, List<InvoiceStatus> status) {
+    List<InvoiceModel> invoiceModels;
+    if (status.isEmpty()) {
+      invoiceModels = repository.findByWorkspaceInvoices(workspaceId);
+    } else {
+      invoiceModels = repository.findByFilterWorkspaceInvoices(workspaceId, status.stream().map(Enum::name).toList());
+    }
+
     List<InvoiceRecord> invoiceDtos = new ArrayList<>();
     if (!invoiceModels.isEmpty()) {
       invoiceDtos = invoiceModels.stream().map(this::getInvoiceRecordDetails).toList();
@@ -342,6 +353,47 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     return JapiResponse.success(salesReps);
+  }
+
+  @Override
+  @TryCatchException
+  public JapiResponse cancelInvoice(String invoiceCode) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    UserModel userModel = (UserModel) authentication.getPrincipal();
+
+    InvoiceModel invoiceModel = repository.findByInvoiceCode(invoiceCode);
+
+    if (invoiceModel == null) throw new NotFoundException("invoice");
+
+    boolean notAllowed = !invoiceModel.getUserWorkspace().getUser().getId().equals(userModel.getId())
+                        && !invoiceModel.getWorkspace().getOwner().getId().equals(userModel.getId());
+
+    if (notAllowed) throw new ForbiddenException("You do not have this kind of permission");
+
+    if (invoiceModel.getStatus().equals(InvoiceStatus.CANCELED)) throw new ApiRequestException("Invoice already canceled!");
+
+    if (!invoiceModel.getStatus().equals(InvoiceStatus.SENT)) throw new ApiRequestException("You cannot cancel already sent invoice");
+
+    Invoice resource;
+    try {
+      RequestOptions requestOptions = RequestOptions.builder().setStripeAccount(invoiceModel.getWorkspace().getOwner().getStripeId()).build();
+      resource = Invoice.retrieve(invoiceModel.getStripeInvoiceId(), requestOptions);
+      InvoiceVoidInvoiceParams invoiceVoidInvoiceParams = InvoiceVoidInvoiceParams.builder().build();
+      resource = resource.voidInvoice(invoiceVoidInvoiceParams, requestOptions);
+    } catch (StripeException e) {
+      throw new com.paydai.api.domain.exception.StripeException(e.getMessage());
+    }
+
+    invoiceModel.setCanceled(true);
+
+    invoiceModel.setStatus(InvoiceStatus.CANCELED);
+
+    invoiceModel.setStripeInvoiceStatus(resource.getStatus());
+
+    InvoiceModel invoiceModel1 = repository.save(invoiceModel);
+
+    return JapiResponse.success(getInvoiceRecordDetails(invoiceModel1));
   }
 
   private InvoiceModel validateInvoice(String invoiceCode) {

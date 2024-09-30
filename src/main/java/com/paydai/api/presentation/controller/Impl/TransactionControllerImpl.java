@@ -78,8 +78,8 @@ public class TransactionControllerImpl implements TransactionController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @GetMapping("payout/sales-rep/overview")
-  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam UUID userId, @RequestParam UUID workspaceId) {
-    JapiResponse response = service.getTransactionOverview(userId, workspaceId);
+  public ResponseEntity<JapiResponse> getPayoutTransactionOverview(@RequestParam String filter, @RequestParam UUID workspaceId) {
+    JapiResponse response = service.getTransactionOverview(filter, workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 
@@ -137,6 +137,25 @@ public class TransactionControllerImpl implements TransactionController {
   @GetMapping("merchant")
   public ResponseEntity<JapiResponse> getTransactionsMerchant(@RequestParam UUID workspaceId) {
     JapiResponse response = service.getTransactionsMerchantUse(workspaceId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
+
+  @Operation(
+    summary = "Payout transactions chart: retrieve API endpoint",
+    description = "GET response to show transaction overview"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @Override
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @GetMapping("charts")
+  public ResponseEntity<JapiResponse> getTransactionsChart(@RequestParam UUID workspaceId) {
+    JapiResponse response = service.getTransactionsChart(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
 }

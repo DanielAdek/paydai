@@ -122,4 +122,23 @@ public class WorkspaceControllerImpl implements WorkspaceController {
     JapiResponse response = service.getManagerTeamMembers(workspaceId);
     return new ResponseEntity<>(response, response.getStatusCode());
   }
+
+  @Operation(
+    summary = "A merchant remove workspace rep API endpoint",
+    description = "GET response to show DTO"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", content = {@Content(schema = @Schema(implementation = JapiResponse.class), mediaType = "application/json")}),
+    @ApiResponse(responseCode = "404", content = {@Content(schema = @Schema())}),
+    @ApiResponse(responseCode = "500", content = {@Content(schema = @Schema())})
+  })
+  @SecurityRequirements({
+    @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
+  })
+  @Override
+  @DeleteMapping("remove/sales-rep")
+  public ResponseEntity<JapiResponse> removeWorkspaceMember(@RequestParam UUID userId, @RequestParam UUID workspaceId) {
+    JapiResponse response = service.removeWorkspaceMember(userId, workspaceId);
+    return new ResponseEntity<>(response, response.getStatusCode());
+  }
 }
