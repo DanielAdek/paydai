@@ -11,4 +11,5 @@ public interface EmailRepository {
   EmailModel findEmailQuery(String email);
   EmailModel save(EmailModel buildEmail);
   EmailModel findPersonalEmailByUser(UUID userId);
+  void updateAuthPassword(UUID emailId, String password);
 }

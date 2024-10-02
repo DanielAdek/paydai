@@ -26,13 +26,13 @@ public class InvoiceManagerModel {
   private Float snapshotCommManagerPercent;
 
   @Column(name = "snapshot_manager_fee_percent")
-  private Float snapshotManagerFeePercent;
+  private Float snapshotManagerFeePercent;  // if the future requires paydai fee from manager
 
   @Column(name = "snapshot_comm_manager")
   private double snapshotCommManager;
 
   @Column(name = "snapshot_comm_manager_net")
-  private double snapshotCommManagerNet;
+  private double snapshotCommManagerNet; // if snapshotManagerFeePercent applies then this amount will be less than snapshotCommManager
 
   @ManyToOne
   @JoinColumn(name = "manager_id")

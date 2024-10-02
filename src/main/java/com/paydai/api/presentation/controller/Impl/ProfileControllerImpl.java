@@ -2,12 +2,11 @@ package com.paydai.api.presentation.controller.Impl;
 
 import com.paydai.api.domain.service.ProfileService;
 import com.paydai.api.presentation.controller.ProfileController;
-import com.paydai.api.presentation.request.ProfileRequest;
+import com.paydai.api.presentation.request.UpdateProfileRequest;
 import com.paydai.api.presentation.response.JapiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -78,7 +77,7 @@ public class ProfileControllerImpl implements ProfileController {
     @SecurityRequirement(name = "Authorization", scopes = {"read", "write"})
   })
   @PutMapping("update")
-  public ResponseEntity<JapiResponse> updateProfileData(@RequestBody ProfileRequest updateRequest) {
+  public ResponseEntity<JapiResponse> updateProfileData(@RequestBody UpdateProfileRequest updateRequest) {
     JapiResponse response = service.updateProfile(updateRequest);
     return new ResponseEntity<>(response, response.getStatusCode());
   }

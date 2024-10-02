@@ -25,12 +25,12 @@ public class WorkspaceModel {
   @Column
   private String name;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "user_id", nullable = false)
   private UserModel owner;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "workspace", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "workspace", fetch = FetchType.EAGER)
   private List<UserWorkspaceModel> userWorkspaces;
 
   @CreationTimestamp

@@ -51,6 +51,10 @@ public class InvoiceServiceImpl implements InvoiceService {
   public JapiResponse create(InvoiceRequest payload) throws StripeException {
     UserModel userModel = profileService.getLoggedInUser();
 
+    /**
+     * In the future please ensure that you query the database based on
+     * the role of the loggedIn user and not only the userId and workspaceId
+     */
     UserWorkspaceModel closerWorkspaceModel = userWorkspaceRepository.findOneByUserId(userModel.getId(), payload.getWorkspaceId());
 
     CommissionSettingModel commissionSettingModel = closerWorkspaceModel.getCommission();

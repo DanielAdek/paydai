@@ -38,7 +38,7 @@ public class UserModel implements UserDetails {
 
   @Column(name = "user_type")
   @Enumerated(EnumType.STRING)
-  private UserType userType;
+  private UserType userType; // todo: change enum to string
 
   @Column(name = "stripe_id")
   private String stripeId;
@@ -63,10 +63,10 @@ public class UserModel implements UserDetails {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private List<EmailModel> emails;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private List<UserWorkspaceModel> userWorkspaces;
 
   @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -87,7 +87,7 @@ public class UserModel implements UserDetails {
   @Override
   public String getPassword() {
     return emails.stream()
-      .filter(email -> email.getPasswordHash() != null)
+      .filter(email -> email.getEmailType().equals(EmailType.PERSONAL))
       .findFirst()
       .map(EmailModel::getPasswordHash)
       .orElse(null);

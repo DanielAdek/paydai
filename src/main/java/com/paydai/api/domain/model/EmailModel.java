@@ -33,7 +33,7 @@ public class EmailModel {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "email_type")
-  private EmailType emailType;
+  private EmailType emailType; // todo use string instead of enum
 
   @ManyToOne
   @JoinColumn(name = "user_id")

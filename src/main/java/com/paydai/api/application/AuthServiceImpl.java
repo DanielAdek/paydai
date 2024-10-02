@@ -51,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
   @TryCatchException
   @Transactional
   public JapiResponse create(RegisterRequest payload) {
+    // todo make some validations on the fields
     // Check if email already exist
     EmailModel email = emailRepository.findEmailQuery(payload.getEmail());
 
@@ -60,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
     UserModel buildUser = UserModel.builder()
       .firstName(payload.getFirstName())
       .lastName(payload.getLastName())
-      .userType(payload.getUserType())
+      .userType(payload.getUserType()) // todo change to string
       .country(payload.getCountry().getName())
       .countryCode(payload.getCountry().getCode())
       .build();

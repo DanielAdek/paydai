@@ -47,6 +47,7 @@ public class TransactionServiceImpl implements TransactionService {
   public JapiResponse transferToSalesRep(Invoice invoice) throws StripeException {
     TransactionModel transactionModel = repository.findTransactionByStripeInvoiceId(invoice.getId());
 
+    // CHECK IF THE TRXN IS ALREADY COMPLETED AND BLOCK IF SO.
     if (transactionModel != null && transactionModel.getStatus().equals(TxnStatusType.PAYMENT_TRANSFERRED)) return JapiResponse.success(null);
 
     InvoiceModel invoiceModel = invoiceRepository.findByStripeInvoiceCode(invoice.getId());
@@ -72,7 +73,10 @@ public class TransactionServiceImpl implements TransactionService {
     UserModel closer = customerModel.getCloser();
     double closerNetComm = invoiceModel.getSnapshotCommCloserNet();
     double closerNet = handleLiability(closer, workspaceModel, closerNetComm, currency, invoiceModel);
+
+    // THIS IS THE ACTUAL TRANSFER TO USER
     if (closerNet > 0) performTransfer(closerNet, currency, closer.getStripeId());
+
     double clRevenue = invoiceModel.getSnapshotCommCloser();
     double clFee = clRevenue - invoiceModel.getSnapshotCommCloserNet();
     String closerName = closer.getFirstName() + " " + closer.getLastName();
@@ -88,7 +92,9 @@ public class TransactionServiceImpl implements TransactionService {
         double setterNet = handleLiability(setter, workspaceModel, setterNetComm, currency, invoiceModel);
         String setterName = setter.getFirstName() + " " + setter.getLastName();
         persistTransactionToDatabase(stRevenue, setterNetComm, stFee, invoiceModel, stripeInvoiceId, currency, workspaceModel, setter, TxnType.PAYOUT, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, setterName, remark);
-        if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId()/*, true, invoice.getCharge()*/);
+
+        // THIS IS THE ACTUAL TRANSFER TO USER
+        if (setterNet > 0) performTransfer(setterNet, currency, setter.getStripeId());
       }
 
     List<InvoiceManagerModel> involvedManagers = invoiceModel.getInvolvedManagers();
@@ -105,6 +111,7 @@ public class TransactionServiceImpl implements TransactionService {
 
           String managerStripeId = invoiceManagerModel.getManager().getStripeId();
 
+          // THIS IS THE ACTUAL TRANSFER TO USER
           Transfer managerTransfer = performTransfer(managerNet, currency, managerStripeId);
 
           repository.save(
@@ -419,16 +426,12 @@ public class TransactionServiceImpl implements TransactionService {
     return commission;
   }
 
-  private Transfer performTransfer(double amount, String currency, String stripeId /*boolean useSource, String chargeId*/) {
+  private Transfer performTransfer(double amount, String currency, String stripeId) {
     try {
       TransferCreateParams.Builder paramsBuilder = TransferCreateParams.builder()
         .setAmount(Double.valueOf(amount).longValue() * 100) //todo use amount dto
         .setCurrency(currency)
         .setDestination(stripeId);
-
-//      if (Boolean.TRUE.equals(useSource)) {
-//        paramsBuilder.setSourceTransaction(chargeId);
-//      }
 
       TransferCreateParams params = paramsBuilder.build();
 

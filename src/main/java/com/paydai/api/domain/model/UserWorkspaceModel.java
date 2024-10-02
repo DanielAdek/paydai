@@ -24,19 +24,19 @@ public class UserWorkspaceModel {
 
   private Boolean removed;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne()
   @JoinColumn(name = "user_id", nullable = false)
   private UserModel user;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne()
   @JoinColumn(name = "workspace_id")
   private WorkspaceModel workspace;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne()
   @JoinColumn(name = "role_id")
   private RoleModel role;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne()
   @JoinColumn(name = "email_id")
   private EmailModel email;
 

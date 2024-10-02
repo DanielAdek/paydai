@@ -19,7 +19,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "invoice_tbl")
 public class InvoiceModel {
-  //TODO SECTION: INVOICE
+  //SECTION: INVOICE
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
@@ -40,7 +40,7 @@ public class InvoiceModel {
   private LocalDateTime dueDate;
 
   @Column
-  @Enumerated(EnumType.STRING)
+  @Enumerated(EnumType.STRING) // todo change to varchar
   private InvoiceStatus status;
 
   @Column
@@ -51,7 +51,7 @@ public class InvoiceModel {
   @Column(name = "sales_manager_involved")
   private boolean managerInvolved;
 
-  //TODO SECTION: SNAPSHOT COMMISSION
+  //SECTION: SNAPSHOT COMMISSION
   @Column(name = "snapshot_comm_setter_percent")
   private Float snapshotCommSetterPercent;
 
@@ -92,10 +92,10 @@ public class InvoiceModel {
   private double platformFee;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "comm_split_scenario")
+  @Column(name = "comm_split_scenario") // todo please use varchar
   private CommSplitScenarioType commSplitScenario;
 
-  // TODO SECTION: STRIPE DETAILS
+  // SECTION: STRIPE DETAILS
   @Column(name = "stripe_invoice_id")
   private String stripeInvoiceId;
 
@@ -114,7 +114,7 @@ public class InvoiceModel {
   @Column(name = "stripe_invoice_status")
   private String stripeInvoiceStatus;
 
-  //TODO SECTION: JOINING
+  //SECTION: JOINING
   @ManyToOne
   @JoinColumn(name = "customer_id")
   private CustomerModel customer;

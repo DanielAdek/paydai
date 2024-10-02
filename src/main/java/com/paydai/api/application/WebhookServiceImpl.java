@@ -34,6 +34,7 @@ public class WebhookServiceImpl implements WebhookService {
     if (dataObjectDeserializer.getObject().isPresent()) {
       invoice = (Invoice) dataObjectDeserializer.getObject().get();
     } else {
+      // todo ensure that this error is saved in webhook log
       throw new ApiRequestException("Deserialization error");
     }
 
@@ -45,16 +46,18 @@ public class WebhookServiceImpl implements WebhookService {
       System.out.println("The invoice sent from connect called!");
     }
 
+    if (event.getType().equals(webhookConstant.invoice_paid)) {
+      log.info("Please use update invoice in here");
+    }
+
     if (event.getType().equals(webhookConstant.invoice_payment_succeeded)) {
       log.info("This invoice payment success");
       // update invoice to paid
-      invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID.toString());
+      invoiceRepository.updateInvoiceStatus(invoice.getId(), invoice.getStatus(), InvoiceStatus.PAID.toString()); // todo before you go live, ensure the status is updated as PAYMENT_SUCCESS
 
-      // transfer fund to sales rep
+      //todo ensure that this transaction is only called when balance is available on paydai platform
       transactionService.transferToSalesRep(invoice);
     }
-
-    if (event.getType().equals(webhookConstant.invoice_paid)) {}
 
     return JapiResponse.success(null);
   }
@@ -74,7 +77,6 @@ public class WebhookServiceImpl implements WebhookService {
 
     if (event.getType().equals(webhookConstant.transfer_created)) {
       log.info("This is triggered " + stripeObject);
-//      payoutLedgerService.transferToSalesRep(stripeObject);
     }
 
     if (event.getType().equals(webhookConstant.transfer_reversed)) {

@@ -118,7 +118,7 @@ public class InviteServiceImpl implements InviteService {
 
     InviteRecord inviteRecord = inviteDtoMapper.apply(inviteDto);
 
-    // SEND EMAIL NOTIFICATION
+    // SEND EMAIL NOTIFICATION // todo ensure to use correct paydai smtp for sending email
     EmailRequest buildEmail = EmailRequest.builder()
       .toEmail(payload.getCompanyEmail())
       .subject("You have been invited to join a workspace")
@@ -221,7 +221,7 @@ public class InviteServiceImpl implements InviteService {
 
       // Save team members
       if (!userWorkspaceModels.isEmpty())
-        for (UserWorkspaceModel userWorkspace : userWorkspaceModels) {
+        for (UserWorkspaceModel userWorkspace : userWorkspaceModels) {  // todo: check to find a better way to create many into database
           teamRepository.save(
             TeamModel.builder()
               .manager(emailModel.getUser())
