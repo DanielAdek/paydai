@@ -32,15 +32,15 @@ public class RefundServiceImpl implements RefundService {
   public JapiResponse create(RefundRequest payload) {
     InvoiceModel invoiceModel = invoiceRepository.findByInvoiceCode(payload.getInvoiceCode());
 
-    UserModel userModel = UserModel.builder().id(payload.getSalesRepId()).build();
+    if (invoiceModel == null) throw new NotFoundException("Invalid Invoice Id");
 
-    WorkspaceModel workspaceModel = WorkspaceModel.builder().id(payload.getWorkspaceId()).build();
+    UserModel userModel = UserModel.builder().id(payload.getSalesRepId()).build();
 
     if (userModel == null) throw new NotFoundException("Invalid User Id");
 
-    if (workspaceModel == null) throw new NotFoundException("Invalid Workspace Id");
+    WorkspaceModel workspaceModel = WorkspaceModel.builder().id(payload.getWorkspaceId()).build();
 
-    if (invoiceModel == null) throw new NotFoundException("Invalid Invoice Id");
+    if (workspaceModel == null) throw new NotFoundException("Invalid Workspace Id");
 
     RefundModel refundModel = repository.save(
       RefundModel.builder()

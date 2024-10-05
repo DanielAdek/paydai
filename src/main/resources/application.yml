@@ -18,7 +18,7 @@ spring:
         mime:
           charset: UTF
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
+    url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}?sslmode=require
     username: ${DB_USER}
     password: ${DB_PASSWORD}
   application:

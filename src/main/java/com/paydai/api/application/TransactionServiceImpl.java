@@ -389,6 +389,8 @@ public class TransactionServiceImpl implements TransactionService {
 
   @TryCatchException
   private double handleLiability(UserModel salesRep, WorkspaceModel workspace, double commission, String currency, InvoiceModel invoiceModel/*, Invoice invoice*/) {
+    //todo when exceptions happens after sending to stripe, kindly have a method that manually save the transaction in the db if required
+    // todo check the stripe dashboard for any record that were not saved during the exception.
     String stripeInCode = invoiceModel.getStripeInvoiceId();
     String giver = salesRep.getFirstName() + " " + salesRep.getLastName();
     String remark = "REFUND:invoice-refund-settlement";
@@ -404,16 +406,25 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Ensure commission stays above 1 after liability deduction
         if (commission < liabilityAmount) {
-          performTransfer(commission, currency, merchant.getStripeId()/*, true, invoice.getCharge()*/);
+
+          // SEND ALL THE COMMISSION TO THE MERCHANT
+          performTransfer(commission, currency, merchant.getStripeId());
+
           salesRepLiability.setTotalPaid(commission);
           salesRepLiability.setStatus(RefundStatus.PARTIALLY_PAID);
+
+          // PERSIST TRANSACTION HISTORY FOR MERCHANT
           persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+
+          // PERSIST TRANSACTION HISTORY FOR SALES REP
           persistTransactionToDatabase(commission, commission, 0.0, invoiceModel, stripeInCode, currency, workspace, salesRep, TxnType.REFUND, TxnEntryType.DEBIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);
+
           commission = Math.max(0, commission - liabilityAmount);
+
           refundRepository.save(salesRepLiability);
           break;
         } else {
-          performTransfer(liabilityAmount, currency, merchant.getStripeId()/*, true, invoice.getCharge()*/);
+          performTransfer(liabilityAmount, currency, merchant.getStripeId());
           salesRepLiability.setStatus(RefundStatus.PAID);
           salesRepLiability.setTotalPaid(liabilityAmount);
           persistTransactionToDatabase(liabilityAmount, liabilityAmount, 0.0, invoiceModel, stripeInCode, currency, workspace, merchant, TxnType.REFUND, TxnEntryType.CREDIT, TxnStatusType.PAYMENT_TRANSFERRED, giver, workspace.getName(), remark);

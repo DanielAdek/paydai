@@ -29,7 +29,7 @@ public class RefundModel {
 
   private String reason;
 
-  @Enumerated(EnumType.STRING)
+  @Enumerated(EnumType.STRING) // todo please use varchar on this column
   private RefundStatus status;
 
   @ManyToOne
